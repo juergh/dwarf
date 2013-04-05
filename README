@@ -1,0 +1,27 @@
+Dwarf is a small tool to manage virtual machines similarly to the way Nova
+does but restricted to the local machine. Dwarf provides a subset of the same
+CLI commands as the Nova client and tries to emulate Nova behavior as closely
+as possible. It only runs on Linux using KVM as the hypervisor.
+
+Since it's not packaged yet, things need to be setup manually prior to using
+Dwarf:
+
+1) Install libvirt and KVM and virsh and virt-manager and all those goodies.
+   Make sure the permissions are set correctly so that a regular user can
+   launch VMs in 'system' mode, i.e. 'virsh --connect=qemmu:///system' needs to
+   work for the user who wants to run Dwarf.
+
+2) Run the 'tools/setup' script to add the Dwarf user and directory and give
+   a regular user permissions to run Dwarf. Run it like this
+   'sudo tools/setup <username>' where <username> is the name of the user who
+   wants to run Dwarf.
+
+3) Initialize the Dwarf environment by running 'bin/dwarf env-init'.
+
+Now you should be ready to use Dwarf. Run 'bin/dwarf -h' for a list of
+supported commands. The names and usages of the commands are copied from the
+Nova client with slight variations where they are required.
+
+For example, to boot an instance, one can specify a local image file rather
+than an ID from an image catalog, i.e.:
+$ bin/dwarf boot --image-file ./test-image.qcow2 server1
