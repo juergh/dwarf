@@ -1,0 +1,21 @@
+#!/bin/bash
+
+user=$1
+
+if [ -z "${user}" ] ; then
+    echo "usage: setup <username>"
+    exit 2
+fi
+
+adduser --system --home /var/lib/dwarf --shell /bin/bash \
+    --disabled-password --disabled-login dwarf
+
+usermod -a -G libvirtd dwarf
+
+cat<<EOF | sudo tee /etc/sudoers.d/dwarf >/dev/null
+Cmnd_Alias NOVACMDS = /bin/chown
+
+dwarf ALL = (root) NOPASSWD: SETENV: NOVACMDS
+${user} ALL = (dwarf) NOPASSWD: ALL
+EOF
+chmod 0440 /etc/sudoers.d/dwarf
