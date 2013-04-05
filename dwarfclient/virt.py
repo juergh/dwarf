@@ -32,7 +32,7 @@ def _create_libvirt_xml(server):
     xml_template = open(os.path.join(os.path.dirname(__file__),
                                      'libvirt.xml.template')).read()
 
-    xml_info = {'name': server.name,
+    xml_info = {'name': server.domain,
                 'memory': server.memory,
                 'vcpus': server.vcpus,
                 'basepath': server.basepath,
@@ -71,7 +71,7 @@ class Controller(object):
 
     def _get_domain(self, server):
         try:
-            domain = self.libvirt.lookupByName(server.name)
+            domain = self.libvirt.lookupByName(server.domain)
         except libvirt.libvirtError as e:
             retval = e.get_error_code()
             if retval == libvirt.VIR_ERR_NO_DOMAIN:

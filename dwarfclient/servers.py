@@ -22,8 +22,8 @@ class Server(object):
         self.memory = 1024 * 1024
         self.vcpus = 1
         self.add_details(details)
-        self.basepath = '%s/instance-d%07x' % (CONF.instances_dir, self.id)
-        self.vncdisplay = None
+        self.domain = 'instance-d%07x' % self.id
+        self.basepath = os.path.join(CONF.instances_dir, self.domain)
 
     def add_details(self, details):
         """
@@ -123,4 +123,4 @@ class Controller(object):
         Get a VNC console to the server
         """
         server = self._get_server(sid)
-        return server.vnc_display
+        return getattr(server, 'vnc_display')
