@@ -18,6 +18,10 @@ class Config(object):
         with open(cfile, 'r') as fh:
             cfg = yaml.load(fh)
 
+        # Handle empty config files
+        if cfg is None:
+            cfg = {}
+
         # Add base environment information
         cfg['dwarf_dir'] = '/var/lib/dwarf'
 
