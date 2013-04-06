@@ -37,7 +37,7 @@ def _create_libvirt_xml(server):
                 'vcpus': server.vcpus,
                 'basepath': server.basepath,
                 'mac_addr': utils.generate_mac(),
-                'bridge': CONF.network['bridge'],
+                'bridge': 'virbr0',
                 'host': utils.get_local_ip()}
 
     xml = str(Template(xml_template, searchList=[xml_info]))
