@@ -24,11 +24,18 @@ _LIBVIRT_DOMAIN_STATE = {
 }
 
 
-def _create_libvirt_xml(server):
+def _create_libvirt_xml(server, force=False):
     """
     Create a libvirt XML file for the server
     """
     xml_file = '%s/libvirt.xml' % server.basepath
+
+    # Check if the XML file exists already and return its content
+    if not force and os.path.exists(xml_file):
+        with open(xml_file, 'r') as fh:
+            xml = fh.read()
+        return xml
+
     xml_template = open(os.path.join(os.path.dirname(__file__),
                                      'libvirt.xml.template')).read()
 
@@ -149,3 +156,10 @@ class Controller(object):
 
         # Get the VM's IP
         server.add_details({'ip_address': utils.find_ip(mac)})
+
+    def reboot_server(self, server):
+        """
+        Reboot a server
+        """
+        self.delete_server(server)
+        self.boot_server(server)

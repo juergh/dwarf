@@ -124,3 +124,11 @@ class Controller(object):
         """
         server = self._get_server(sid)
         return getattr(server, 'vnc_display')
+
+    def reboot(self, sid):
+        """
+        Reboot a server
+        """
+        server = self._get_server(sid)
+        self.virt.reboot_server(server)
+        return server

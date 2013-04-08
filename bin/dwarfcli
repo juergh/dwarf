@@ -61,6 +61,13 @@ def do_delete(args):
     gc = client.Client(args)
     gc.servers.delete(args.server)
 
+@utils.add_arg('server', type=int, help='server ID')
+@utils.add_help('reboot a server')
+def do_reboot(args):
+    gc = client.Client(args)
+    server = gc.servers.reboot(args.server)
+    utils.print_details(server)
+
 
 @utils.add_arg('server', type=int, help='server ID')
 @utils.add_help('get the console log of a server')
