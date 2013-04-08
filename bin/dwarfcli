@@ -35,7 +35,7 @@ def do_env_purge(args):
 def do_list(args):
     gc = client.Client(args)
     servers = gc.servers.list()
-    utils.print_list(servers, ['ID', 'Name', 'IP Address'])
+    utils.print_list(servers, ['ID', 'Name', 'Domain', 'IP Address'])
 
 
 @utils.add_arg('server', type=int, help='server ID')
