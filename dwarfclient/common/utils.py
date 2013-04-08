@@ -219,11 +219,13 @@ def find_ip(mac):
     Find the IP associated with the given MAC address
     """
     addr = None
-    for line in execute(['arp', '-n'])[0].splitlines():
-        col = line.split()
-        if col[2] == mac:
-            addr = col[0]
-            break
+    leases = '/var/lib/libvirt/dnsmasq/default.leases'
+    with open(leases, 'r') as fh:
+        for line in fh.readlines():
+            col = line.split()
+            if col[1] == mac:
+                addr = col[2]
+                break
 
     LOG.debug("utils.find_ip: mac=%s, addr=%s", mac, addr)
     return addr
