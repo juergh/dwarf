@@ -5,6 +5,7 @@ import shutil
 
 from dwarfclient import db
 from dwarfclient import exception
+from dwarfclient import metadata
 from dwarfclient import virt
 
 from dwarfclient.common import config
@@ -39,6 +40,7 @@ class Controller(object):
         self.args = args
         self.db = db.Controller(args)
         self.virt = virt.Controller(args)
+        self.metadata = metadata.Controller(args)
 
     def _init_server(self, name):
         details = self.db.init_server(name)
@@ -52,6 +54,7 @@ class Controller(object):
 
     def _update_server(self, server):
         self.virt.update_server(server)
+        self.metadata.update_server(server)
 
     def list(self):
         """
@@ -93,8 +96,10 @@ class Controller(object):
         os.makedirs(server.basepath)
         utils.create_local_images(server.basepath, base_images)
 
-        # Finally boot the server
+        # Finally boot the server and start its metadata server
         self.virt.boot_server(server)
+        self.metadata.start(server)
+
         return server
 
     def delete(self, sid):
@@ -102,6 +107,7 @@ class Controller(object):
         Delete a server
         """
         server = self._get_server(sid)
+        self.metadata.stop(server)
         self.virt.delete_server(server)
         if os.path.exists(server.basepath):
             shutil.rmtree(server.basepath)
@@ -130,5 +136,7 @@ class Controller(object):
         Reboot a server
         """
         server = self._get_server(sid)
+        self.metadata.stop(server)
         self.virt.reboot_server(server)
+        self.metadata.start(server)
         return server

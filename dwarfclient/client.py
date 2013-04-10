@@ -30,7 +30,7 @@ class Client(object):
 
         # Create the directory structure
         print('Creating directory tree %s' % CONF.dwarf_dir)
-        for d in ['instances_dir', 'instances_base_dir']:
+        for d in ['instances_dir', 'instances_base_dir', 'run_dir']:
             os.makedirs(getattr(CONF, d))
 
         # Initialize the database

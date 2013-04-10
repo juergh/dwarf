@@ -13,7 +13,8 @@ adduser --system --home /var/lib/dwarf --shell /bin/bash \
 usermod -a -G libvirtd dwarf
 
 cat<<EOF > /etc/sudoers.d/dwarf
-Cmnd_Alias NOVACMDS = /bin/chown
+Cmnd_Alias NOVACMDS = /bin/chown, \
+                      /sbin/iptables
 
 dwarf ALL = (root) NOPASSWD: SETENV: NOVACMDS
 ${user} ALL = (dwarf) NOPASSWD: ALL

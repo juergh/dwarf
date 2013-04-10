@@ -25,6 +25,7 @@ class Config(object):
         # Add base environment information
         cfg['dwarf_dir'] = '/var/lib/dwarf'
 
+        cfg['run_dir'] = os.path.join(cfg['dwarf_dir'], 'run')
         cfg['instances_dir'] = os.path.join(cfg['dwarf_dir'], 'instances')
         cfg['instances_base_dir'] = os.path.join(cfg['instances_dir'], '_base')
 

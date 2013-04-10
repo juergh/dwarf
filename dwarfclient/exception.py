@@ -38,3 +38,7 @@ class ServerBootFailure(DwarfException):
 
 class ServerDeleteFailure(DwarfException):
     message = 'Failed to delete server: %(reason)s'
+
+
+class MetadataStartFailure(DwarfException):
+    message = 'Failed to start metadata server" %(reason)s'
