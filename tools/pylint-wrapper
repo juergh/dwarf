@@ -1,0 +1,44 @@
+#!/usr/bin/python
+#
+# Wrapper to handle expected pylint errors rather than turning them off
+# completely
+
+import re
+import subprocess
+import sys
+
+
+e1101 = re.compile(r"Instance of 'Config' has no '[a-zA-Z_]+' member")
+
+sys.argv[0] = 'pylint'
+proc = subprocess.Popen(sys.argv, stdout=subprocess.PIPE)
+
+retval = 0
+header = None
+
+while True:
+    line = proc.stdout.readline()
+
+    # Check for EOF
+    if not line:
+        break
+
+    # Skip expected E1101 errors
+    if e1101.search(line):
+        continue
+
+    # Grab the 'header'
+    if line.startswith('************* Module'):
+        header = line
+        continue
+
+    # We have a valid error if we came here
+    retval = 1
+
+    if header:
+        sys.stdout.write(header)
+        header = None
+    sys.stdout.write(line)
+    sys.stdout.flush()
+
+sys.exit(retval)
