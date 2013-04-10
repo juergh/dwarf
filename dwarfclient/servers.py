@@ -100,6 +100,7 @@ class Controller(object):
         self.virt.boot_server(server)
         self.metadata.start(server)
 
+        self._update_server(server)
         return server
 
     def delete(self, sid):
@@ -139,4 +140,6 @@ class Controller(object):
         self.metadata.stop(server)
         self.virt.reboot_server(server)
         self.metadata.start(server)
+
+        self._update_server(server)
         return server

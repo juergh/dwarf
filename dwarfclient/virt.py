@@ -79,11 +79,8 @@ class Controller(object):
     def _get_domain(self, server):
         try:
             domain = self.libvirt.lookupByName(server.domain)
-        except libvirt.libvirtError as e:
-            retval = e.get_error_code()
-            if retval == libvirt.VIR_ERR_NO_DOMAIN:
-                return
-            raise
+        except libvirt.libvirtError:
+            return
         return domain
 
     def _destroy_domain(self, domain):
@@ -116,7 +113,6 @@ class Controller(object):
         self._connect()
         xml = _create_libvirt_xml(server)
         self._create_domain(xml)
-        self.update_server(server)
 
     def delete_server(self, server):
         """
@@ -130,12 +126,18 @@ class Controller(object):
         self._undefine_domain(domain)
 
     def update_server(self, server):
+        """
+        Update the server object with information from libvirt
+        """
         self._connect()
         domain = self._get_domain(server)
         if not domain:
             return
 
-        xml = domain.XMLDesc(0)
+        try:
+            xml = domain.XMLDesc(0)
+        except libvirt.libvirtError:
+            return
         dom = minidom.parseString(xml)
 
         # Get VNC information

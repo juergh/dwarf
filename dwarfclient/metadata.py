@@ -121,7 +121,7 @@ class Controller(object):
     def _read_pid_file(self, server):
         path = '%s/%s.pid' % (CONF.run_dir, server.domain)
         if not os.path.exists(path):
-            return None
+            return [None, None]
         with open(path, 'r') as fh:
             data = fh.read()
         return [int(x) for x in data.split()]
@@ -233,4 +233,5 @@ class Controller(object):
             server.add_details({'metadata_server_pid': pid,
                                 'metadata_server_port': port})
         except OSError:
-            pass
+            server.add_details({'metadata_server_pid': None,
+                                'metadata_server_port': None})
