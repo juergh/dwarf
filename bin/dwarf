@@ -1,5 +1,0 @@
-#!/bin/bash
-
-DIR=$(pushd $(dirname $BASH_SOURCE) > /dev/null; pwd; popd > /dev/null)
-
-sudo -u dwarf ${DIR}/dwarfcli "$@"
