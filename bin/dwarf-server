@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+# Add ../ to the Python search path if ../dwarfclient/__init__.py exists
+possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+                                                os.pardir, os.pardir))
+if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
+    sys.path.insert(0, possible_topdir)
+
+import Queue
+
+from dwarf.api import auth
+from dwarf.api import compute
+from dwarf.api import images
+
+from dwarf import worker
+
+
+def run_threads():
+    quiet = False
+
+    # Create the request queue for inter-thread communication
+    request_q = Queue.Queue()
+
+    # Create the API and worker threads
+    threads = [
+        auth.AuthApiServerThread(35357, quiet=quiet),
+        compute.ComputeApiServerThread(8774, request_q=request_q, quiet=quiet),
+        images.ImagesApiServerThread(9292, request_q=request_q, quiet=quiet),
+        worker.WorkerThread(request_q)
+    ]
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+
+if __name__ == '__main__':
+    run_threads()
