@@ -7,11 +7,12 @@ if [ -z "${user}" ] ; then
     exit 2
 fi
 
+# Add the Dwarf user and add it to the libvirtd group
 adduser --system --home /var/lib/dwarf --shell /bin/bash \
     --disabled-password --disabled-login dwarf
-
 usermod -a -G libvirtd dwarf
 
+# Create the Dwarf sudoer file
 cat<<EOF > /etc/sudoers.d/dwarf
 Cmnd_Alias NOVACMDS = /bin/chown, \
                       /sbin/iptables
