@@ -9,27 +9,18 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-import Queue
-
 from dwarf.api import auth
 from dwarf.api import compute
+from dwarf.api import database
 from dwarf.api import images
-
-from dwarf import worker
 
 
 def run_threads():
-    quiet = False
-
-    # Create the request queue for inter-thread communication
-    request_q = Queue.Queue()
-
-    # Create the API and worker threads
     threads = [
-        auth.AuthApiServerThread(35357, quiet=quiet),
-        compute.ComputeApiServerThread(8774, request_q=request_q, quiet=quiet),
-        images.ImagesApiServerThread(9292, request_q=request_q, quiet=quiet),
-        worker.WorkerThread(request_q)
+        auth.AuthApiThread(35357),
+        compute.ComputeApiThread(8774),
+        database.DatabaseApiThread(8773),
+        images.ImagesApiThread(9292),
     ]
 
     for thread in threads:

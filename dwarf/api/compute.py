@@ -1,33 +1,78 @@
 #!/usr/bin/python
 
 import bottle
+import json
+import threading
 
-from dwarf.api import base
+from dwarf import compute
+from dwarf import exception
 
 
-class ComputeApiServerThread(base.ApiServerThread):
+class ComputeApiThread(threading.Thread):
+
+    def __init__(self, port):
+        threading.Thread.__init__(self)
+        self.port = port
+        self.compute = compute.Controller()
 
     def run(self):
-        print("Starting compute server thread")
+        print("Starting compute API thread")
 
         app = bottle.Bottle()
 
-        # nova image-list
-        @app.route('/v1/<_tenant_id>/images/detail', method='GET')
-        def images_detail(_tenant_id):   # pylint: disable=W0612
-            result = self._do_request('compute', 'images')
-            return result
+        # GET: nova image-list
+        # GET: nova image-show <image_id>
+        @app.get('/v1/<_tenant_id>/images/detail')
+        @app.get('/v1/<_tenant_id>/images/<image_id>')
+        @exception.catchall
+        def http_images(_tenant_id, image_id):   # pylint: disable=W0612
+            """
+            Images actions
+            """
+            print(image_id)
+            # nova image-list
+            if image_id == 'detail':
+                return self.compute.images.list()
 
-        # nova image-show <image_id>
-        @app.route('/v1/<_tenant_id>/images/<image_id>', method='GET')
-        def images(_tenant_id, image_id):   # pylint: disable=W0612
-            result = self._do_request('compute', 'image', image_id)
-            return result
+            # nova image-show <image_id>
+            else:
+                return self.compute.images.show(image_id)
 
-        # nova list
-        @app.route('/v1/<_tenant_id>/servers/detail', method='GET')
-        def server_detail(_tenant_id):   # pylint: disable=W0612
-            result = self._do_request('compute', 'servers')
-            return result
+        # GET:  nova keypair-list
+        # POST: nova keypair-add
+        @app.get('/v1/<_tenant_id>/os-keypairs')
+        @app.post('/v1/<_tenant_id>/os-keypairs')
+        @exception.catchall
+        def http_keypairs(_tenant_id):   # pylint: disable=W0612
+            """
+            Keypairs actions
+            """
+            # nova keypair-list
+            if bottle.request.method == 'GET':
+                return self.compute.keypairs.list()
 
-        bottle.run(app, host='127.0.0.1', port=self.port, quiet=self.quiet)
+            # nova keypair-add
+            if bottle.request.method == 'POST':
+                body = json.load(bottle.request.body)
+                return self.compute.keypairs.add(body)
+
+            bottle.abort(400)
+
+        @app.delete('/v1/<_tenant_id>/os-keypairs/<keypair>')
+        @exception.catchall
+        def http_keypair(_tenant_id, keypair):   # pylint: disable=W0612
+            """
+            Keypair actions
+            """
+            return self.compute.keypairs.delete(keypair)
+
+        # GET: nova list
+        @app.get('/v1/<_tenant_id>/servers/detail')
+        @exception.catchall
+        def http_servers(_tenant_id):   # pylint: disable=W0612
+            """
+            Servers actions
+            """
+            return self.compute.servers.list()
+
+        bottle.run(app, host='127.0.0.1', port=self.port)

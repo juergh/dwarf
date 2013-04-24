@@ -2,8 +2,9 @@
 
 import bottle
 import json
+import threading
 
-from dwarf.api import base
+from dwarf import exception
 
 
 token = {
@@ -63,18 +64,24 @@ post_tokens_reply = {
 }
 
 
-class AuthApiServerThread(base.ApiServerThread):
+class AuthApiThread(threading.Thread):
+
+    def __init__(self, port):
+        threading.Thread.__init__(self)
+        self.port = port
 
     def run(self):
-        print("Starting auth server thread")
+        print("Starting auth API thread")
 
         app = bottle.Bottle()
 
-        @app.route('/v2.0/tokens', method='POST')
-        def tokens():   # pylint: disable=W0612
+        @app.post('/v2.0/tokens')
+        @exception.catchall
+        def http_tokens():   # pylint: disable=W0612
             body = json.load(bottle.request.body)
             if 'auth' in body:
                 return post_tokens_reply
-            bottle.abort(400)
 
-        bottle.run(app, host='127.0.0.1', port=self.port, quiet=self.quiet)
+            bottle.app(400)
+
+        bottle.run(app, host='127.0.0.1', port=self.port)
