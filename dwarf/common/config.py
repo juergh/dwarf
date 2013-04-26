@@ -28,6 +28,7 @@ class Config(object):
         cfg['run_dir'] = os.path.join(cfg['dwarf_dir'], 'run')
         cfg['instances_dir'] = os.path.join(cfg['dwarf_dir'], 'instances')
         cfg['instances_base_dir'] = os.path.join(cfg['instances_dir'], '_base')
+        cfg['images_dir'] = os.path.join(cfg['dwarf_dir'], 'images')
 
         cfg['dwarf_db'] = os.path.join(cfg['dwarf_dir'], 'dwarf.db')
         cfg['dwarf_log'] = os.path.join(cfg['dwarf_dir'], 'dwarf.log')

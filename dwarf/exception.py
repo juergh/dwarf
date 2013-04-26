@@ -15,6 +15,7 @@ def catchall(func):
         try:
             return func(*args, **kwargs)
         except DwarfException as e:
+            print('caught DwarfException: %s %s' % (e.code, e.message))
             abort(e.code, e.message)
         except Exception as e:
             (et, ei, tb) = sys.exc_info()
