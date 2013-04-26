@@ -48,19 +48,11 @@ class DwarfException(Exception):
     message = "An unknown exception occurred"
     code = 500
 
-    def __init__(self, message=None, **kwargs):
-        self.kwargs = kwargs
-
-        if 'code' not in self.kwargs:
-            try:
-                self.kwargs['code'] = self.code
-            except AttributeError:
-                pass
-
-        if not message:
-            message = self.message % kwargs
-
-        super(DwarfException, self).__init__(message)
+    def __init__(self, **kwargs):
+        if 'code' in kwargs:
+            self.code = kwargs['code']
+        self.message = self.message % kwargs
+        super(DwarfException, self).__init__(self.message)
 
 
 class Failure(DwarfException):
