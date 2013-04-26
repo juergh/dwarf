@@ -12,6 +12,14 @@ from dwarf.common import config
 
 CONFIG = config.CONFIG
 
+_DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
+
+DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'key']
+DB_KEYPAIRS_COLS = _DB_COLS + ['name', 'fingerprint', 'public_key']
+DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
+                             'status', 'is_public', 'location', 'checksum',
+                             'min_disk', 'min_ram', 'owner', 'protected']
+
 
 def _dump_table(name):
     """
@@ -36,8 +44,7 @@ class Table(object):
 
     def __init__(self, table, cols):
         self.table = table
-        self.cols = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
-        self.cols.extend(cols)
+        self.cols = cols
 
     def init(self):
         """
@@ -63,26 +70,27 @@ class Table(object):
         Add a new table row
         """
         print('db.%s.add()' % self.table)
-        name = kwargs.get('name')
+#        name = kwargs.get('name')
 
         con = sq3.connect(CONFIG.dwarf_db)
         with con:
             cur = con.cursor()
 
             # Check if the row exists already
-            cur.execute('SELECT * FROM %s WHERE name=? AND deleted=?' %
-                        self.table, (name, 0))
-            if cur.fetchone():
-                raise exception.Failure(reason='%s %s already exists' %
-                                        (self.table.rstrip('s'), name),
-                                        code=400)
+#            cur.execute('SELECT * FROM %s WHERE name=? AND deleted=?' %
+#                        self.table, (name, 0))
+#            if cur.fetchone():
+#                raise exception.Failure(reason='%s %s already exists' %
+#                                        (self.table.rstrip('s'), name),
+#                                        code=400)
 
             # Get the highest row ID
-            kwargs['id'] = 1
+            eid = 1
             cur.execute('SELECT max(id) FROM %s' % self.table)
             row = cur.fetchone()
             if row[0] is not None:
-                kwargs['id'] = int(row[0]) + 1
+                eid = int(row[0]) + 1
+            kwargs['id'] = eid
 
             # Fill in the missing row properties
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
@@ -101,7 +109,7 @@ class Table(object):
             # Insert the new row
             cur.execute('INSERT into %s values (%s)' % (self.table, fmt), vals)
 
-        return self.show(name=name)
+        return self.show(id=eid)
 
     def delete(self, **kwargs):
         """
@@ -174,14 +182,9 @@ class Table(object):
 class Controller(object):
 
     def __init__(self):
-        self.servers = Table('servers', ['name', 'status', 'key'])
-        self.keypairs = Table('keypairs', ['name', 'fingerprint',
-                                           'public_key'])
-        self.images = Table('images', ['name', 'disk_format',
-                                       'container_format', 'size', 'status',
-                                       'is_public', 'location', 'checksum',
-                                       'min_disk', 'min_ram', 'owner',
-                                       'protected'])
+        self.servers = Table('servers', DB_SERVERS_COLS)
+        self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS)
+        self.images = Table('images', DB_IMAGES_COLS)
 
     def init(self):
         if os.path.exists(CONFIG.dwarf_db):

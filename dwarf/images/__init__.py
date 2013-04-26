@@ -6,6 +6,7 @@ from hashlib import md5
 import os
 
 from dwarf import db
+from dwarf import exception
 from dwarf.common import config
 
 CONFIG = config.CONFIG
@@ -27,7 +28,7 @@ class Controller(object):
         print('images.show(image_id=%s)' % image_id)
         return self.db.images.show(id=image_id)
 
-    def add(self, fh):
+    def add(self, fh, md):
         print('images.add()')
 
         # Read the image data, store it in a temp location and calculate the
@@ -47,12 +48,13 @@ class Controller(object):
         image_file = '%s/%s' % (CONFIG.images_dir, md5sum)
         os.rename(tmp_file, image_file)
 
+        # Add additiional image metadata
+        md['checksum'] = md5sum
+        md['location'] = 'file://%s' % image_file
+        md['status'] = 'active'
+
         # Update the database
-        image = self.db.images.add(name=md5sum, size=1,
-                                   status='active', is_public=1,
-                                   location='file://%s' % image_file,
-                                   checksum=md5sum, min_disk=0, min_ram=0,
-                                   protected=0)
+        image = self.db.images.add(**md)
 
         # TODO: fix image properties
         image['properties'] = {}

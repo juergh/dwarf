@@ -60,8 +60,15 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
+            # Parse the HTTP header
+            image_md = {}
+            for key in bottle.request.headers.keys():
+                if key.lower().startswith('x-image-meta-'):
+                    k = key.lower()[13:].replace('-', '_')
+                    image_md[k] = bottle.request.headers[key]
+
             # glance add
-            fh = bottle.request.body
-            return {'image': self.images.add(fh)}
+            image_fh = bottle.request.body
+            return {'image': self.images.add(image_fh, image_md)}
 
         bottle.run(app, host='127.0.0.1', port=self.port)
