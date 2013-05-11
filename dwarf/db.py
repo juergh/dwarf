@@ -33,7 +33,10 @@ def _dump_table(name):
     return rows
 
 
-def get(keys, **kwargs):
+def get_from_dict(keys, **kwargs):
+    """
+    Find key in dict and return (key, val) pair
+    """
     for key in keys:
         val = kwargs.get(key, None)
         if val:
@@ -120,7 +123,7 @@ class Table(object):
         Delete a table row
         """
         print('db.%s.delete()' % self.table)
-        (key, val) = get(['id', 'name'], **kwargs)
+        (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
         con = sq3.connect(CONFIG.dwarf_db)
         with con:
@@ -164,7 +167,7 @@ class Table(object):
         Get a single table row, converted to a dict
         """
         print('db.%s.show()' % self.table)
-        (key, val) = get(['id', 'name'], **kwargs)
+        (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
         con = sq3.connect(CONFIG.dwarf_db)
         with con:
