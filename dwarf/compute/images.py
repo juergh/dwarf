@@ -15,11 +15,18 @@ class Controller(object):
         List all images
         """
         print('compute.images.list()')
-        return []
+        images = self.db.images.list()
+        return images
 
-    def show(self, _image_id):
+    def show(self, image_id):
         """
         Show image details
         """
         print('compute.images.show()')
-        return {'links': []}
+        image = self.db.images.show(id=image_id)
+
+        for key in ('deleted', 'deleted_at'):
+            del image[key]
+        image['links'] = []
+
+        return image
