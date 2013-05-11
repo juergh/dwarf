@@ -10,7 +10,7 @@ from dwarf import exception
 def _to_string(objs):
     result = []
     for obj in objs:
-        result.append(' '.join(str(o) for o in obj))
+        result.append(' | '.join(str(o) for o in obj))
     return '\n'.join(result) + '\n'
 
 
