@@ -32,11 +32,11 @@ class ComputeApiThread(threading.Thread):
             print(image_id)
             # nova image-list
             if image_id == 'detail':
-                return self.compute.images.list()
+                return {'images' : self.compute.images.list()}
 
             # nova image-show <image_id>
             else:
-                return self.compute.images.show(image_id)
+                return {'image': self.compute.images.show(image_id)}
 
         # GET:  nova keypair-list
         # POST: nova keypair-add
@@ -49,22 +49,22 @@ class ComputeApiThread(threading.Thread):
             """
             # nova keypair-list
             if bottle.request.method == 'GET':
-                return self.compute.keypairs.list()
+                return {'keypairs': self.compute.keypairs.list()}
 
             # nova keypair-add
             if bottle.request.method == 'POST':
                 body = json.load(bottle.request.body)
-                return self.compute.keypairs.add(body)
+                return {'keypair': self.compute.keypairs.add(body['keypair'])}
 
             bottle.abort(400)
 
         @app.delete('/v1/<_tenant_id>/os-keypairs/<keypair>')
         @exception.catchall
-        def http_keypair(_tenant_id, keypair):   # pylint: disable=W0612
+        def http_keypair(_tenant_id, keypair_name):   # pylint: disable=W0612
             """
             Keypair actions
             """
-            return self.compute.keypairs.delete(keypair)
+            self.compute.keypairs.delete(keypair_name)
 
         # GET: nova list
         @app.get('/v1/<_tenant_id>/servers/detail')
@@ -73,6 +73,6 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
-            return self.compute.servers.list()
+            return {'servers': self.compute.servers.list()}
 
         bottle.run(app, host='127.0.0.1', port=self.port)

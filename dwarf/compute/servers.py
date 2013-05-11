@@ -12,9 +12,9 @@ class Controller(object):
 #        self.virt = virt.Controller(args)
 #        self.metadata = metadata.Controller(args)
 
-    def list(self, *_args, **_kwargs):
+    def list(self):
         """
         List all servers
         """
         print('compute.servers.list()')
-        return {'servers': self.db.servers.list()}
+        return self.db.servers.list()

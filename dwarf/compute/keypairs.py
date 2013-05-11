@@ -14,7 +14,7 @@ class Controller(object):
     def __init__(self):
         self.db = db.Controller()
 
-    def list(self, *_args, **_kwargs):
+    def list(self):
         """
         List all keypairs
         """
@@ -25,14 +25,13 @@ class Controller(object):
         for keypair in keypairs:
             del keypair['id']
 
-        return {'keypairs': keypairs}
+        return keypairs
 
-    def add(self, *args, **_kwargs):
+    def add(self, keypair):
         """
         Add a keypair
         """
         print('compute.keypairs.add()')
-        keypair = args[0]['keypair']
 
         # Generate a new keypair if the request doesn't contain a public key
         if 'public_key' not in keypair:
@@ -53,7 +52,7 @@ class Controller(object):
         # TODO: fix user_id
         keypair['user_id'] = 1000
 
-        return {'keypair': keypair}
+        return keypair
 
     def delete(self, *args, **_kwargs):
         """

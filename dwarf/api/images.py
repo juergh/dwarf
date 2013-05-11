@@ -36,6 +36,11 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
+            print(">>>>>>>>>>>>>>>>")
+            for k in bottle.request.headers.keys():
+                print('%s = %s' % (k, bottle.request.headers[k]))
+            print("<<<<<<<<<<<<<<<<")
+
             # glance index
             if image_id == 'detail' and bottle.request.method == 'GET':
                 return {'images': self.images.list()}
@@ -60,6 +65,11 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
+            print(">>>>>>>>>>>>>>>>")
+            for k in bottle.request.headers.keys():
+                print('%s = %s' % (k, bottle.request.headers[k]))
+            print("<<<<<<<<<<<<<<<<")
+
             # Parse the HTTP header
             image_md = {}
             for key in bottle.request.headers.keys():

@@ -10,17 +10,16 @@ class Controller(object):
     def __init__(self):
         self.db = db.Controller()
 
-    def list(self, *_args, **_kwargs):
+    def list(self):
         """
         List all images
         """
         print('compute.images.list()')
-        return {'images': []}
+        return []
 
-    def show(self, *_args, **_kwargs):
+    def show(self, image_id):
         """
         Show image details
         """
         print('compute.images.show()')
-        #image_id = args[0]
-        return {'image': {'links': []}}
+        return {'links': []}
