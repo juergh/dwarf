@@ -46,6 +46,12 @@ class ComputeApiThread(threading.Thread):
             """
             Keypairs actions
             """
+            print(">>>>>>>>>>>>>>>>")
+            for k in bottle.request.headers.keys():
+                print('%s = %s' % (k, bottle.request.headers[k]))
+#            print('body = %s' % json.load(bottle.request.body))
+            print("<<<<<<<<<<<<<<<<")
+
             # nova keypair-list
             if bottle.request.method == 'GET':
                 return {'keypairs': self.compute.keypairs.list()}
@@ -57,7 +63,7 @@ class ComputeApiThread(threading.Thread):
 
             bottle.abort(400)
 
-        @app.delete('/v1/<_tenant_id>/os-keypairs/<keypair>')
+        @app.delete('/v1/<_tenant_id>/os-keypairs/<keypair_name>')
         @exception.catchall
         def http_keypair(_tenant_id, keypair_name):   # pylint: disable=W0612
             """
