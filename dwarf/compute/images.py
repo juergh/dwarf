@@ -17,7 +17,7 @@ class Controller(object):
         print('compute.images.list()')
         return []
 
-    def show(self, image_id):
+    def show(self, _image_id):
         """
         Show image details
         """

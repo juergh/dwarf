@@ -9,7 +9,6 @@ from dwarf import exception
 
 
 class ComputeApiThread(threading.Thread):
-
     def __init__(self, port):
         threading.Thread.__init__(self)
         self.port = port
@@ -32,7 +31,7 @@ class ComputeApiThread(threading.Thread):
             print(image_id)
             # nova image-list
             if image_id == 'detail':
-                return {'images' : self.compute.images.list()}
+                return {'images': self.compute.images.list()}
 
             # nova image-show <image_id>
             else:
