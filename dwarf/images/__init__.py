@@ -26,7 +26,9 @@ class Controller(object):
 
     def show(self, image_id):
         print('images.show(image_id=%s)' % image_id)
-        return self.db.images.show(id=image_id)
+        image = self.db.images.show(id=image_id)
+        del image['deleted_at']
+        return image
 
     def add(self, fh, md):
         print('images.add()')
@@ -68,7 +70,6 @@ class Controller(object):
         image = self.db.images.show(id=image_id)
 
         # Delete the image in the database
-        # TODO: set status='deleted'
         self.db.images.delete(id=image_id)
 
         # Delete the image file
