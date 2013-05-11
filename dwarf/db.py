@@ -42,9 +42,10 @@ def get(keys, **kwargs):
 
 class Table(object):
 
-    def __init__(self, table, cols):
+    def __init__(self, table, cols, unique=None):
         self.table = table
         self.cols = cols
+        self.unique = unique
 
     def init(self):
         """
@@ -70,19 +71,22 @@ class Table(object):
         Add a new table row
         """
         print('db.%s.add()' % self.table)
-#        name = kwargs.get('name')
 
         con = sq3.connect(CONFIG.dwarf_db)
         with con:
             cur = con.cursor()
 
             # Check if the row exists already
-#            cur.execute('SELECT * FROM %s WHERE name=? AND deleted=?' %
-#                        self.table, (name, 0))
-#            if cur.fetchone():
-#                raise exception.Failure(reason='%s %s already exists' %
-#                                        (self.table.rstrip('s'), name),
-#                                        code=400)
+            if self.unique:
+                key = self.unique
+                val = kwargs.get(key, None)
+                if val:
+                    cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
+                                (self.table, key), (val, 0))
+                    if cur.fetchone():
+                        raise exception.Failure(reason='%s %s already exists' %
+                                                (self.table.rstrip('s'), val),
+                                                code=400)
 
             # Get the highest row ID
             eid = 1
@@ -183,7 +187,7 @@ class Controller(object):
 
     def __init__(self):
         self.servers = Table('servers', DB_SERVERS_COLS)
-        self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS)
+        self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS, unique='name')
         self.images = Table('images', DB_IMAGES_COLS)
 
     def init(self):

@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from base64 import b64encode
+from hashlib import md5
 from M2Crypto import RSA
 
 from dwarf import db
@@ -18,7 +19,13 @@ class Controller(object):
         List all keypairs
         """
         print('compute.keypairs.list()')
-        return {'keypairs': self.db.keypairs.list()}
+        keypairs = self.db.keypairs.list()
+
+        # Remove the IDs from the keypairs to not confuse the Nova CLI
+        for keypair in keypairs:
+            del keypair['id']
+
+        return {'keypairs': keypairs}
 
     def add(self, *args, **_kwargs):
         """
@@ -33,10 +40,14 @@ class Controller(object):
             keypair['public_key'] = 'ssh-rsa %s' % b64encode(key.pub()[1])
             keypair['private_key'] = key.as_pem(cipher=None)
 
+        # Calculate the key fingerprint
+        fp_plain = md5(b64encode(key.pub()[1])).hexdigest()
+        fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
+
         # Add the keypair to the database
         # TODO: calculate fingerprint
         self.db.keypairs.add(name=keypair['name'],
-                             fingerprint='',
+                             fingerprint=fp,
                              public_key=keypair['public_key'])
 
         # TODO: fix user_id
