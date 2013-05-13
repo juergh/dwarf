@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from hashlib import md5
 from M2Crypto import RSA
 
@@ -40,7 +40,7 @@ class Controller(object):
             keypair['private_key'] = key.as_pem(cipher=None)
 
         # Calculate the key fingerprint
-        fp_plain = md5(b64encode(keypair['public_key'][8:])).hexdigest()
+        fp_plain = md5(b64decode(keypair['public_key'].split()[1])).hexdigest()
         fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
 
         # Add the keypair to the database
