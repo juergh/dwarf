@@ -19,14 +19,14 @@ class ComputeApiThread(threading.Thread):
         self.port = port
         self.compute = compute.Controller()
 
-    def run(self):
+    def run(self):   # pylint: disable=R0912
         print("Starting compute API thread")
 
         app = bottle.Bottle()
 
         # GET: nova image-list
         # GET: nova image-show <image_id>
-        @app.get('/v1/<_tenant_id>/images/detail')
+#        @app.get('/v1/<_tenant_id>/images/detail')
         @app.get('/v1/<_tenant_id>/images/<image_id>')
         @exception.catchall
         def http_images(_tenant_id, image_id):   # pylint: disable=W0612
@@ -79,15 +79,51 @@ class ComputeApiThread(threading.Thread):
             self.compute.keypairs.delete(keypair_name)
 
         # GET: nova list
-        @app.get('/v1/<_tenant_id>/servers/detail')
+        # GET: nova show <server_id>
+#        @app.get('/v1/<_tenant_id>/servers/detail')
+        @app.get('/v1/<_tenant_id>/servers/<server_id>')
         @exception.catchall
-        def http_servers(_tenant_id):   # pylint: disable=W0612
+        def http_servers(_tenant_id, server_id):   # pylint: disable=W0612
             """
             Servers actions
             """
+            print(server_id)
             if CONF.debug:
                 utils.show_request(bottle.request)
 
-            return {'servers': self.compute.servers.list()}
+            # nova list
+            if server_id == 'detail':
+                return {'servers': self.compute.servers.list()}
+
+            # nova show <server_id>
+            else:
+                return {'server': self.compute.servers.show(server_id)}
+
+        # GET: nova flavor list
+        # GET: nova flavor show <flavor_id>
+#        @app.get('/v1/<_tenant_id>/flavors/detail')
+        @app.get('/v1/<_tenant_id>/flavors/<flavor_id>')
+        @exception.catchall
+        def http_flavors(_tenant_id, flavor_id):   # pylint: disable=W0612
+            """
+            Flavors actions
+            """
+            flavor = {
+                'links': [],
+                'id': flavor_id,
+                'name': 'm1.default',
+                'disk': 0,
+                'ram': 512,
+                'vcpus': 1
+            }
+
+            # nova flavor-list
+            if flavor_id == 'detail':
+                flavor['id'] = 1
+                return {'flavors': [flavor]}
+
+            # nova flavor-show <flavor_id>
+            else:
+                return {'flavor': flavor}
 
         bottle.run(app, host='127.0.0.1', port=self.port)
