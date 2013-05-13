@@ -6,6 +6,11 @@ import threading
 from dwarf import exception
 import dwarf.images as images
 
+from dwarf.common import config
+from dwarf.common import utils
+
+CONF = config.CONFIG
+
 
 def add_header(metadata):
     for key in metadata:
@@ -36,10 +41,8 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
-            print(">>>>>>>>>>>>>>>>")
-            for k in bottle.request.headers.keys():
-                print('%s = %s' % (k, bottle.request.headers[k]))
-            print("<<<<<<<<<<<<<<<<")
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
             # glance index
             if image_id == 'detail' and bottle.request.method == 'GET':
@@ -65,10 +68,8 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
-            print(">>>>>>>>>>>>>>>>")
-            for k in bottle.request.headers.keys():
-                print('%s = %s' % (k, bottle.request.headers[k]))
-            print("<<<<<<<<<<<<<<<<")
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
             # Parse the HTTP header
             image_md = {}

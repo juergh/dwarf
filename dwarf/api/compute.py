@@ -7,6 +7,11 @@ import threading
 from dwarf import compute
 from dwarf import exception
 
+from dwarf.common import config
+from dwarf.common import utils
+
+CONF = config.CONFIG
+
 
 class ComputeApiThread(threading.Thread):
     def __init__(self, port):
@@ -28,7 +33,9 @@ class ComputeApiThread(threading.Thread):
             """
             Images actions
             """
-            print(image_id)
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
             # nova image-list
             if image_id == 'detail':
                 return {'images': self.compute.images.list()}
@@ -46,11 +53,8 @@ class ComputeApiThread(threading.Thread):
             """
             Keypairs actions
             """
-            print(">>>>>>>>>>>>>>>>")
-            for k in bottle.request.headers.keys():
-                print('%s = %s' % (k, bottle.request.headers[k]))
-#            print('body = %s' % json.load(bottle.request.body))
-            print("<<<<<<<<<<<<<<<<")
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
             # nova keypair-list
             if bottle.request.method == 'GET':
@@ -69,6 +73,9 @@ class ComputeApiThread(threading.Thread):
             """
             Keypair actions
             """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
             self.compute.keypairs.delete(keypair_name)
 
         # GET: nova list
@@ -78,6 +85,9 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
             return {'servers': self.compute.servers.list()}
 
         bottle.run(app, host='127.0.0.1', port=self.port)

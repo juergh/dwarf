@@ -10,10 +10,10 @@ class Config(object):
 
     def __init__(self):
         # Get the config data from file
-        cfile = '/etc/dwarf/dwarf.cfg'
+        cfile = '/etc/default/dwarf'
         if not os.path.exists(cfile):
             cfile = os.path.join(os.path.dirname(__file__), '../../etc',
-                                 'dwarf.cfg')
+                                 'dwarf.conf')
 
         with open(cfile, 'r') as fh:
             cfg = yaml.load(fh)

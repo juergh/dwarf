@@ -6,6 +6,11 @@ import threading
 
 from dwarf import exception
 
+from dwarf.common import config
+from dwarf.common import utils
+
+CONF = config.CONFIG
+
 
 token = {
     "id": "0011223344556677",
@@ -78,6 +83,12 @@ class AuthApiThread(threading.Thread):
         @app.post('/v2.0/tokens')
         @exception.catchall
         def http_tokens():   # pylint: disable=W0612
+            """
+            Tokens actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
             body = json.load(bottle.request.body)
             if 'auth' in body:
                 return post_tokens_reply
