@@ -50,7 +50,7 @@ class Controller(object):
         image_file = '%s/%s' % (CONFIG.images_dir, md5sum)
         os.rename(tmp_file, image_file)
 
-        # Add additiional image metadata
+        # Add additional image metadata
         md['checksum'] = md5sum
         md['location'] = 'file://%s' % image_file
         md['status'] = 'active'

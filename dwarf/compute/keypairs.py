@@ -7,6 +7,9 @@ from hashlib import md5
 from M2Crypto import RSA
 
 from dwarf import db
+from dwarf.common import utils
+
+KEYPAIRS_INFO = ('fingerprint', 'name', 'public_key')
 
 
 class Controller(object):
@@ -19,13 +22,9 @@ class Controller(object):
         List all keypairs
         """
         print('compute.keypairs.list()')
-        keypairs = self.db.keypairs.list()
 
-        # Remove the IDs from the keypairs to not confuse the Nova CLI
-        for keypair in keypairs:
-            del keypair['id']
-
-        return keypairs
+        _keypairs = self.db.keypairs.list()
+        return utils.sanitize(_keypairs, KEYPAIRS_INFO)
 
     def add(self, keypair):
         """
@@ -34,30 +33,32 @@ class Controller(object):
         print('compute.keypairs.add()')
 
         # Generate a new keypair if the request doesn't contain a public key
-        if 'public_key' not in keypair:
+        if 'public_key' in keypair:
+            public_key = keypair['public_key']
+            private_key = None
+        else:
             key = RSA.gen_key(1024, 65537, callback=lambda: None)
-            keypair['public_key'] = 'ssh-rsa %s' % b64encode(key.pub()[1])
-            keypair['private_key'] = key.as_pem(cipher=None)
+            public_key = 'ssh-rsa %s' % b64encode(key.pub()[1])
+            private_key = key.as_pem(cipher=None)
 
         # Calculate the key fingerprint
-        fp_plain = md5(b64decode(keypair['public_key'].split()[1])).hexdigest()
+        fp_plain = md5(b64decode(public_key.split()[1])).hexdigest()
         fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
 
         # Add the keypair to the database
-        # TODO: calculate fingerprint
-        self.db.keypairs.add(name=keypair['name'],
-                             fingerprint=fp,
-                             public_key=keypair['public_key'])
+        _keypair = self.db.keypairs.add(name=keypair['name'], fingerprint=fp,
+                                        public_key=public_key)
 
-        # TODO: fix user_id
-        keypair['user_id'] = 1000
+        if private_key is None:
+            return utils.sanitize(_keypair, KEYPAIRS_INFO)
 
-        return keypair
+        _keypair['private_key'] = private_key
+        return utils.sanitize(_keypair, KEYPAIRS_INFO + ('private_key', ))
 
-    def delete(self, *args, **_kwargs):
+    def delete(self, keypair_name):
         """
         Delete a keypair
         """
         print('compute.keypairs.delete()')
-        name = args[0]
-        self.db.keypairs.delete(name=name)
+
+        self.db.keypairs.delete(name=keypair_name)

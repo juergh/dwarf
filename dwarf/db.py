@@ -14,11 +14,13 @@ CONFIG = config.CONFIG
 
 _DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
 
-DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'key']
+DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'image_id', 'flavor_id',
+                              'key_name']
 DB_KEYPAIRS_COLS = _DB_COLS + ['name', 'fingerprint', 'public_key']
 DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
                              'status', 'is_public', 'location', 'checksum',
                              'min_disk', 'min_ram', 'owner', 'protected']
+DB_FLAVORS_COLS = _DB_COLS + ['name', 'disk', 'ram', 'vcpus']
 
 
 def _dump_table(name):
@@ -92,12 +94,12 @@ class Table(object):
                                                 code=400)
 
             # Get the highest row ID
-            eid = 1
+            rid = 1
             cur.execute('SELECT max(id) FROM %s' % self.table)
             row = cur.fetchone()
             if row[0] is not None:
-                eid = int(row[0]) + 1
-            kwargs['id'] = eid
+                rid = int(row[0]) + 1
+            kwargs['id'] = rid
 
             # Fill in the missing row properties
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
@@ -116,7 +118,7 @@ class Table(object):
             # Insert the new row
             cur.execute('INSERT into %s values (%s)' % (self.table, fmt), vals)
 
-        return self.show(id=eid)
+        return self.show(id=rid)
 
     def delete(self, **kwargs):
         """
@@ -189,9 +191,10 @@ class Table(object):
 class Controller(object):
 
     def __init__(self):
-        self.servers = Table('servers', DB_SERVERS_COLS)
+        self.servers = Table('servers', DB_SERVERS_COLS, unique='name')
         self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS, unique='name')
         self.images = Table('images', DB_IMAGES_COLS)
+        self.flavors = Table('flavors', DB_FLAVORS_COLS)
 
     def init(self):
         if os.path.exists(CONFIG.dwarf_db):
@@ -200,6 +203,9 @@ class Controller(object):
         self.servers.init()
         self.keypairs.init()
         self.images.init()
+        self.flavors.init()
+        # Hard-code a default flavor
+        self.flavors.add(name='m1.default', disk='0', ram='512', vcpus='1')
 
     def delete(self):
         if not os.path.exists(CONFIG.dwarf_db):

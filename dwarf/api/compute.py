@@ -87,7 +87,6 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
-            print(server_id)
             if CONF.debug:
                 utils.show_request(bottle.request)
 
@@ -99,6 +98,20 @@ class ComputeApiThread(threading.Thread):
             else:
                 return {'server': self.compute.servers.show(server_id)}
 
+        # POST: nova boot
+        @app.post('/v1/<_tenant_id>/servers')
+        @exception.catchall
+        def http_servers2(_tenant_id):   # pylint: disable=W0612
+            """
+            Servers actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
+            # nova boot
+            body = json.load(bottle.request.body)
+            return {'server': self.compute.servers.boot(body['server'])}
+
         # GET: nova flavor list
         # GET: nova flavor show <flavor_id>
 #        @app.get('/v1/<_tenant_id>/flavors/detail')
@@ -108,22 +121,15 @@ class ComputeApiThread(threading.Thread):
             """
             Flavors actions
             """
-            flavor = {
-                'links': [],
-                'id': flavor_id,
-                'name': 'm1.default',
-                'disk': 0,
-                'ram': 512,
-                'vcpus': 1
-            }
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
             # nova flavor-list
             if flavor_id == 'detail':
-                flavor['id'] = 1
-                return {'flavors': [flavor]}
+                return {'flavors': self.compute.flavors.list()}
 
             # nova flavor-show <flavor_id>
             else:
-                return {'flavor': flavor}
+                return {'flavor': self.compute.flavors.show(flavor_id)}
 
         bottle.run(app, host='127.0.0.1', port=self.port)

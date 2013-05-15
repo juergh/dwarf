@@ -11,8 +11,9 @@ case "$1" in
 	curl -X GET ${URL}
 	echo
 	curl -X GET ${URL}/servers
-	curl -X GET ${URL}/keypairs
 	curl -X GET ${URL}/images
+	curl -X GET ${URL}/keypairs
+	curl -X GET ${URL}/flavors
 	;;
     *)
 	echo "Unknown command '$1'"
