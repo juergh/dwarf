@@ -13,11 +13,16 @@ CONF = config.CONFIG
 
 
 def add_header(metadata):
-    for key in metadata:
-        # Hack: We can't use the default add_header() method because it
-        # replaces '_' with '-' in the header name
-        func = bottle.response._headers.setdefault   # pylint: disable=W0212
-        func('x-image-meta-%s' % key, []).append(str(metadata[key]))
+    # Hack: We can't use bottle's default add_header() method because it
+    # replaces '_' with '-' in the header name
+    func = bottle.response._headers.setdefault   # pylint: disable=W0212
+
+    for (key, val) in metadata.iteritems():
+        if key == 'properties':
+            for (k, v) in val.iteritems():
+                func('x-image-meta-property-%s' % k, []).append(str(v))
+        else:
+            func('x-image-meta-%s' % key, []).append(str(val))
 
 
 class ImagesApiThread(threading.Thread):
@@ -50,8 +55,8 @@ class ImagesApiThread(threading.Thread):
 
             # glance show <image_id>
             if image_id != 'detail' and bottle.request.method == 'HEAD':
-                image_md = self.images.show(image_id)
-                add_header(image_md)
+                image = self.images.show(image_id)
+                add_header(image)
                 return
 
             # glance delete <image_id>
