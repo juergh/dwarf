@@ -37,6 +37,7 @@ class Controller(object):
         print('images.show(image_id=%s)' % image_id)
 
         _image = self.db.images.show(id=image_id)
+        print(_image)
         return utils.sanitize(_image, IMAGES_INFO)
 
     def add(self, image_fh, image_md):

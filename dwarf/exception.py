@@ -3,7 +3,7 @@
 import sys
 
 from functools import wraps
-from bottle import abort
+from bottle import response, abort
 
 
 def catchall(func):
@@ -16,6 +16,7 @@ def catchall(func):
             return func(*args, **kwargs)
         except DwarfException as e:
             print('caught DwarfException: %s %s' % (e.code, e.message))
+            response.content_type = 'application/json; charset=UTF-8'
             abort(e.code, e.message)
         except Exception as e:
             (et, ei, tb) = sys.exc_info()
@@ -69,3 +70,7 @@ class ServerDeleteFailure(DwarfException):
 
 class MetadataStartFailure(DwarfException):
     message = 'Failed to start metadata server" %(reason)s'
+
+
+class CommandExecutionFailure(DwarfException):
+    message = 'Failed to run command" %(reason)s'

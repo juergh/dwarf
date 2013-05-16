@@ -6,8 +6,8 @@ from dwarf import db
 
 from dwarf.common import utils
 
-IMAGES_INFO = ('created_at', 'id', 'links', 'name', 'size', 'status',
-               'is_public', 'updated_at')
+IMAGES_INFO = ('created_at', 'id', 'is_public', 'links', 'name', 'size',
+               'status', 'updated_at')
 
 
 class Controller(object):
@@ -28,6 +28,6 @@ class Controller(object):
         """
         Show image details
         """
-        print('compute.images.show(iamge_id=%s)' % image_id)
+        print('compute.images.show(image_id=%s)' % image_id)
         _image = self.db.images.show(id=image_id)
         return utils.sanitize(_image, IMAGES_INFO)
