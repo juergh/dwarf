@@ -82,6 +82,7 @@ class ComputeApiThread(threading.Thread):
         # GET: nova show <server_id>
 #        @app.get('/v1/<_tenant_id>/servers/detail')
         @app.get('/v1/<_tenant_id>/servers/<server_id>')
+        @app.delete('/v1/<_tenant_id>/servers/<server_id>')
         @exception.catchall
         def http_servers(_tenant_id, server_id):   # pylint: disable=W0612
             """
@@ -89,6 +90,11 @@ class ComputeApiThread(threading.Thread):
             """
             if CONF.debug:
                 utils.show_request(bottle.request)
+
+            # nova delete <server_id>
+            if bottle.request.method == 'DELETE':
+                self.compute.servers.delete(server_id)
+                return
 
             # nova list
             if server_id == 'detail':

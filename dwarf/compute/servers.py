@@ -71,3 +71,11 @@ class Controller(object):
                                       key_name=server.get('key_name'))
 
         return utils.sanitize(self._expand(_server), SERVERS_INFO)
+
+    def delete(self, server_id):
+        """
+        Delete a server
+        """
+        print('compute.servers.delete(server_id=%s)' % server_id)
+
+        self.db.servers.delete(id=server_id)
