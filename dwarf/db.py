@@ -10,7 +10,7 @@ from dwarf import exception
 
 from dwarf.common import config
 
-CONFIG = config.CONFIG
+CONF = config.CONFIG
 
 _DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
 
@@ -27,7 +27,7 @@ def _dump_table(name):
     """
     Return all table rows
     """
-    con = sq3.connect(CONFIG.dwarf_db)
+    con = sq3.connect(CONF.dwarf_db)
     with con:
         cur = con.cursor()
         cur.execute('SELECT * FROM %s' % name)
@@ -60,7 +60,7 @@ class Table(object):
         # 'id TEXT, name TEXT, status TEXT, key TEXT'
         fmt = ','.join(['%s TEXT' % c for c in self.cols])
 
-        con = sq3.connect(CONFIG.dwarf_db)
+        con = sq3.connect(CONF.dwarf_db)
         with con:
             cur = con.cursor()
             cur.execute('CREATE TABLE %s (%s)' % (self.table, fmt))
@@ -77,7 +77,7 @@ class Table(object):
         """
         print('db.%s.add()' % self.table)
 
-        con = sq3.connect(CONFIG.dwarf_db)
+        con = sq3.connect(CONF.dwarf_db)
         with con:
             cur = con.cursor()
 
@@ -127,7 +127,7 @@ class Table(object):
         print('db.%s.delete()' % self.table)
         (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
-        con = sq3.connect(CONFIG.dwarf_db)
+        con = sq3.connect(CONF.dwarf_db)
         with con:
             cur = con.cursor()
 
@@ -150,7 +150,7 @@ class Table(object):
         """
         print('db.%s.list()' % self.table)
 
-        con = sq3.connect(CONFIG.dwarf_db)
+        con = sq3.connect(CONF.dwarf_db)
         with con:
             con.row_factory = sq3.Row
             cur = con.cursor()
@@ -171,7 +171,7 @@ class Table(object):
         print('db.%s.show()' % self.table)
         (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
-        con = sq3.connect(CONFIG.dwarf_db)
+        con = sq3.connect(CONF.dwarf_db)
         with con:
             con.row_factory = sq3.Row
             cur = con.cursor()
@@ -197,7 +197,7 @@ class Controller(object):
         self.flavors = Table('flavors', DB_FLAVORS_COLS)
 
     def init(self):
-        if os.path.exists(CONFIG.dwarf_db):
+        if os.path.exists(CONF.dwarf_db):
             print('Database exists already')
             return
         self.servers.init()
@@ -208,10 +208,10 @@ class Controller(object):
         self.flavors.add(name='m1.default', disk='0', ram='512', vcpus='1')
 
     def delete(self):
-        if not os.path.exists(CONFIG.dwarf_db):
+        if not os.path.exists(CONF.dwarf_db):
             print('Database does not exist')
             return
-        os.remove(CONFIG.dwarf_db)
+        os.remove(CONF.dwarf_db)
 
     def dump(self, table=None):
         if not table:

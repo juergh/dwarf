@@ -13,6 +13,8 @@ def sanitize(obj, keys):
                 fields[k] = obj[k]
             elif k == 'links':
                 fields[k] = []
+            elif k == 'properties':
+                fields[k] = {}
             else:
                 fields[k] = None
         return fields
