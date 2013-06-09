@@ -2,18 +2,19 @@
 
 from __future__ import print_function
 
+import logging
 import os
 
 from dwarf import db
 
+from dwarf.common import config
+from dwarf.common import utils
 from dwarf.compute import flavors
 from dwarf.compute import images
 from dwarf.compute import virt
 
-from dwarf.common import config
-from dwarf.common import utils
-
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
 
 SERVERS_INFO = ('created_at', 'flavor', 'id', 'image', 'links', 'name',
                 'status', 'updated_at')
@@ -32,13 +33,15 @@ class Controller(object):
         """
         Expand server details
         """
-        _image = self.images.show(server['image_id'])
-        del server['image_id']
-        server['image'] = _image
+        if 'image_id' in server:
+            _image = self.images.show(server['image_id'])
+            del server['image_id']
+            server['image'] = _image
 
-        _flavor = self.flavors.show(server['flavor_id'])
-        del server['flavor_id']
-        server['flavor'] = _flavor
+        if 'flavor_id' in server:
+            _flavor = self.flavors.show(server['flavor_id'])
+            del server['flavor_id']
+            server['flavor'] = _flavor
 
         return server
 
@@ -46,7 +49,7 @@ class Controller(object):
         """
         List all servers
         """
-        print('compute.servers.list()')
+        LOG.info('list()')
 
         _servers = []
         for s in self.db.servers.list():
@@ -57,7 +60,7 @@ class Controller(object):
         """
         Show server details
         """
-        print('compute.servers.show(server_id=%s)' % server_id)
+        LOG.info('show(server_id=%s)', server_id)
 
         _server = self.db.servers.show(id=server_id)
         return utils.sanitize(self._expand(_server), SERVERS_INFO)
@@ -66,7 +69,7 @@ class Controller(object):
         """
         Boot a new server
         """
-        print('compute.servers.boot()')
+        LOG.info('boot(server=%s)', server)
 
         image_id = server['imageRef']
         flavor_id = server['flavorRef']
@@ -77,7 +80,7 @@ class Controller(object):
                                       key_name=server.get('key_name'))
         _server = self._expand(_server)
 
-        server_domain = 'instance-d%07x' % int(_server['id'])
+        _server['domain'] = 'instance-d%07x' % int(_server['id'])
 
         # Create the base images
         # Need to query the database to get the glance image file location
@@ -87,9 +90,12 @@ class Controller(object):
                                                image_file, image_id)
 
         # Create the server base directory and the disk images
-        server_base_dir = '%s/%s' % (CONF.instances_dir, server_domain)
-        os.makedirs(server_base_dir)
-        utils.create_local_images(server_base_dir, base_images)
+        server['basepath'] = '%s/%s' % (CONF.instances_dir, server['domain'])
+        os.makedirs(server['basepath'])
+        utils.create_local_images(server['basepath'], base_images)
+
+        # Boot the server
+        self.virt.boot_server(server)
 
         return utils.sanitize(_server, SERVERS_INFO)
 
@@ -97,6 +103,6 @@ class Controller(object):
         """
         Delete a server
         """
-        print('compute.servers.delete(server_id=%s)' % server_id)
+        LOG.info('delete(server_id=%s)', server_id)
 
         self.db.servers.delete(id=server_id)

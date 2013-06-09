@@ -2,15 +2,23 @@
 
 import bottle
 import json
+import logging
 import threading
+
+from wsgiref.simple_server import WSGIRequestHandler
 
 from dwarf import compute
 from dwarf import exception
-
 from dwarf.common import config
 from dwarf.common import utils
 
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
+
+
+class ComputeApiRequestHandler(WSGIRequestHandler):
+    def log_message(self, fmt, *args):
+        LOG.info(fmt, *args)
 
 
 class ComputeApiThread(threading.Thread):
@@ -20,7 +28,7 @@ class ComputeApiThread(threading.Thread):
         self.compute = compute.Controller()
 
     def run(self):   # pylint: disable=R0912
-        print("Starting compute API thread")
+        LOG.info('Starting compute API thread')
 
         app = bottle.Bottle()
 
@@ -138,4 +146,5 @@ class ComputeApiThread(threading.Thread):
             else:
                 return {'flavor': self.compute.flavors.show(flavor_id)}
 
-        bottle.run(app, host='127.0.0.1', port=self.port)
+        bottle.run(app, host='127.0.0.1', port=self.port,
+                   handler_class=ComputeApiRequestHandler)

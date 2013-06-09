@@ -2,8 +2,10 @@
 
 from __future__ import print_function
 
-from hashlib import md5
+import logging
 import os
+
+from hashlib import md5
 
 from dwarf import db
 from dwarf import exception
@@ -12,6 +14,7 @@ from dwarf.common import config
 from dwarf.common import utils
 
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
 
 IMAGES_INFO = ('checksum', 'created_at', 'container_format', 'disk_format',
                'id', 'is_public', 'location', 'min_disk', 'min_ram', 'name',
@@ -28,20 +31,19 @@ class Controller(object):
         """
         List all images
         """
-        print('images.list()')
+        LOG.info('list()')
 
         _images = self.db.images.list()
         return utils.sanitize(_images, IMAGES_INFO)
 
     def show(self, image_id):
-        print('images.show(image_id=%s)' % image_id)
+        LOG.info('show(image_id=%s)', image_id)
 
         _image = self.db.images.show(id=image_id)
-        print(_image)
         return utils.sanitize(_image, IMAGES_INFO)
 
     def add(self, image_fh, image_md):
-        print('images.add()')
+        LOG.info('add()')
 
         # Read the image data, store it in a temp location and calculate the
         # md5 sum
@@ -70,7 +72,7 @@ class Controller(object):
         return utils.sanitize(_image, IMAGES_INFO)
 
     def delete(self, image_id):
-        print('images.delete(image_id=%s)' % image_id)
+        LOG.info('delete(image_id=%s)', image_id)
 
         # Get the image details
         _image = self.db.images.show(id=image_id)

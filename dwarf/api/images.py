@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
 import bottle
+import logging
 import threading
+
+from wsgiref.simple_server import WSGIRequestHandler
 
 from dwarf import exception
 import dwarf.images as images
@@ -10,6 +13,7 @@ from dwarf.common import config
 from dwarf.common import utils
 
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
 
 
 def add_header(metadata):
@@ -25,6 +29,11 @@ def add_header(metadata):
             func('x-image-meta-%s' % key, []).append(str(val))
 
 
+class ImagesApiRequestHandler(WSGIRequestHandler):
+    def log_message(self, fmt, *args):
+        LOG.info(fmt, *args)
+
+
 class ImagesApiThread(threading.Thread):
 
     def __init__(self, port):
@@ -33,7 +42,7 @@ class ImagesApiThread(threading.Thread):
         self.images = images.Controller()
 
     def run(self):
-        print("Starting images server thread")
+        LOG.info('Starting images server thread')
 
         app = bottle.Bottle()
 
@@ -87,4 +96,5 @@ class ImagesApiThread(threading.Thread):
             image_fh = bottle.request.body
             return {'image': self.images.add(image_fh, image_md)}
 
-        bottle.run(app, host='127.0.0.1', port=self.port)
+        bottle.run(app, host='127.0.0.1', port=self.port,
+                   handler_class=ImagesApiRequestHandler)

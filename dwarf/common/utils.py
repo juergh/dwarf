@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import hashlib
+import logging
 import os
 import random
 import signal
@@ -8,6 +9,8 @@ import socket
 import subprocess
 
 from dwarf import exception
+
+LOG = logging.getLogger(__name__)
 
 
 def sanitize(obj, keys):
@@ -35,15 +38,26 @@ def sanitize(obj, keys):
 
 
 def show_request(req):
-    print("---- BEGIN REQUEST HEADERS -----")
+    LOG.debug('---- BEGIN REQUEST HEADERS -----')
     for key in req.headers.keys():
-        print('%s = %s' % (key, req.headers[key]))
-    print("---- END REQUEST HEADERS -----")
+        LOG.debug('%s = %s', key, req.headers[key])
+    LOG.debug('---- END REQUEST HEADERS -----')
 
 #    if req.body:
 #        print("---- BEGIN REQUEST BODY -----")
 #        print('%s' % req.body)
 #        print("---- END REQUEST BODY -----")
+
+
+def generate_mac():
+    """
+    Generate a random MAC address
+    """
+    mac = [0x52, 0x54, 0x00,
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff)]
+    return ':'.join(['%02x' % x for x in mac])
 
 
 def get_local_ip():
@@ -60,17 +74,6 @@ def get_local_ip():
         pass
 
     return addr
-
-
-def generate_mac():
-    """
-    Generate a random MAC address
-    """
-    mac = [0x52, 0x54, 0x00,
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff)]
-    return ':'.join(['%02x' % x for x in mac])
 
 
 def get_ip(mac):
@@ -93,8 +96,8 @@ def create_base_images(target_dir, image_file, image_id):
     """
     Create the boot and ephemeral disk base images if they don't exist
     """
-    print('utils.create_base_images(target_dir=%s, image_file=%s, '
-          'image_id=%s)' % (target_dir, image_file, image_id))
+    LOG.info('create_base_images(target_dir=%s, image_file=%s, image_id=%s)',
+             target_dir, image_file, image_id)
 
     # Boot disk base image
     sha1sum = hashlib.sha1(image_id).hexdigest()
@@ -126,8 +129,8 @@ def create_local_images(target_dir, base_images):
     """
     Create the boot and ephemeral disk images
     """
-    print('utils.create_local_images(target_dir=%s, base_images=%s)' %
-          (target_dir, base_images))
+    LOG.info('create_local_images(target_dir=%s, base_images=%s)', target_dir,
+             base_images)
 
     # Boot disk (disk)
     disk = '%s/disk' % target_dir
@@ -149,8 +152,8 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     """
     Helper function to execute a command
     """
-    print('utils.execute(cmd=%s, check_exit_code=%s, shell=%s, '
-          'run_as_root=%s)' % (cmd, check_exit_code, shell, run_as_root))
+    LOG.info('execute(cmd=%s, check_exit_code=%s, shell=%s, run_as_root=%s)',
+             cmd, check_exit_code, shell, run_as_root)
 
     def preexec_fn():
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
@@ -187,7 +190,7 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
                                                                 stderr))
 
     if stdout:
-        print('utils.execute(stdout=%s)' % stdout)
+        LOG.info('execute(stdout=%s)', stdout)
     if stderr:
-        print('utils.execute(stderr=%s)' % stderr)
+        LOG.info('execute(stderr=%s)', stderr)
     return (stdout, stderr)

@@ -2,12 +2,16 @@
 
 from __future__ import print_function
 
+import logging
+
 from base64 import b64encode, b64decode
 from hashlib import md5
 from M2Crypto import RSA
 
 from dwarf import db
 from dwarf.common import utils
+
+LOG = logging.getLogger(__name__)
 
 KEYPAIRS_INFO = ('fingerprint', 'name', 'public_key')
 
@@ -21,8 +25,7 @@ class Controller(object):
         """
         List all keypairs
         """
-        print('compute.keypairs.list()')
-
+        LOG.info('list()')
         _keypairs = self.db.keypairs.list()
         return utils.sanitize(_keypairs, KEYPAIRS_INFO)
 
@@ -30,7 +33,7 @@ class Controller(object):
         """
         Add a keypair
         """
-        print('compute.keypairs.add()')
+        LOG.info('add()')
 
         # Generate a new keypair if the request doesn't contain a public key
         if 'public_key' in keypair:
@@ -59,6 +62,5 @@ class Controller(object):
         """
         Delete a keypair
         """
-        print('compute.keypairs.delete()')
-
+        LOG.info('delete(name=%s)', keypair_name)
         self.db.keypairs.delete(name=keypair_name)

@@ -2,14 +2,17 @@
 
 from __future__ import print_function
 
+import logging
 import os
 import sqlite3 as sq3
+
 from time import gmtime, strftime
 
 from dwarf import exception
-
 from dwarf.common import config
 
+
+LOG = logging.getLogger(__name__)
 CONF = config.CONFIG
 
 _DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
@@ -75,7 +78,7 @@ class Table(object):
         """
         Add a new table row
         """
-        print('db.%s.add()' % self.table)
+        LOG.info('%s : add(%s)', self.table, kwargs)
 
         con = sq3.connect(CONF.dwarf_db)
         with con:
@@ -124,7 +127,7 @@ class Table(object):
         """
         Delete a table row
         """
-        print('db.%s.delete()' % self.table)
+        LOG.info('%s : delete(%s)', self.table, kwargs)
         (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
         con = sq3.connect(CONF.dwarf_db)
@@ -148,7 +151,7 @@ class Table(object):
         """
         Get all table rows, converted to an array of dicts
         """
-        print('db.%s.list()' % self.table)
+        LOG.info('%s : list()', self.table)
 
         con = sq3.connect(CONF.dwarf_db)
         with con:
@@ -162,13 +165,14 @@ class Table(object):
         for row in sq3_rows:
             rows.append(dict(zip(row.keys(), row)))
 
+        LOG.debug('%s : %s', self.table, rows)
         return rows
 
     def show(self, **kwargs):
         """
         Get a single table row, converted to a dict
         """
-        print('db.%s.show()' % self.table)
+        LOG.info('%s : show(%s)', self.table, kwargs)
         (key, val) = get_from_dict(['id', 'name'], **kwargs)
 
         con = sq3.connect(CONF.dwarf_db)
@@ -185,7 +189,10 @@ class Table(object):
                                     code=404)
 
         # Convert to a dict
-        return dict(zip(sq3_row.keys(), sq3_row))
+        row = dict(zip(sq3_row.keys(), sq3_row))
+
+        LOG.debug('%s : %s', self.table, row)
+        return row
 
 
 class Controller(object):

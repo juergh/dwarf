@@ -2,9 +2,13 @@
 
 from __future__ import print_function
 
+import logging
+
 from dwarf import db
 
 from dwarf.common import utils
+
+LOG = logging.getLogger(__name__)
 
 IMAGES_INFO = ('created_at', 'id', 'is_public', 'links', 'name', 'size',
                'status', 'updated_at')
@@ -19,8 +23,7 @@ class Controller(object):
         """
         List all images
         """
-        print('compute.images.list()')
-
+        LOG.info('list()')
         _images = self.db.images.list()
         return utils.sanitize(_images, IMAGES_INFO)
 
@@ -28,6 +31,6 @@ class Controller(object):
         """
         Show image details
         """
-        print('compute.images.show(image_id=%s)' % image_id)
+        LOG.info('show(image_id=%s)', image_id)
         _image = self.db.images.show(id=image_id)
         return utils.sanitize(_image, IMAGES_INFO)

@@ -1,10 +1,15 @@
 #!/usr/bin/python
 
 import bottle
+import logging
 import threading
+
+from wsgiref.simple_server import WSGIRequestHandler
 
 from dwarf import db
 from dwarf import exception
+
+LOG = logging.getLogger(__name__)
 
 
 def _to_string(objs):
@@ -12,6 +17,11 @@ def _to_string(objs):
     for obj in objs:
         result.append(' | '.join(str(o) for o in obj))
     return '\n'.join(result) + '\n'
+
+
+class DatabaseApiRequestHandler(WSGIRequestHandler):
+    def log_message(self, fmt, *args):
+        LOG.info(fmt, *args)
 
 
 class DatabaseApiThread(threading.Thread):
@@ -22,7 +32,7 @@ class DatabaseApiThread(threading.Thread):
         self.db = db.Controller()
 
     def run(self):
-        print("Starting database API thread")
+        LOG.info('Starting database API thread')
 
         app = bottle.Bottle()
 
@@ -58,4 +68,5 @@ class DatabaseApiThread(threading.Thread):
 
             return _to_string(obj.dump())
 
-        bottle.run(app, host='127.0.0.1', port=self.port)
+        bottle.run(app, host='127.0.0.1', port=self.port,
+                   handler_class=DatabaseApiRequestHandler)

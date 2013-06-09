@@ -2,9 +2,12 @@
 
 from __future__ import print_function
 
-from dwarf import db
+import logging
 
+from dwarf import db
 from dwarf.common import utils
+
+LOG = logging.getLogger(__name__)
 
 FLAVORS_INFO = ('disk', 'id', 'links', 'name', 'ram', 'vcpus')
 
@@ -18,7 +21,7 @@ class Controller(object):
         """
         List all flavors
         """
-        print('compute.flavors.list()')
+        LOG.info('list()')
         _flavors = self.db.flavors.list()
         return utils.sanitize(_flavors, FLAVORS_INFO)
 
@@ -26,6 +29,6 @@ class Controller(object):
         """
         Show flavor details
         """
-        print('compute.flavors.show(flavor_id=%s)' % flavor_id)
+        LOG.info('show(flavor_id=%s)', flavor_id)
         _flavor = self.db.flavors.show(id=flavor_id)
         return utils.sanitize(_flavor, FLAVORS_INFO)

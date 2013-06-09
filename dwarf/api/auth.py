@@ -2,7 +2,10 @@
 
 import bottle
 import json
+import logging
 import threading
+
+from wsgiref.simple_server import WSGIRequestHandler
 
 from dwarf import exception
 
@@ -10,6 +13,7 @@ from dwarf.common import config
 from dwarf.common import utils
 
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
 
 
 token = {
@@ -69,6 +73,11 @@ post_tokens_reply = {
 }
 
 
+class AuthApiRequestHandler(WSGIRequestHandler):
+    def log_message(self, fmt, *args):
+        LOG.info(fmt, *args)
+
+
 class AuthApiThread(threading.Thread):
 
     def __init__(self, port):
@@ -76,7 +85,7 @@ class AuthApiThread(threading.Thread):
         self.port = port
 
     def run(self):
-        print("Starting auth API thread")
+        LOG.info('Starting auth API thread')
 
         app = bottle.Bottle()
 
@@ -95,4 +104,5 @@ class AuthApiThread(threading.Thread):
 
             bottle.app(400)
 
-        bottle.run(app, host='127.0.0.1', port=self.port)
+        bottle.run(app, host='127.0.0.1', port=self.port,
+                   handler_class=AuthApiRequestHandler)
