@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
+import logging
 import sys
 
 from functools import wraps
 from bottle import response, abort
+
+LOG = logging.getLogger(__name__)
 
 
 def catchall(func):
@@ -15,7 +18,7 @@ def catchall(func):
         try:
             return func(*args, **kwargs)
         except DwarfException as e:
-            print('caught DwarfException: %s %s' % (e.code, e.message))
+            LOG.warn('caught DwarfException: %s (%s)', e.code, e.message)
             response.content_type = 'application/json; charset=UTF-8'
             abort(e.code, e.message)
         except Exception as e:
