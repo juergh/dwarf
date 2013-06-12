@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
 import libvirt   # pylint: disable=F0401
+import logging
 import os
 
 from Cheetah.Template import Template
 
 from dwarf.common import utils
+
+LOG = logging.getLogger(__name__)
 
 
 def create_libvirt_xml(server, force=False):
@@ -24,7 +27,7 @@ def create_libvirt_xml(server, force=False):
                                      'libvirt.xml.template')).read()
 
     xml_info = {'name': server['domain'],
-                'memory': server['flavor']['ram'],
+                'memory': int(server['flavor']['ram']) * 1024,
                 'vcpus': server['flavor']['vcpus'],
                 'basepath': server['basepath'],
                 'mac_addr': utils.generate_mac(),
@@ -59,12 +62,12 @@ class Controller(object):
         domain.createWithFlags(flags)
         return domain
 
-    def _get_domain(self, server):
+    def _get_domain(self, domain_name):
         """
         Get the active server domain
         """
         try:
-            domain = self.libvirt.lookupByName(server['domain'])
+            domain = self.libvirt.lookupByName(domain_name)
         except libvirt.libvirtError:
             return
         return domain
@@ -73,6 +76,9 @@ class Controller(object):
         """
         Destroy a libvirt domain
         """
+        if domain is None:
+            return
+
         try:
             domain.destroy()
         except libvirt.libvirtError as e:
@@ -90,12 +96,30 @@ class Controller(object):
         """
         Undefine a libvirt domain
         """
+        if domain is None:
+            return
+
         domain.undefine()
 
     def boot_server(self, server):
         """
         Boot a server
         """
+        LOG.info('boot_server(server=%s)', server)
+
         self._connect()
         xml = create_libvirt_xml(server)
         self._create_domain(xml)
+
+        return server
+
+    def delete_server(self, server_id):
+        """
+        Delete a server
+        """
+        LOG.info('delete_server(server_id=%s)', server_id)
+
+        self._connect()
+        domain = self._get_domain(utils.id2domain(server_id))
+        self._destroy_domain(domain)
+        self._undefine_domain(domain)

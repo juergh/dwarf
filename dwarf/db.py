@@ -96,13 +96,14 @@ class Table(object):
                                                 (self.table.rstrip('s'), val),
                                                 code=400)
 
-            # Get the highest row ID
-            rid = 1
-            cur.execute('SELECT max(id) FROM %s' % self.table)
-            row = cur.fetchone()
-            if row[0] is not None:
-                rid = int(row[0]) + 1
-            kwargs['id'] = rid
+            if not 'id' in kwargs:
+                # Get the highest row ID
+                rid = 1
+                cur.execute('SELECT max(id) FROM %s' % self.table)
+                row = cur.fetchone()
+                if row[0] is not None:
+                    rid = int(row[0]) + 1
+                kwargs['id'] = rid
 
             # Fill in the missing row properties
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
@@ -121,7 +122,37 @@ class Table(object):
             # Insert the new row
             cur.execute('INSERT into %s values (%s)' % (self.table, fmt), vals)
 
-        return self.show(id=rid)
+        return self.show(id=kwargs['id'])
+
+    def update(self, **kwargs):
+        """
+        Update a table row
+        """
+        LOG.info('%s : update(%s)', self.table, kwargs)
+
+        con = sq3.connect(CONF.dwarf_db)
+        with con:
+            cur = con.cursor()
+
+            # Fill in the missing row properties
+            now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+            kwargs['updated_at'] = now
+
+            # Create the sqlite formatting string and values
+            fmt = ''
+            vals = []
+            for c in self.cols:
+                if c in kwargs:
+                    fmt = '%s,%s=?' % (fmt, c)
+                    vals.append(kwargs[c])
+            fmt = fmt.lstrip(',')
+            vals.append(kwargs['id'])
+
+            # Update the row
+            cur.execute('UPDATE %s SET %s WHERE id=?' % (self.table, fmt),
+                        vals)
+
+        return self.show(id=kwargs['id'])
 
     def delete(self, **kwargs):
         """
@@ -144,8 +175,8 @@ class Table(object):
 
             # Delete the row
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-            cur.execute('UPDATE %s SET deleted_at=?, deleted=? WHERE %s=?' %
-                        (self.table, key), (now, 1, val))
+            cur.execute('UPDATE %s SET deleted_at=?, updated_at=?, deleted=?'
+                        'WHERE %s=?' % (self.table, key), (now, now, 1, val))
 
     def list(self):
         """
@@ -211,8 +242,14 @@ class Controller(object):
         self.keypairs.init()
         self.images.init()
         self.flavors.init()
-        # Hard-code a default flavor
-        self.flavors.add(name='m1.default', disk='0', ram='512', vcpus='1')
+
+        # Hard-code the default flavors
+        self.flavors.add(id=100, name='standard.xsmall', ram='512',
+                         disk='30', vcpus='1')
+        self.flavors.add(id=101, name='standard.small', ram='512',
+                         disk='60', vcpus='1')
+        self.flavors.add(id=102, name='standard.medium', ram='512',
+                         disk='120', vcpus='1')
 
     def delete(self):
         if not os.path.exists(CONF.dwarf_db):

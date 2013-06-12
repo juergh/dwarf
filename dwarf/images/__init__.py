@@ -37,13 +37,18 @@ class Controller(object):
         return utils.sanitize(_images, IMAGES_INFO)
 
     def show(self, image_id):
+        """
+        Show image details
+        """
         LOG.info('show(image_id=%s)', image_id)
-
         _image = self.db.images.show(id=image_id)
         return utils.sanitize(_image, IMAGES_INFO)
 
     def add(self, image_fh, image_md):
-        LOG.info('add()')
+        """
+        Add a new image
+        """
+        LOG.info('add(image_md=%s)', image_md)
 
         # Read the image data, store it in a temp location and calculate the
         # md5 sum
@@ -72,6 +77,9 @@ class Controller(object):
         return utils.sanitize(_image, IMAGES_INFO)
 
     def delete(self, image_id):
+        """
+        Delete an image
+        """
         LOG.info('delete(image_id=%s)', image_id)
 
         # Get the image details

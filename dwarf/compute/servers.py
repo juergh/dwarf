@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import logging
 import os
+import shutil
 
 from dwarf import db
 
@@ -16,8 +17,8 @@ from dwarf.compute import virt
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
-SERVERS_INFO = ('created_at', 'flavor', 'id', 'image', 'links', 'name',
-                'status', 'updated_at')
+SERVERS_INFO = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
+                'name', 'status', 'updated_at')
 
 
 class Controller(object):
@@ -29,19 +30,31 @@ class Controller(object):
         self.virt = virt.Controller()
 #        self.metadata = metadata.Controller(args)
 
-    def _expand(self, server):
+    def _extend(self, server):
         """
-        Expand server details
+        Extend server details
         """
         if 'image_id' in server:
-            _image = self.images.show(server['image_id'])
+            server['image'] = self.images.show(server['image_id'])
             del server['image_id']
-            server['image'] = _image
 
         if 'flavor_id' in server:
-            _flavor = self.flavors.show(server['flavor_id'])
+            server['flavor'] = self.flavors.show(server['flavor_id'])
             del server['flavor_id']
-            server['flavor'] = _flavor
+
+        return server
+
+    def _reduce(self, server):
+        """
+        Reduce server details
+        """
+        if 'image' in server:
+            server['image_id'] = server['image']['id']
+            del server['image']
+
+        if 'flavor' in server:
+            server['flavor_id'] = server['flavor']['id']
+            del server['flavor']
 
         return server
 
@@ -51,10 +64,10 @@ class Controller(object):
         """
         LOG.info('list()')
 
-        _servers = []
+        servers = []
         for s in self.db.servers.list():
-            _servers.append(self._expand(s))
-        return utils.sanitize(_servers, SERVERS_INFO)
+            servers.append(self._extend(s))
+        return utils.sanitize(servers, SERVERS_INFO)
 
     def show(self, server_id):
         """
@@ -62,8 +75,8 @@ class Controller(object):
         """
         LOG.info('show(server_id=%s)', server_id)
 
-        _server = self.db.servers.show(id=server_id)
-        return utils.sanitize(self._expand(_server), SERVERS_INFO)
+        server = self.db.servers.show(id=server_id)
+        return utils.sanitize(self._extend(server), SERVERS_INFO)
 
     def boot(self, server):
         """
@@ -71,33 +84,37 @@ class Controller(object):
         """
         LOG.info('boot(server=%s)', server)
 
+        name = server['name']
         image_id = server['imageRef']
         flavor_id = server['flavorRef']
+        key_name = server.get('key_name')
 
-        # Create a new server in the database
-        _server = self.db.servers.add(name=server['name'], image_id=image_id,
-                                      flavor_id=flavor_id,
-                                      key_name=server.get('key_name'))
-        _server = self._expand(_server)
+        # Add a new server to the database
+        server = self.db.servers.add(name=name, image_id=image_id,
+                                     flavor_id=flavor_id, key_name=key_name)
+        server = self._extend(server)
 
-        _server['domain'] = 'instance-d%07x' % int(_server['id'])
+        server['domain'] = utils.id2domain(server['id'])
+        server['basepath'] = '%s/%s' % (CONF.instances_dir, server['domain'])
 
         # Create the base images
         # Need to query the database to get the glance image file location
-        _image = self.db.images.show(id=image_id)
-        image_file = _image['location'][7:]   # remove 'file://'
+        image = self.db.images.show(id=image_id)
+        image_file = image['location'][7:]   # remove 'file://'
         base_images = utils.create_base_images(CONF.instances_base_dir,
                                                image_file, image_id)
 
         # Create the server base directory and the disk images
-        server['basepath'] = '%s/%s' % (CONF.instances_dir, server['domain'])
         os.makedirs(server['basepath'])
         utils.create_local_images(server['basepath'], base_images)
 
         # Boot the server
-        self.virt.boot_server(server)
+        server = self.virt.boot_server(server)
 
-        return utils.sanitize(_server, SERVERS_INFO)
+        # Update the database
+        server = self.db.servers.update(**self._reduce(server))
+
+        return utils.sanitize(server, SERVERS_INFO)
 
     def delete(self, server_id):
         """
@@ -105,4 +122,13 @@ class Controller(object):
         """
         LOG.info('delete(server_id=%s)', server_id)
 
+        # Kill the running instance
+        self.virt.delete_server(server_id)
+
+        # Purge all instance files
+        basepath = '%s/%s' % (CONF.instances_dir, utils.id2domain(server_id))
+        if os.path.exists(basepath):
+            shutil.rmtree(basepath)
+
+        # Delete the database entry
         self.db.servers.delete(id=server_id)

@@ -106,6 +106,7 @@ def create_base_images(target_dir, image_file, image_id):
         try:
             execute(['qemu-img', 'convert', '-O', 'raw', image_file,
                      boot_disk])
+            execute(['qemu-img', 'resize', boot_disk, '10G'])
         except:
             if os.path.exists(boot_disk):
                 os.remove(boot_disk)
@@ -194,3 +195,7 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     if stderr:
         LOG.info('execute(stderr=%s)', stderr)
     return (stdout, stderr)
+
+
+def id2domain(sid):
+    return 'instance-d%07x' % int(sid)
