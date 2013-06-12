@@ -132,3 +132,17 @@ class Controller(object):
 
         # Delete the database entry
         self.db.servers.delete(id=server_id)
+
+    def console_log(self, server_id):
+        """
+        Return the server console log
+        """
+        console_log = os.path.join(CONF.instances_dir,
+                                   utils.id2domain(server_id), 'console.log')
+
+        # Make the console log readable
+        utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
+
+        with open(console_log) as fh:
+            data = fh.read()
+        return data

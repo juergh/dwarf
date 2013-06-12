@@ -126,6 +126,21 @@ class ComputeApiThread(threading.Thread):
             body = json.load(bottle.request.body)
             return {'server': self.compute.servers.boot(body['server'])}
 
+        # POST: nova console-log
+        @app.post('/v1/<_tenant_id>/servers/<server_id>/action')
+        @exception.catchall
+        def http_servers3(_tenant_id, server_id):   # pylint: disable=W0612
+            """
+            Servers actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
+            # nova console-log
+            body = json.load(bottle.request.body)
+            if 'os-getConsoleOutput' in body:
+                return {'output': self.compute.servers.console_log(server_id)}
+
         # GET: nova flavor list
         # GET: nova flavor show <flavor_id>
 #        @app.get('/v1/<_tenant_id>/flavors/detail')
