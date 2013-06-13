@@ -15,6 +15,10 @@ from dwarf.api import compute
 from dwarf.api import database
 from dwarf.api import images
 
+from dwarf.common import config
+
+CONF = config.CONFIG
+
 
 def run_threads():
     threads = [
@@ -32,8 +36,9 @@ def run_threads():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s : '
-                        '%(message)s', level=logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG)
+    _filename = CONF.dwarf_log
+    _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
+    logging.basicConfig(filename=_filename, format=_format,
+                        level=logging.DEBUG)
 
     run_threads()
