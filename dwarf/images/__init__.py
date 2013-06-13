@@ -33,16 +33,16 @@ class Controller(object):
         """
         LOG.info('list()')
 
-        _images = self.db.images.list()
-        return utils.sanitize(_images, IMAGES_INFO)
+        images = self.db.images.list()
+        return utils.sanitize(images, IMAGES_INFO)
 
     def show(self, image_id):
         """
         Show image details
         """
         LOG.info('show(image_id=%s)', image_id)
-        _image = self.db.images.show(id=image_id)
-        return utils.sanitize(_image, IMAGES_INFO)
+        image = self.db.images.show(id=image_id)
+        return utils.sanitize(image, IMAGES_INFO)
 
     def add(self, image_fh, image_md):
         """
@@ -64,7 +64,7 @@ class Controller(object):
         md5sum = d.hexdigest()
 
         # Rename the image file, use its md5sum as the new name
-        image_file = '%s/%s' % (CONF.images_dir, md5sum)
+        image_file = os.path.join(CONF.images_dir, md5sum)
         os.rename(tmp_file, image_file)
 
         # Add additional image metadata
@@ -73,8 +73,8 @@ class Controller(object):
         image_md['status'] = 'active'
 
         # Add the new image to the database
-        _image = self.db.images.add(**image_md)
-        return utils.sanitize(_image, IMAGES_INFO)
+        image = self.db.images.add(**image_md)
+        return utils.sanitize(image, IMAGES_INFO)
 
     def delete(self, image_id):
         """
@@ -83,11 +83,11 @@ class Controller(object):
         LOG.info('delete(image_id=%s)', image_id)
 
         # Get the image details
-        _image = self.db.images.show(id=image_id)
+        image = self.db.images.show(id=image_id)
 
         # Delete the image in the database
         self.db.images.delete(id=image_id)
 
         # Delete the image file
-        image_file = '%s/%s' % (CONF.images_dir, _image['checksum'])
+        image_file = os.path.join(CONF.images_dir, image['checksum'])
         os.unlink(image_file)

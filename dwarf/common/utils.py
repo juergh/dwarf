@@ -125,6 +125,7 @@ def get_ip(mac):
                 addr = col[2]
                 break
 
+    LOG.info('get_ip(mac=%s) : %s', mac, addr)
     return addr
 
 
@@ -239,12 +240,24 @@ def id2domain(sid):
 
 def timer_start(tid, interval, repeat, exit_on_retval,
                 func, *args, **kwargs):
+    """
+    Start a new timer
+    """
+    LOG.info('timer_start(tid=%s, interval=%s, repeat=%s, exit_on_retval=%s, '
+             'func=%s, args=%s, kwargs=%s)', tid, interval, repeat,
+             exit_on_retval, func.__name__, args, kwargs)
+
     t = _Timer(tid, interval, repeat, exit_on_retval, func, *args, **kwargs)
     _TIMER[tid] = t
     t.start()
 
 
 def timer_stop(tid):
+    """
+    Stop a running timer
+    """
+    LOG.info('timer_stop(tid=%s)', tid)
+
     t = _TIMER[tid]
     del _TIMER[tid]
     t.stop()

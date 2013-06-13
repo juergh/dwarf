@@ -6,8 +6,10 @@ import os
 
 from Cheetah.Template import Template
 
+from dwarf.common import config
 from dwarf.common import utils
 
+CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
 
@@ -15,7 +17,8 @@ def create_libvirt_xml(server, force=False):
     """
     Create a libvirt XML file for the server
     """
-    xml_file = '%s/libvirt.xml' % server['basepath']
+    basepath = os.path.join(CONF.instances_dir, server['domain'])
+    xml_file = os.path.join(basepath, 'libvirt.xml')
 
     # Check if the XML file exists already and return its content
     if not force and os.path.exists(xml_file):
@@ -29,8 +32,8 @@ def create_libvirt_xml(server, force=False):
     xml_info = {'name': server['domain'],
                 'memory': int(server['flavor']['ram']) * 1024,
                 'vcpus': server['flavor']['vcpus'],
-                'basepath': server['basepath'],
-                'mac_addr': utils.generate_mac(),
+                'basepath': basepath,
+                'mac_addr': server['mac_address'],
                 'bridge': 'virbr0',
                 'host': utils.get_local_ip()}
 
@@ -110,8 +113,6 @@ class Controller(object):
         self._connect()
         xml = create_libvirt_xml(server)
         self._create_domain(xml)
-
-        return server
 
     def delete_server(self, server_id):
         """
