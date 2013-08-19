@@ -99,7 +99,7 @@ class Table(object):
             if not 'id' in kwargs:
                 # Get the highest row ID
                 rid = 1
-                cur.execute('SELECT max(id) FROM %s' % self.table)
+                cur.execute('SELECT max(cast(id as INT)) FROM %s' % self.table)
                 row = cur.fetchone()
                 if row[0] is not None:
                     rid = int(row[0]) + 1
