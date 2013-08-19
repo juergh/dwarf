@@ -10,6 +10,8 @@ from dwarf import db
 
 from dwarf.common import config
 from dwarf.common import utils
+
+from dwarf.compute import ec2metadata
 from dwarf.compute import flavors
 from dwarf.compute import images
 from dwarf.compute import virt
@@ -28,7 +30,7 @@ class Controller(object):
         self.flavors = flavors.Controller()
         self.images = images.Controller()
         self.virt = virt.Controller()
-#        self.metadata = metadata.Controller(args)
+        self.ec2metadata = ec2metadata.Controller()
 
     def _extend(self, server):
         """
@@ -87,7 +89,7 @@ class Controller(object):
         server = self.db.servers.show(id=server_id)
         return utils.sanitize(self._extend(server), SERVERS_INFO)
 
-    def _update_ip(self, server):
+    def _wait_for_ip(self, server):
         """
         Update the DHCP assigned IP address
         """
@@ -95,7 +97,11 @@ class Controller(object):
         if ip is None:
             return False
 
-        self.db.servers.update(id=server['id'], ip=ip)
+        # Update the database and metadata server
+        server = self.db.servers.update(id=server['id'], ip=ip,
+                                        status='ACTIVE')
+        self.ec2metadata.add_server(server)
+
         return True
 
     def boot(self, server):
@@ -135,8 +141,8 @@ class Controller(object):
         # Finally boot the server
         self.virt.boot_server(server)
 
-        # Schedule a timer to get and update the DHCP assigned IP
-        utils.timer_start(domain, 2, 60/2, [True], self._update_ip, server)
+        # Schedule a timer to wait for the server to get its DHCP IP address
+        utils.timer_start(domain, 2, 60/2, [True], self._wait_for_ip, server)
 
         return utils.sanitize(server, SERVERS_INFO)
 
@@ -146,16 +152,21 @@ class Controller(object):
         """
         LOG.info('delete(server_id=%s)', server_id)
 
+        server = self.db.servers.show(id=server_id)
+
+        # Nuke the metadata server
+        self.ec2metadata.delete_server(server)
+
         # Kill the running instance
-        self.virt.delete_server(server_id)
+        self.virt.delete_server(server)
 
         # Purge all instance files
-        basepath = os.path.join(CONF.instances_dir, utils.id2domain(server_id))
+        basepath = os.path.join(CONF.instances_dir, server['domain'])
         if os.path.exists(basepath):
             shutil.rmtree(basepath)
 
         # Delete the database entry
-        self.db.servers.delete(id=server_id)
+        self.db.servers.delete(id=server['id'])
 
     def console_log(self, server_id):
         """

@@ -17,28 +17,32 @@ from dwarf.api import images
 
 from dwarf.common import config
 
+from dwarf.compute import ec2metadata
+
 CONF = config.CONFIG
 
 
-def run_threads():
-    threads = [
-        auth.AuthApiThread(35357),
-        compute.ComputeApiThread(8774),
-        database.DatabaseApiThread(8773),
-        images.ImagesApiThread(9292),
-    ]
-
-    for thread in threads:
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-
 if __name__ == '__main__':
+    # Set up the logger
     _filename = CONF.dwarf_log
     _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
     logging.basicConfig(filename=_filename, format=_format,
                         level=logging.DEBUG)
 
-    run_threads()
+    # Create the API server threads
+    threads = [
+        auth.AuthApiThread(35357),
+        compute.ComputeApiThread(8774),
+        database.DatabaseApiThread(8773),
+        images.ImagesApiThread(9292),
+        ec2metadata.Ec2MetadataThread(8888),
+    ]
+
+    # Start all threads
+    for thread in threads:
+        thread.start()
+
+    # Wait for all threads to terminate. Should never happen.
+    for thread in threads:
+        thread.join()
+

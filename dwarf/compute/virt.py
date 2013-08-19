@@ -65,12 +65,12 @@ class Controller(object):
         domain.createWithFlags(flags)
         return domain
 
-    def _get_domain(self, domain_name):
+    def _get_domain(self, server):
         """
         Get the active server domain
         """
         try:
-            domain = self.libvirt.lookupByName(domain_name)
+            domain = self.libvirt.lookupByName(server['domain'])
         except libvirt.libvirtError:
             return
         return domain
@@ -114,13 +114,13 @@ class Controller(object):
         xml = create_libvirt_xml(server)
         self._create_domain(xml)
 
-    def delete_server(self, server_id):
+    def delete_server(self, server):
         """
         Delete a server
         """
-        LOG.info('delete_server(server_id=%s)', server_id)
+        LOG.info('delete_server(server=%s)', server)
 
         self._connect()
-        domain = self._get_domain(utils.id2domain(server_id))
+        domain = self._get_domain(server)
         self._destroy_domain(domain)
         self._undefine_domain(domain)
