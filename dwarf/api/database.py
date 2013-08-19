@@ -68,5 +68,19 @@ class DatabaseApiThread(threading.Thread):
 
             return _to_string(obj.dump())
 
+        @app.delete('/db/<table>/<rid>')
+        @exception.catchall
+        def http_table_id(table, rid):   # pylint: disable=W0612
+            """
+            Delete a table row
+            """
+            # Delete a table row
+            obj = getattr(self.db, table, None)
+            if not obj:
+                raise exception.Failure(reason='Table %s does not exist' %
+                                        table,
+                                        code=400)
+            obj.delete(id=rid)
+
         bottle.run(app, host='127.0.0.1', port=self.port,
                    handler_class=DatabaseApiRequestHandler)
