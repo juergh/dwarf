@@ -310,5 +310,12 @@ class BottleRequestHandler(WSGIRequestHandler):
     """
     Bottle request handler class
     """
-    def log_message(self, fmt, *args):
-        LOG.info('%s ' + fmt, self.client_address, *args)
+    def log_request(self, code, size=0):
+        LOG.info('%s from %s to http://%s:%s%s %s %s',
+                 self.command,
+                 self.client_address[0],
+                 self.server.server_address[0],
+                 self.server.server_address[1],
+                 self.path,
+                 code,
+                 size)
