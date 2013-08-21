@@ -169,9 +169,9 @@ class Table(object):
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
                         (self.table, key), (val, 0))
             if not cur.fetchone():
-                raise exception.Failure(reason='%s %s not found' %
-                                        (self.table.rstrip('s'), val),
-                                        code=404)
+                raise exception.NotFound(reason='%s %s not found' %
+                                         (self.table.rstrip('s'), val),
+                                         code=404)
 
             # Delete the row
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
@@ -204,7 +204,7 @@ class Table(object):
         Get a single table row, converted to a dict
         """
         LOG.info('%s : show(%s)', self.table, kwargs)
-        (key, val) = get_from_dict(['id', 'name'], **kwargs)
+        (key, val) = get_from_dict(['id', 'name', 'ip'], **kwargs)
 
         con = sq3.connect(CONF.dwarf_db)
         with con:
@@ -215,9 +215,9 @@ class Table(object):
             sq3_row = cur.fetchone()
 
         if not sq3_row:
-            raise exception.Failure(reason='%s %s not found' %
-                                    (self.table.rstrip('s'), val),
-                                    code=404)
+            raise exception.NotFound(reason='%s %s not found' %
+                                     (self.table.rstrip('s'), val),
+                                     code=404)
 
         # Convert to a dict
         row = dict(zip(sq3_row.keys(), sq3_row))

@@ -63,6 +63,10 @@ class Failure(DwarfException):
     message = '%(reason)s'
 
 
+class NotFound(DwarfException):
+    message = '%(reason)s'
+
+
 class ServerBootFailure(DwarfException):
     message = 'Failed to boot server: %(reason)s'
 
