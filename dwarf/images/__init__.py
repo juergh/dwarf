@@ -70,7 +70,7 @@ class Controller(object):
         # Add additional image metadata
         image_md['checksum'] = md5sum
         image_md['location'] = 'file://%s' % image_file
-        image_md['status'] = 'active'
+        image_md['status'] = 'ACTIVE'
 
         # Add the new image to the database
         image = self.db.images.add(**image_md)
