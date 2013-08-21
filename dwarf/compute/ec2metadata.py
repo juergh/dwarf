@@ -4,8 +4,7 @@ import bottle
 import logging
 import threading
 
-from wsgiref.simple_server import WSGIRequestHandler
-
+from dwarf import db as dwarf_db
 from dwarf import exception
 
 from dwarf.common import config
@@ -14,28 +13,13 @@ from dwarf.common import utils
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
-_EC2_METADATA_THREAD = None
 
-
-class Ec2MetadataRequestHandler(WSGIRequestHandler):
-    def log_message(self, fmt, *args):
-        LOG.info(fmt, *args)
-
-
-class Ec2MetadataThread(threading.Thread):
-    def __init__(self, port):
-        threading.Thread.__init__(self)
-        self.port = port
-        self.server = {}
-
-        global _EC2_METADATA_THREAD   # pylint: disable=W0603
-        _EC2_METADATA_THREAD = self
-
-    def _resources(self, server):
-        """
-        Return the supported metadata resources
-        """
-        resources = {
+def _ec2metadata_resources(server, keypair):
+    """
+    Return the supported metadata resources
+    """
+    resources = {
+        'data': {
             'meta-data': {
                 'ami-id': 'ami-%08x' % int(server['id']),
                 'ami-launch-index': '0',
@@ -55,134 +39,112 @@ class Ec2MetadataThread(threading.Thread):
                     'availability-zone': 'nova',
                 },
                 'public-hostname': 'dwarf-host',
+                'public-keys': '0=%s' % server['key_name'],
                 'reservation-id': 'None',
                 'security-groups': 'default'
             },
             'user-data': ''
-        }
+        },
+        'keys': {
+            '0': {
+                'openssh-key': keypair['public_key'],
+            },
+        },
+    }
 
-        return resources
+    return resources
 
-    def add_server(self, server):
+
+def _ec2metadata_worker():
+    """
+    Ec2 metadata thread worker
+    """
+    LOG.info('Starting Ec2 metadata worker')
+
+    # Cache to reduce database lookups
+    servers = {}
+    keypairs = {}
+
+    # Supported API versions
+    versions = ['1.0',
+                '2007-01-19',
+                '2007-03-01',
+                '2007-08-29',
+                '2007-10-10',
+                '2007-12-15',
+                '2008-02-01',
+                '2008-09-01',
+                '2009-04-04']
+
+    db = dwarf_db.Controller()
+    app = bottle.Bottle()
+
+    @app.get('<url:re:[a-z0-9-/.]*>')
+    @exception.catchall
+    def http_get(url):   # pylint: disable=W0612
         """
-        Add a (compute) server to the metadata server
+        Ec2 metadata requests
         """
-        LOG.info('add_server(server=%s', server)
+        # Client IP address
+        ip = bottle.request.remote_addr
 
-        if server['ip'] in self.server:
-            LOG.warning('server with IP %s exists already', server['ip'])
-            return
+        if ip == '192.168.122.1' and ip not in servers:
+            servers[ip] = {'id': 1, 'key_name': 'juergh'}
+            keypairs[ip] = {'public_key': 'noneofyourbusiness!!'}
 
-        # Add the server resources
-        self.server[server['ip']] = self._resources(server)
+        # Query the database if the data for this client is not in the cache
+        if ip not in servers:
+            servers[ip] = db.servers.show(ip=ip)
+            keypairs[ip] = db.keypairs.show(name=servers[ip]['key_name'])
 
-        # Add the IP route
-        utils.execute(['iptables',
-                       '-t', 'nat',
-                       '-A', 'PREROUTING',
-#                       '-s', '0.0.0.0/0',
-                       '-s', server['ip'],
-                       '-d', '169.254.169.254/32',
-                       '-p', 'tcp',
-                       '-m', 'tcp',
-                       '--dport', 80,
-                       '-j', 'REDIRECT',
-                       '--to-port', self.port],
-                      run_as_root=True)
+        # Split the URL path into its individual components
+        path = url.strip('/')
+        components = path.split('/')
 
-    def delete_server(self, server):
-        """
-        Delete a (compute) server from the metadata server
-        """
-        LOG.info('delete_server(server=%s', server)
+        # Check if the requested API version (first path component) is
+        # supported
+        version = components.pop(0)
+        if version not in (versions + ['latest']):
+            return ''.join('%s\n' % v for v in versions)
 
-        # Delete the IP route
-        utils.execute(['iptables',
-                       '-t', 'nat',
-                       '-D', 'PREROUTING',
-#                       '-s', '0.0.0.0/0',
-                       '-s', server['ip'],
-                       '-d', '169.254.169.254/32',
-                       '-p', 'tcp',
-                       '-m', 'tcp',
-                       '--dport', 80,
-                       '-j', 'REDIRECT',
-                       '--to-port', self.port],
-                      run_as_root=True,
-                      check_exit_code=False)
+        # Get the client's metadata resources
+        resources = _ec2metadata_resources(servers[ip], keypairs[ip])
+        data = resources['data']
+        keys = resources['keys']
 
-        if server['ip'] not in self.server:
-            LOG.warning('server with IP %s does not exist', server['ip'])
-            return
+        # Walk through the path components
+        c_prev = ''
+        for c in components:
+            # Check if the client goes after the public keys
+            if c_prev == 'public-keys' and c in keys:
+                data = keys
 
-        # Delete the server resources
-        del self.server[server['ip']]
-
-    def run(self):   # pylint: disable=R0912
-        LOG.info('Starting Ec2 metadata thread')
-
-        # Supported API versions
-        versions = ['1.0',
-                    '2007-01-19',
-                    '2007-03-01',
-                    '2007-08-29',
-                    '2007-10-10',
-                    '2007-12-15',
-                    '2008-02-01',
-                    '2008-09-01',
-                    '2009-04-04']
-
-        app = bottle.Bottle()
-
-        @app.get('<url:re:[a-z0-9-/.]*>')
-        @exception.catchall
-        def http_get(url):   # pylint: disable=W0612
-            """
-            Ec2 metadata requests
-            """
-            client_ip = bottle.request.remote_addr
-
-            # Check if we know about this client
-            if client_ip not in self.server:
+            if c in data:
+                data = data[c]
+            else:
                 bottle.abort(404)
 
-            path = url.strip('/')
-            components = path.split('/')
+            c_prev = c
 
-            # Check if the requested API version is supported
-            version = components.pop(0)
-            if version not in (versions + ['latest']):
-                return ''.join('%s\n' % v for v in versions)
+        if isinstance(data, (str, unicode)):
+            # Return the requested value
+            return data
 
-            # Walk through the path components
-            data = self.server[client_ip]
-            for c in components:
-                if c in data:
-                    data = data[c]
-                else:
-                    bottle.abort(404)
+        elif isinstance(data, dict):
+            # Return the directory listing
+            return '\n'.join(sorted(data.iterkeys()))
 
-            if isinstance(data, (str, unicode)):
-                # Return the requested value
-                return data
+        bottle.abort(404)
 
-            elif isinstance(data, dict):
-                # Return the directory listing
-                return '\n'.join(sorted(data.iterkeys()))
-
-            bottle.abort(404)
-
-        bottle.run(app, host='192.168.122.1', port=self.port,
-#        bottle.run(app, host='192.168.1.37', port=self.port,
-                   handler_class=Ec2MetadataRequestHandler)
+    host = CONF.ec2_metadata_host
+    port = CONF.ec2_metadata_port
+    LOG.info('Ec2 metadata server listening on %s:%s', host, port)
+    bottle.run(app, host=host, port=port,
+               handler_class=utils.BottleRequestHandler)
 
 
-class Controller(object):
-
-    def add_server(self, server):
-        # Add the compute server data
-        _EC2_METADATA_THREAD.add_server(server)
-
-    def delete_server(self, server):
-        # Delete the compute server data
-        _EC2_METADATA_THREAD.delete_server(server)
+def thread():
+    """
+    Return the Ec2 metadata thread
+    """
+    return threading.Thread(target=_ec2metadata_worker)

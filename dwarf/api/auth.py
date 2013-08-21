@@ -5,8 +5,6 @@ import json
 import logging
 import threading
 
-from wsgiref.simple_server import WSGIRequestHandler
-
 from dwarf import exception
 
 from dwarf.common import config
@@ -73,36 +71,38 @@ post_tokens_reply = {
 }
 
 
-class AuthApiRequestHandler(WSGIRequestHandler):
-    def log_message(self, fmt, *args):
-        LOG.info(fmt, *args)
+def _auth_api_worker():
+    """
+    Auth API thread worker
+    """
+    LOG.info('Starting auth API worker')
+
+    app = bottle.Bottle()
+
+    @app.post('/v2.0/tokens')
+    @exception.catchall
+    def http_tokens():   # pylint: disable=W0612
+        """
+        Tokens actions
+        """
+        if CONF.debug:
+            utils.show_request(bottle.request)
+
+        body = json.load(bottle.request.body)
+        if 'auth' in body:
+            return post_tokens_reply
+
+        bottle.app(400)
+
+    host = '127.0.0.1'
+    port = CONF.auth_api_port
+    LOG.info('Auth API server listening on %s:%s', host, port)
+    bottle.run(app, host=host, port=port,
+               handler_class=utils.BottleRequestHandler)
 
 
-class AuthApiThread(threading.Thread):
-
-    def __init__(self, port):
-        threading.Thread.__init__(self)
-        self.port = port
-
-    def run(self):
-        LOG.info('Starting auth API thread')
-
-        app = bottle.Bottle()
-
-        @app.post('/v2.0/tokens')
-        @exception.catchall
-        def http_tokens():   # pylint: disable=W0612
-            """
-            Tokens actions
-            """
-            if CONF.debug:
-                utils.show_request(bottle.request)
-
-            body = json.load(bottle.request.body)
-            if 'auth' in body:
-                return post_tokens_reply
-
-            bottle.app(400)
-
-        bottle.run(app, host='127.0.0.1', port=self.port,
-                   handler_class=AuthApiRequestHandler)
+def thread():
+    """
+    Return the auth API thread
+    """
+    return threading.Thread(target=_auth_api_worker)

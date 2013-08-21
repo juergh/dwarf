@@ -2,6 +2,7 @@
 
 import logging
 import os
+import signal
 import sys
 
 # Add ../ to the Python search path if ../dwarfclient/__init__.py exists
@@ -20,6 +21,11 @@ from dwarf.common import config
 from dwarf.compute import ec2metadata
 
 CONF = config.CONFIG
+LOG = logging.getLogger(__name__)
+
+
+def cleanup(dummy_signal, dummy_frame):
+    sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -29,20 +35,27 @@ if __name__ == '__main__':
     logging.basicConfig(filename=_filename, format=_format,
                         level=logging.DEBUG)
 
-    # Create the API server threads
+    # Dump the config options
+    CONF.dump_options()
+
+    # Create the API (and Ec2 metadata) server threads
     threads = [
-        auth.AuthApiThread(35357),
-        compute.ComputeApiThread(8774),
-        database.DatabaseApiThread(8773),
-        images.ImagesApiThread(9292),
-        ec2metadata.Ec2MetadataThread(8888),
+        auth.thread(),
+        compute.thread(),
+        database.thread(),
+        images.thread(),
+        ec2metadata.thread(),
     ]
+
+    # Install the exit handler
+    signal.signal(signal.SIGINT, cleanup)
 
     # Start all threads
     for thread in threads:
+        thread.daemon = True
         thread.start()
 
-    # Wait for all threads to terminate. Should never happen.
+    # Wait for all threads to terminate
     for thread in threads:
-        thread.join()
-
+        while thread.is_alive():
+            thread.join(3600)

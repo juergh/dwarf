@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from wsgiref.simple_server import WSGIRequestHandler
+
 import hashlib
 import logging
 import os
@@ -37,7 +39,7 @@ class _Timer(Thread):
         self._stop = False
 
     def run(self):
-        for _i in range(self.repeat):
+        for dummy in range(self.repeat):
             time.sleep(self.interval)
             if self._stop:
                 break
@@ -104,7 +106,7 @@ def get_local_ip():
     try:
         csock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         csock.connect(('8.8.8.8', 80))
-        (addr, _port) = csock.getsockname()
+        (addr, dummy_port) = csock.getsockname()
         csock.close()
     except socket.error:
         pass
@@ -261,3 +263,52 @@ def timer_stop(tid):
     t = _TIMER[tid]
     del _TIMER[tid]
     t.stop()
+
+
+def add_ec2metadata_route(ip, port):
+    """
+    Add the iptables route for the Ec2 metadata service
+    """
+    LOG.info('add_ec2metadata_route(ip=%s, port=%s)', ip, port)
+
+    # Add the route
+    execute(['iptables',
+             '-t', 'nat',
+             '-A', 'PREROUTING',
+             '-s', ip,
+             '-d', '169.254.169.254/32',
+             '-p', 'tcp',
+             '-m', 'tcp',
+             '--dport', 80,
+             '-j', 'REDIRECT',
+             '--to-port', port],
+            run_as_root=True)
+
+
+def delete_ec2metadata_route(ip, port):
+    """
+    Delete a (compute) server from the metadata server
+    """
+    LOG.info('delete_ec2metadata_route(ip=%s, port=%s)', ip, port)
+
+    # Delete the route
+    execute(['iptables',
+             '-t', 'nat',
+             '-D', 'PREROUTING',
+             '-s', ip,
+             '-d', '169.254.169.254/32',
+             '-p', 'tcp',
+             '-m', 'tcp',
+             '--dport', 80,
+             '-j', 'REDIRECT',
+             '--to-port', port],
+            run_as_root=True,
+            check_exit_code=False)
+
+
+class BottleRequestHandler(WSGIRequestHandler):
+    """
+    Bottle request handler class
+    """
+    def log_message(self, fmt, *args):
+        LOG.info('%s ' + fmt, self.client_address, *args)

@@ -11,9 +11,9 @@ from dwarf import db
 from dwarf.common import config
 from dwarf.common import utils
 
-from dwarf.compute import ec2metadata
 from dwarf.compute import flavors
 from dwarf.compute import images
+from dwarf.compute import keypairs
 from dwarf.compute import virt
 
 CONF = config.CONFIG
@@ -30,7 +30,7 @@ class Controller(object):
         self.flavors = flavors.Controller()
         self.images = images.Controller()
         self.virt = virt.Controller()
-        self.ec2metadata = ec2metadata.Controller()
+        self.keypairs = keypairs.Controller()
 
     def _extend(self, server):
         """
@@ -93,6 +93,7 @@ class Controller(object):
         """
         Update the DHCP assigned IP address
         """
+        # Try to get the server's DHCP-assigned IP
         ip = utils.get_ip(server['mac_address'])
         if ip is None:
             return False
@@ -100,7 +101,9 @@ class Controller(object):
         # Update the database and metadata server
         server = self.db.servers.update(id=server['id'], ip=ip,
                                         status='ACTIVE')
-        self.ec2metadata.add_server(server)
+
+        # Add the iptables route for the Ec2 metadata service
+        utils.add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
         return True
 
@@ -154,8 +157,8 @@ class Controller(object):
 
         server = self.db.servers.show(id=server_id)
 
-        # Nuke the metadata server
-        self.ec2metadata.delete_server(server)
+        # Delete the iptables route for the Ec2 metadata service
+        utils.delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
         # Kill the running instance
         self.virt.delete_server(server)
