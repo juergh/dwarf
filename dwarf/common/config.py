@@ -2,8 +2,11 @@
 
 from __future__ import print_function
 
+import logging
 import os
 import yaml
+
+LOG = logging.getLogger(__name__)
 
 
 class Config(object):
@@ -36,6 +39,16 @@ class Config(object):
         # Add the config data as attributes to our object
         for (key, val) in cfg.iteritems():
             setattr(self, key, val)
+
+        # Store for later use
+        self._cfg = cfg
+
+    def dump_options(self):
+        """
+        Dump the options to the logfile
+        """
+        for key in sorted(self._cfg.iterkeys()):
+            LOG.info('%s: %s', key, self._cfg[key])
 
 
 CONFIG = Config()
