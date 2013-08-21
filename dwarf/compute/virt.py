@@ -90,7 +90,8 @@ class Controller(object):
                 # If the instance is already shut off, we get this:
                 # Code=5 Error=Requested operation is not valid:
                 # domain is not running
-                (state, _max_mem, _mem, _vcpus, _time) = domain.info()
+                (state, dummy_max_mem, dummy_mem, dummy_vcpus, dummy_time) = \
+                    domain.info()
                 if state == 5:
                     return
             raise
