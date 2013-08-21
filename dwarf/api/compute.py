@@ -34,10 +34,9 @@ class ComputeApiThread(threading.Thread):
 
         # GET: nova image-list
         # GET: nova image-show <image_id>
-#        @app.get('/v1/<_tenant_id>/images/detail')
-        @app.get('/v1/<_tenant_id>/images/<image_id>')
+        @app.get('/v1/<dummy_tenant_id>/images/<image_id>')
         @exception.catchall
-        def http_images(_tenant_id, image_id):   # pylint: disable=W0612
+        def http_images(dummy_tenant_id, image_id):   # pylint: disable=W0612
             """
             Images actions
             """
@@ -55,9 +54,9 @@ class ComputeApiThread(threading.Thread):
         # GET:  nova keypair-list
         # POST: nova keypair-add
         @app.get('/v1/<_tenant_id>/os-keypairs')
-        @app.post('/v1/<_tenant_id>/os-keypairs')
+        @app.post('/v1/<dummy_tenant_id>/os-keypairs')
         @exception.catchall
-        def http_keypairs(_tenant_id):   # pylint: disable=W0612
+        def http_keypairs(dummy_tenant_id):   # pylint: disable=W0612
             """
             Keypairs actions
             """
@@ -75,9 +74,9 @@ class ComputeApiThread(threading.Thread):
 
             bottle.abort(400)
 
-        @app.delete('/v1/<_tenant_id>/os-keypairs/<keypair_name>')
+        @app.delete('/v1/<dummy_tenant_id>/os-keypairs/<keypair_name>')
         @exception.catchall
-        def http_keypair(_tenant_id, keypair_name):   # pylint: disable=W0612
+        def http_keypair(dummy_tenant_id, keypair_name):   # pylint: disable=W0612
             """
             Keypair actions
             """
@@ -88,11 +87,10 @@ class ComputeApiThread(threading.Thread):
 
         # GET: nova list
         # GET: nova show <server_id>
-#        @app.get('/v1/<_tenant_id>/servers/detail')
         @app.get('/v1/<_tenant_id>/servers/<server_id>')
-        @app.delete('/v1/<_tenant_id>/servers/<server_id>')
+        @app.delete('/v1/<dummy_tenant_id>/servers/<server_id>')
         @exception.catchall
-        def http_servers(_tenant_id, server_id):   # pylint: disable=W0612
+        def http_servers(dummy_tenant_id, server_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -113,9 +111,9 @@ class ComputeApiThread(threading.Thread):
                 return {'server': self.compute.servers.show(server_id)}
 
         # POST: nova boot
-        @app.post('/v1/<_tenant_id>/servers')
+        @app.post('/v1/<dummy_tenant_id>/servers')
         @exception.catchall
-        def http_servers2(_tenant_id):   # pylint: disable=W0612
+        def http_servers2(dummy_tenant_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -127,9 +125,9 @@ class ComputeApiThread(threading.Thread):
             return {'server': self.compute.servers.boot(body['server'])}
 
         # POST: nova console-log
-        @app.post('/v1/<_tenant_id>/servers/<server_id>/action')
+        @app.post('/v1/<dummy_tenant_id>/servers/<server_id>/action')
         @exception.catchall
-        def http_servers3(_tenant_id, server_id):   # pylint: disable=W0612
+        def http_servers3(dummy_tenant_id, server_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -143,10 +141,9 @@ class ComputeApiThread(threading.Thread):
 
         # GET: nova flavor list
         # GET: nova flavor show <flavor_id>
-#        @app.get('/v1/<_tenant_id>/flavors/detail')
-        @app.get('/v1/<_tenant_id>/flavors/<flavor_id>')
+        @app.get('/v1/<dummy_tenant_id>/flavors/<flavor_id>')
         @exception.catchall
-        def http_flavors(_tenant_id, flavor_id):   # pylint: disable=W0612
+        def http_flavors(dummy_tenant_id, flavor_id):   # pylint: disable=W0612
             """
             Flavors actions
             """
