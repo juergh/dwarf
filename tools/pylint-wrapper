@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 
-e1101 = re.compile(r"Instance of 'Config' has no '[a-zA-Z_]+' member")
+e1101 = re.compile(r"Instance of 'Config' has no '[0-9a-zA-Z_]+' member")
 
 sys.argv[0] = 'pylint'
 proc = subprocess.Popen(sys.argv, stdout=subprocess.PIPE)
