@@ -14,42 +14,73 @@ CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
 
+def _ec2metadata_format(data):
+    """
+    Format Ec2 metadata
+    """
+    # Handle dicts
+    if isinstance(data, dict):
+        output = ''
+        for (key, val) in data.iteritems():
+            # Skip hidden keys
+            if key == '_key_name':
+                continue
+
+            output += key
+            if isinstance(val, dict):
+                # Handle hidden keys
+                if '_key_name' in val:
+                    output += '=' + str(val['_key_name'])
+                else:
+                    output += '/'
+            output += '\n'
+
+        # Drop the trailing '\n'
+        return output[:-1]
+
+    # Handle lists
+    elif isinstance(data, list):
+        return '\n'.join(data)
+
+    # Handle everything else
+    else:
+        return str(data)
+
+
 def _ec2metadata_resources(server, keypair):
     """
     Return the supported metadata resources
     """
     resources = {
-        'data': {
-            'meta-data': {
-                'ami-id': 'ami-%08x' % int(server['id']),
-                'ami-launch-index': '0',
-                'ami-manifest-path': 'FIXME',
-                'block-device-mapping': {
-                    'ami': 'vda',
-                    'root': '/dev/vda',
-                    'ephemeral0': '/dev/vdb',
-                },
-                'hostname': 'TBD',
-                'instance-action': 'None',
-                'instance-id': 'TBD',
-                'instance-type': 'dwarf.small',
-                'local-hostname': 'TBD',
-                'local-ipv4': 'None',
-                'placement': {
-                    'availability-zone': 'nova',
-                },
-                'public-hostname': 'dwarf-host',
-                'public-keys': '0=%s' % server['key_name'],
-                'reservation-id': 'None',
-                'security-groups': 'default'
+        'meta-data': {
+            'ami-id': 'ami-%08x' % int(server['id']),
+            'ami-launch-index': '0',
+            'ami-manifest-path': 'FIXME',
+            'block-device-mapping': {
+                'ami': 'vda',
+                'root': '/dev/vda',
+                'ephemeral0': '/dev/vdb',
             },
-            'user-data': ''
-        },
-        'keys': {
-            '0': {
-                'openssh-key': keypair['public_key'],
+            'hostname': 'TBD',
+            'instance-action': 'None',
+            'instance-id': 'TBD',
+            'instance-type': 'dwarf.small',
+            'local-hostname': 'TBD',
+            'local-ipv4': 'None',
+            'placement': {
+                'availability-zone': 'nova',
             },
+            'public-hostname': 'dwarf-host',
+            'public-keys': {
+                '0': {
+                    '_key_name': server['key_name'],
+                    'openssh-key': keypair['public_key'],
+                },
+            },
+            'reservation-id': 'None',
+            'security-groups': 'default'
         },
+        'user-data': ''
     }
 
     return resources
@@ -61,7 +92,7 @@ def _ec2metadata_worker():
     """
     LOG.info('Starting Ec2 metadata worker')
 
-    # Cache to reduce database lookups
+    # Cache to minimize database lookups
     servers = {}
     keypairs = {}
 
@@ -88,11 +119,8 @@ def _ec2metadata_worker():
         # Client IP address
         ip = bottle.request.remote_addr
 
-        if ip == '192.168.122.1' and ip not in servers:
-            servers[ip] = {'id': 1, 'key_name': 'juergh'}
-            keypairs[ip] = {'public_key': 'noneofyourbusiness!!'}
-
-        # Query the database if the data for this client is not in the cache
+        # Query the database if the server and keypair data of this client is
+        # not in the cache
         if ip not in servers:
             servers[ip] = db.servers.show(ip=ip)
             keypairs[ip] = db.keypairs.show(name=servers[ip]['key_name'])
@@ -105,36 +133,21 @@ def _ec2metadata_worker():
         # supported
         version = components.pop(0)
         if version not in (versions + ['latest']):
-            return ''.join('%s\n' % v for v in versions)
+            return _ec2metadata_format(versions)
 
         # Get the client's metadata resources
-        resources = _ec2metadata_resources(servers[ip], keypairs[ip])
-        data = resources['data']
-        keys = resources['keys']
+        data = _ec2metadata_resources(servers[ip], keypairs[ip])
 
         # Walk through the path components
-        c_prev = ''
         for c in components:
-            # Check if the client goes after the public keys
-            if c_prev == 'public-keys' and c in keys:
-                data = keys
-
-            if c in data:
-                data = data[c]
-            else:
+            # Bail out if accessing hidden or non-existing keys
+            if c == '_key_name' or c not in data:
                 bottle.abort(404)
+            else:
+                data = data[c]
 
-            c_prev = c
-
-        if isinstance(data, (str, unicode)):
-            # Return the requested value
-            return data
-
-        elif isinstance(data, dict):
-            # Return the directory listing
-            return '\n'.join(sorted(data.iterkeys()))
-
-        bottle.abort(404)
+        # Format and return the data
+        return _ec2metadata_format(data)
 
     host = CONF.ec2_metadata_host
     port = CONF.ec2_metadata_port
