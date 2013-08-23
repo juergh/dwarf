@@ -5,7 +5,7 @@ import os
 import signal
 import sys
 
-# Add ../ to the Python search path if ../dwarfclient/__init__.py exists
+# Add ../ to the Python search path if ../dwarf/__init__.py exists
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                                 os.pardir, os.pardir))
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
@@ -30,7 +30,7 @@ def cleanup(dummy_signal, dummy_frame):
         thread.stop()
 
 
-def main():
+if __name__ == '__main__':
     global THREADS   # pylint: disable=W0603
 
     # Set up the logger
@@ -64,7 +64,3 @@ def main():
     for thread in THREADS:
         while thread.is_alive():
             thread.join(3600)
-
-
-if __name__ == '__main__':
-    main()
