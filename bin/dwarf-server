@@ -21,14 +21,18 @@ from dwarf.common import config
 from dwarf.compute import ec2metadata
 
 CONF = config.CONFIG
-LOG = logging.getLogger(__name__)
+
+THREADS = []
 
 
 def cleanup(dummy_signal, dummy_frame):
-    sys.exit(0)
+    for thread in THREADS:
+        thread.stop()
 
 
-if __name__ == '__main__':
+def main():
+    global THREADS   # pylint: disable=W0603
+
     # Set up the logger
     _filename = CONF.dwarf_log
     _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
@@ -39,23 +43,28 @@ if __name__ == '__main__':
     CONF.dump_options()
 
     # Create the API (and Ec2 metadata) server threads
-    threads = [
-        auth.thread(),
-        compute.thread(),
-        database.thread(),
-        images.thread(),
-        ec2metadata.thread(),
+    THREADS = [
+        auth.AuthApiThread(),
+        compute.ComputeApiThread(),
+        database.DatabaseApiThread(),
+        images.ImagesApiThread(),
+        ec2metadata.Ec2MetadataThread(),
     ]
 
     # Install the exit handler
-    signal.signal(signal.SIGINT, cleanup)
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, cleanup)
 
     # Start all threads
-    for thread in threads:
+    for thread in THREADS:
         thread.daemon = True
         thread.start()
 
     # Wait for all threads to terminate
-    for thread in threads:
+    for thread in THREADS:
         while thread.is_alive():
             thread.join(3600)
+
+
+if __name__ == '__main__':
+    main()

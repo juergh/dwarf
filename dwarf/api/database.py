@@ -6,9 +6,9 @@ import threading
 
 from dwarf import db as dwarf_db
 from dwarf import exception
+from dwarf import http
 
 from dwarf.common import config
-from dwarf.common import utils
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
@@ -21,68 +21,69 @@ def _to_string(objs):
     return '\n'.join(result) + '\n'
 
 
-def _database_api_worker():
-    """
-    Database API thread worker
-    """
-    LOG.info('Starting database API worker')
+class DatabaseApiThread(threading.Thread):
+    server = None
 
-    db = dwarf_db.Controller()
-    app = bottle.Bottle()
+    def stop(self):
+        self.server.stop()
 
-    @app.get('/db')
-    @app.post('/db')
-    @exception.catchall
-    def http_db():   # pylint: disable=W0612
+    def run(self):
         """
-        Dump or initialize the database
+        Database API thread worker
         """
-        # Initialize the database
-        if bottle.request.method == 'POST':
-            db.delete()
-            db.init()
-            return 'Database initialized\n'
+        LOG.info('Starting database API worker')
 
-        # Dump the master database
-        else:
-            return _to_string(db.dump())
+        db = dwarf_db.Controller()
+        app = bottle.Bottle()
 
-    @app.get('/db/<table>')
-    @exception.catchall
-    def http_table(table):   # pylint: disable=W0612
-        """
-        Dump a single database table
-        """
-        # Dump a single database table
-        obj = getattr(db, table, None)
-        if not obj:
-            raise exception.Failure(reason='Table %s does not exist' % table,
-                                    code=400)
+        @app.get('/db')
+        @app.post('/db')
+        @exception.catchall
+        def http_1():   # pylint: disable=W0612
+            """
+            Dump or initialize the database
+            """
+            # Initialize the database
+            if bottle.request.method == 'POST':
+                db.delete()
+                db.init()
+                return 'Database initialized\n'
 
-        return _to_string(obj.dump())
+            # Dump the master database
+            else:
+                return _to_string(db.dump())
 
-    @app.delete('/db/<table>/<rid>')
-    @exception.catchall
-    def http_table_id(table, rid):   # pylint: disable=W0612
-        """
-        Delete a table row
-        """
-        # Delete a table row
-        obj = getattr(db, table, None)
-        if not obj:
-            raise exception.Failure(reason='Table %s does not exist' % table,
-                                    code=400)
-        obj.delete(id=rid)
+        @app.get('/db/<table>')
+        @exception.catchall
+        def http_2(table):   # pylint: disable=W0612
+            """
+            Dump a single database table
+            """
+            # Dump a single database table
+            obj = getattr(db, table, None)
+            if not obj:
+                raise exception.Failure(reason='Table %s does not exist' %
+                                        table, code=400)
 
-    host = '127.0.0.1'
-    port = CONF.database_api_port
-    LOG.info('Database API server listening on %s:%s', host, port)
-    bottle.run(app, host=host, port=port,
-               handler_class=utils.BottleRequestHandler)
+            return _to_string(obj.dump())
 
+        @app.delete('/db/<table>/<rid>')
+        @exception.catchall
+        def http_3(table, rid):   # pylint: disable=W0612
+            """
+            Delete a table row
+            """
+            # Delete a table row
+            obj = getattr(db, table, None)
+            if not obj:
+                raise exception.Failure(reason='Table %s does not exist' %
+                                        table, code=400)
+            obj.delete(id=rid)
 
-def thread():
-    """
-    Return the database API thread
-    """
-    return threading.Thread(target=_database_api_worker)
+        host = '127.0.0.1'
+        port = CONF.database_api_port
+        self.server = http.BaseHTTPServer(host=host, port=port)
+
+        LOG.info('Database API server listening on %s:%s', host, port)
+        bottle.run(app, server=self.server)
+        LOG.info('Database API server shut down')

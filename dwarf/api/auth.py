@@ -6,6 +6,7 @@ import logging
 import threading
 
 from dwarf import exception
+from dwarf import http
 
 from dwarf.common import config
 from dwarf.common import utils
@@ -71,38 +72,39 @@ post_tokens_reply = {
 }
 
 
-def _auth_api_worker():
-    """
-    Auth API thread worker
-    """
-    LOG.info('Starting auth API worker')
+class AuthApiThread(threading.Thread):
+    server = None
 
-    app = bottle.Bottle()
+    def stop(self):
+        self.server.stop()
 
-    @app.post('/v2.0/tokens')
-    @exception.catchall
-    def http_tokens():   # pylint: disable=W0612
+    def run(self):
         """
-        Tokens actions
+        Auth API thread worker
         """
-        if CONF.debug:
-            utils.show_request(bottle.request)
+        LOG.info('Starting auth API worker')
 
-        body = json.load(bottle.request.body)
-        if 'auth' in body:
-            return post_tokens_reply
+        app = bottle.Bottle()
 
-        bottle.app(400)
+        @app.post('/v2.0/tokens')
+        @exception.catchall
+        def http_1():   # pylint: disable=W0612
+            """
+            Tokens actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
-    host = '127.0.0.1'
-    port = CONF.auth_api_port
-    LOG.info('Auth API server listening on %s:%s', host, port)
-    bottle.run(app, host=host, port=port,
-               handler_class=utils.BottleRequestHandler)
+            body = json.load(bottle.request.body)
+            if 'auth' in body:
+                return post_tokens_reply
 
+            bottle.app(400)
 
-def thread():
-    """
-    Return the auth API thread
-    """
-    return threading.Thread(target=_auth_api_worker)
+        host = '127.0.0.1'
+        port = CONF.auth_api_port
+        self.server = http.BaseHTTPServer(host=host, port=port)
+
+        LOG.info('Auth API server listening on %s:%s', host, port)
+        bottle.run(app, server=self.server)
+        LOG.info('Auth API server shut down')

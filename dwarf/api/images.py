@@ -4,8 +4,10 @@ import bottle
 import logging
 import threading
 
-from dwarf import exception
 import dwarf.images as dwarf_images
+
+from dwarf import exception
+from dwarf import http
 
 from dwarf.common import config
 from dwarf.common import utils
@@ -27,75 +29,76 @@ def _add_header(metadata):
             func('x-image-meta-%s' % key, []).append(str(val))
 
 
-def _images_api_worker():
-    """
-    Images API thread worker
-    """
-    LOG.info('Starting images API worker')
+class ImagesApiThread(threading.Thread):
+    server = None
 
-    images = dwarf_images.Controller()
-    app = bottle.Bottle()
+    def stop(self):
+        self.server.stop()
 
-    # GET:    glance index
-    # HEAD:   glance show <image_id>
-    # DELETE: glance delete <image_id>
-    @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
-    @app.route('//v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
-    @exception.catchall
-    def http_images(image_id):   # pylint: disable=W0612
+    def run(self):
         """
-        Images actions
+        Images API thread worker
         """
-        if CONF.debug:
-            utils.show_request(bottle.request)
+        LOG.info('Starting images API worker')
 
-        # glance index
-        if image_id == 'detail' and bottle.request.method == 'GET':
-            return {'images': images.list()}
+        images = dwarf_images.Controller()
+        app = bottle.Bottle()
 
-        # glance show <image_id>
-        if image_id != 'detail' and bottle.request.method == 'HEAD':
-            image = images.show(image_id)
-            _add_header(image)
-            return
+        # GET:    glance index
+        # HEAD:   glance show <image_id>
+        # DELETE: glance delete <image_id>
+        @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
+        @app.route('//v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
+        @exception.catchall
+        def http_1(image_id):   # pylint: disable=W0612
+            """
+            Images actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
-        # glance delete <image_id>
-        if image_id != 'detail' and bottle.request.method == 'DELETE':
-            images.delete(image_id)
-            return
+            # glance index
+            if image_id == 'detail' and bottle.request.method == 'GET':
+                return {'images': images.list()}
 
-        bottle.abort(400, 'Unable to handle request')
+            # glance show <image_id>
+            if image_id != 'detail' and bottle.request.method == 'HEAD':
+                image = images.show(image_id)
+                _add_header(image)
+                return
 
-    # POST: glance add
-    @app.route('/v1/images', method='POST')
-    @exception.catchall
-    def http_images2():   # pylint: disable=W0612
-        """
-        Images actions
-        """
-        if CONF.debug:
-            utils.show_request(bottle.request)
+            # glance delete <image_id>
+            if image_id != 'detail' and bottle.request.method == 'DELETE':
+                images.delete(image_id)
+                return
 
-        # Parse the HTTP header
-        image_md = {}
-        for key in bottle.request.headers.keys():
-            if key.lower().startswith('x-image-meta-'):
-                k = key.lower()[13:].replace('-', '_')
-                image_md[k] = bottle.request.headers[key]
+            bottle.abort(400, 'Unable to handle request')
 
-        # glance add
-        image_fh = bottle.request.body
-        return {'image': images.add(image_fh, image_md)}
+        # POST: glance add
+        @app.route('/v1/images', method='POST')
+        @exception.catchall
+        def http_2():   # pylint: disable=W0612
+            """
+            Images actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
 
-    host = '127.0.0.1'
-    port = CONF.images_api_port
-    LOG.info('Images API server listening on %s:%s', host, port)
-    bottle.run(app, host=host, port=port,
-               handler_class=utils.BottleRequestHandler)
+            # Parse the HTTP header
+            image_md = {}
+            for key in bottle.request.headers.keys():
+                if key.lower().startswith('x-image-meta-'):
+                    k = key.lower()[13:].replace('-', '_')
+                    image_md[k] = bottle.request.headers[key]
 
+            # glance add
+            image_fh = bottle.request.body
+            return {'image': images.add(image_fh, image_md)}
 
-def thread():
-    """
-    Return the images API thread
-    """
-    return threading.Thread(target=_images_api_worker)
+        host = '127.0.0.1'
+        port = CONF.images_api_port
+        self.server = http.BaseHTTPServer(host=host, port=port)
+
+        LOG.info('Images API server listening on %s:%s', host, port)
+        bottle.run(app, server=self.server)
+        LOG.info('Images API server shut down')
