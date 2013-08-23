@@ -37,11 +37,12 @@ service_compute = {
     "type": "compute",
     "endpoints": [{
             "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:8774/v1/1000",
+            "publicURL": "http://127.0.0.1:%s/v1.1/1000" % \
+                CONF.compute_api_port,
             "region": "dwarf-region",
             "versionId": "1.1",
-            "versionInfo": "http://127.0.0.1:8774/v1.1",
-            "versionList": "http://127.0.0.1:8774"
+            "versionInfo": "http://127.0.0.1:%s/v1.1" % CONF.compute_api_port,
+            "versionList": "http://127.0.0.1:%s" % CONF.compute_api_port
     }]
 }
 
@@ -51,11 +52,11 @@ service_image = {
     "type": "image",
     "endpoints": [{
             "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:9292/v1.0",
+            "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.images_api_port,
             "region": "dwarf-region",
             "versionId": "1.0",
-            "versionInfo": "http://127.0.0.1:9292/v1.0",
-            "versionList": "http://127.0.0.1:9292"
+            "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.images_api_port,
+            "versionList": "http://127.0.0.1:%s" % CONF.images_api_port
     }]
 }
 
