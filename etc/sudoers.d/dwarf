@@ -1,0 +1,4 @@
+Cmnd_Alias NOVACMDS = /bin/chown, \
+                      /sbin/iptables
+
+dwarf ALL = (root) NOPASSWD: SETENV: NOVACMDS
