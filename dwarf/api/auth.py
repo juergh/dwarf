@@ -37,8 +37,8 @@ service_compute = {
     "type": "compute",
     "endpoints": [{
             "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:%s/v1.1/1000" % \
-                CONF.compute_api_port,
+            "publicURL": "http://127.0.0.1:%s/v1.1/1000" %
+            CONF.compute_api_port,
             "region": "dwarf-region",
             "versionId": "1.1",
             "versionInfo": "http://127.0.0.1:%s/v1.1" % CONF.compute_api_port,
