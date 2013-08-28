@@ -1,0 +1,8 @@
+description "Dwarf server"
+author "Juerg Haefliger <juergh@gmail.com>"
+
+start on (local-filesystem and net-device-up IFACE=lo) or (started libvirt-bin)
+
+respawn
+
+exec su -c "dwarf" dwarf

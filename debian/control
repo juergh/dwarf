@@ -1,0 +1,17 @@
+Source: dwarf
+Maintainer: Juerg Haefliger <juergh@gmail.com>
+Section: python
+Priority: optional
+Build-Depends: debhelper,
+               python,
+               python-setuptools
+X-Python-Version: >= 2.6
+Standards-Version: 3.9.4
+
+Package: dwarf
+Architecture: all
+Depends: ${misc:Depends},
+         ${python:Depends}
+Description: OpenStack API on top of libvirt
+ Dwarf is a simple server that supports a limited set ot the OpenStack API on
+ top of the locally running libvirt daemon.
