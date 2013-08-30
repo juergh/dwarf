@@ -13,7 +13,7 @@ class Config(object):
 
     def __init__(self):
         # Get the config data from file
-        cfile = '/etc/default/dwarf'
+        cfile = '/etc/dwarf.conf'
         if not os.path.exists(cfile):
             cfile = os.path.join(os.path.dirname(__file__), '../../etc',
                                  'dwarf.conf')
