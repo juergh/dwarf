@@ -11,7 +11,16 @@ Standards-Version: 3.9.4
 Package: dwarf
 Architecture: all
 Depends: ${misc:Depends},
-         ${python:Depends}
+         ${python:Depends},
+         adduser,
+         libvirt-bin,
+	 python-bottle,
+	 python-cheetah,
+	 python-m2crypto,
+	 python-simplejson,
+	 python-libvirt,
+	 python-yaml,
+	 qemu-kvm
 Description: OpenStack API on top of libvirt
  Dwarf is a simple server that supports a limited set ot the OpenStack API on
  top of the locally running libvirt daemon.
