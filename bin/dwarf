@@ -22,8 +22,6 @@ from dwarf.compute import ec2metadata
 
 CONF = config.CONFIG
 
-THREADS = []
-
 
 def cleanup(dummy_signal, dummy_frame):
     for thread in THREADS:
@@ -51,8 +49,8 @@ if __name__ == '__main__':
         ec2metadata.Ec2MetadataThread(),
     ]
 
-    # Install the exit handler
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    # Install the cleanup handler
+    signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
     # Start all threads
