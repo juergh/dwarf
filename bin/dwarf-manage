@@ -1,0 +1,79 @@
+#!/usr/bin/python
+
+import argparse
+import os
+import sys
+
+# Add ../ to the Python search path if ../dwarf/__init__.py exists
+possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+                                                os.pardir, os.pardir))
+if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
+    sys.path.insert(0, possible_topdir)
+
+from dwarf import db as dwarf_db
+
+
+def _dec(name, *args, **kwargs):
+    """
+    Decorator for subcommand arguments and help text
+    """
+    def _decorator(func):
+        # Because of the sematics of decorator composition if we just append
+        # to the options list positional options will appear to be backwards.
+        func.__dict__.setdefault(name, []).insert(0, (args, kwargs))
+        return func
+    return _decorator
+
+
+def add_help(*args, **kwargs):
+    return _dec('help', *args, **kwargs)
+
+
+def add_arg(*args, **kwargs):
+    return _dec('arg', *args, **kwargs)
+
+
+@add_help('initialize the database')
+def do_db_init(dummy_args):
+    db = dwarf_db.Controller()
+    db.init()
+
+
+@add_help('dump the database')
+@add_arg('table', help='table name', nargs='?', default=None)
+def do_db_dump(args):
+    db = dwarf_db.Controller()
+    db.dump(args.table)
+
+
+def add_subcommand_parsers(parser, module):
+    """
+    Add subparsers for the subcommands
+    """
+    subparsers = parser.add_subparsers(title='subcommands')
+
+    # Walk through the 'do_' functions
+    for attr in (a for a in dir(module) if a.startswith('do_')):
+        cmd_name = attr[3:].replace('_', '-')
+        cmd_cb = getattr(module, attr)
+        cmd_desc = cmd_cb.__doc__ or ''
+        cmd_help = getattr(cmd_cb, 'help', [])
+        cmd_args = getattr(cmd_cb, 'arg', [])
+
+        parser = subparsers.add_parser(cmd_name, help=cmd_help[0][0][0],
+                                       description=cmd_desc, add_help=False)
+        parser.add_argument('-h', '--help', action='help')
+        for (args, kwargs) in cmd_args:
+            parser.add_argument(*args, **kwargs)
+        parser.set_defaults(func=cmd_cb)
+
+
+if __name__ == '__main__':
+    # Create the parser, add the top-level arguments and add the subparsers for
+    # the subcommands
+    aparser = argparse.ArgumentParser()
+    add_subcommand_parsers(aparser, sys.modules[__name__])
+
+    # Parse the arguments and call the subcommand
+    aargs = aparser.parse_args()
+    aargs.func(aargs)

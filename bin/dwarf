@@ -13,7 +13,6 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 
 from dwarf.api import auth
 from dwarf.api import compute
-from dwarf.api import database
 from dwarf.api import images
 
 from dwarf.common import config
@@ -44,7 +43,6 @@ if __name__ == '__main__':
     THREADS = [
         auth.AuthApiThread(),
         compute.ComputeApiThread(),
-        database.DatabaseApiThread(),
         images.ImagesApiThread(),
         ec2metadata.Ec2MetadataThread(),
     ]

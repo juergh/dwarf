@@ -26,16 +26,11 @@ DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
 DB_FLAVORS_COLS = _DB_COLS + ['name', 'disk', 'ram', 'vcpus']
 
 
-def _dump_table(name):
-    """
-    Return all table rows
-    """
-    con = sq3.connect(CONF.dwarf_db)
-    with con:
-        cur = con.cursor()
-        cur.execute('SELECT * FROM %s' % name)
-        rows = cur.fetchall()
-    return rows
+def _print_rows(objs):
+    result = []
+    for obj in objs:
+        result.append(' | '.join(str(o) for o in obj))
+    print('\n'.join(result) + '\n')
 
 
 def get_from_dict(keys, **kwargs):
@@ -59,6 +54,8 @@ class Table(object):
         """
         Initialize (create) the table
         """
+        LOG.info('%s : init()', self.table)
+
         # Convert the cols array to an sqlite formatting string, i.e.,:
         # 'id TEXT, name TEXT, status TEXT, key TEXT'
         fmt = ','.join(['%s TEXT' % c for c in self.cols])
@@ -72,7 +69,15 @@ class Table(object):
         """
         Return all table rows
         """
-        return _dump_table(self.table)
+        LOG.info('%s : dump()', self.table)
+
+        con = sq3.connect(CONF.dwarf_db)
+        with con:
+            cur = con.cursor()
+            cur.execute('SELECT * FROM %s' % self.table)
+            rows = cur.fetchall()
+
+        return rows
 
     def add(self, **kwargs):
         """
@@ -235,9 +240,14 @@ class Controller(object):
         self.flavors = Table('flavors', DB_FLAVORS_COLS)
 
     def init(self):
+        """
+        Initialize the database
+        """
         if os.path.exists(CONF.dwarf_db):
             print('Database exists already')
             return
+
+        LOG.info('Initializing database %s', CONF.dwarf_db)
         self.servers.init()
         self.keypairs.init()
         self.images.init()
@@ -252,18 +262,31 @@ class Controller(object):
                          disk='120', vcpus='1')
 
     def delete(self):
+        """
+        Delete the database
+        """
         if not os.path.exists(CONF.dwarf_db):
             print('Database does not exist')
             return
         os.remove(CONF.dwarf_db)
 
     def dump(self, table=None):
-        if not table:
-            return _dump_table('sqlite_master')
+        """
+        Dump a database table
+        """
+        if table is None:
+            con = sq3.connect(CONF.dwarf_db)
+            with con:
+                cur = con.cursor()
+                cur.execute('SELECT * FROM sqlite_master')
+                rows = cur.fetchall()
 
-        try:
-            obj = getattr(self, table)
-        except AttributeError:
-            return 'Table %s not found' % table
+        else:
+            try:
+                obj = getattr(self, table)
+            except AttributeError:
+                print('Table %s not found' % table)
+                return
+            rows = obj.dump()
 
-        return obj.dump()
+        _print_rows(rows)
