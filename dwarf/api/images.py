@@ -76,6 +76,7 @@ class ImagesApiThread(threading.Thread):
 
         # POST: glance add
         @app.route('/v1/images', method='POST')
+        @app.route('//v1/images', method='POST')
         @exception.catchall
         def http_2():   # pylint: disable=W0612
             """
