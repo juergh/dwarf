@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import logging
 import os
 import sys
 
@@ -11,6 +12,10 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
 from dwarf import db as dwarf_db
+
+from dwarf.common import config
+
+CONF = config.CONFIG
 
 
 def _dec(name, *args, **kwargs):
@@ -37,6 +42,12 @@ def add_arg(*args, **kwargs):
 def do_db_init(dummy_args):
     db = dwarf_db.Controller()
     db.init()
+
+
+@add_help('delete the database')
+def do_db_delete(dummy_args):
+    db = dwarf_db.Controller()
+    db.delete()
 
 
 @add_help('dump the database')
@@ -69,6 +80,12 @@ def add_subcommand_parsers(parser, module):
 
 
 if __name__ == '__main__':
+    # Set up the logger
+    _filename = CONF.dwarf_log
+    _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
+    logging.basicConfig(filename=_filename, format=_format,
+                        level=logging.DEBUG)
+
     # Create the parser, add the top-level arguments and add the subparsers for
     # the subcommands
     aparser = argparse.ArgumentParser()

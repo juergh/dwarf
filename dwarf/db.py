@@ -268,6 +268,8 @@ class Controller(object):
         if not os.path.exists(CONF.dwarf_db):
             print('Database does not exist')
             return
+
+        LOG.info('Deleting database %s', CONF.dwarf_db)
         os.remove(CONF.dwarf_db)
 
     def dump(self, table=None):
