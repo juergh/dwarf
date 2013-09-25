@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ] ; then
+    if ! getent passwd dwarf >/dev/null ; then
+	adduser \
+	    --system \
+	    --ingroup libvirtd \
+	    --home /var/lib/dwarf \
+	    --no-create-home \
+	    --shell /bin/bash \
+	    dwarf
+    fi
+
+    mkdir -p /var/lib/dwarf/instances/_base
+    mkdir -p /var/lib/dwarf/images
+
+    chown -R dwarf:root /var/lib/dwarf /etc/dwarf.conf
+
+    chmod 600 /etc/dwarf.conf
+
+    chown root:root /etc/sudoers.d/dwarf
+    chmod 440 /etc/sudoers.d/dwarf
+fi
+
+#DEBHELPER#
+
+exit 0
