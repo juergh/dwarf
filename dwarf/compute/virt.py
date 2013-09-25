@@ -13,11 +13,15 @@ CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
 
-def create_libvirt_xml(server, force=False):
+def _name(sid):
+    return 'dwarf-%08x' % int(sid)
+
+
+def _create_libvirt_xml(server, force=False):
     """
     Create a libvirt XML file for the server
     """
-    basepath = os.path.join(CONF.instances_dir, server['domain'])
+    basepath = os.path.join(CONF.instances_dir, server['id'])
     xml_file = os.path.join(basepath, 'libvirt.xml')
 
     # Check if the XML file exists already and return its content
@@ -29,13 +33,16 @@ def create_libvirt_xml(server, force=False):
     xml_template = open(os.path.join(os.path.dirname(__file__),
                                      'libvirt.xml.template')).read()
 
-    xml_info = {'name': server['domain'],
-                'memory': int(server['flavor']['ram']) * 1024,
-                'vcpus': server['flavor']['vcpus'],
-                'basepath': basepath,
-                'mac_addr': server['mac_address'],
-                'bridge': 'virbr0',
-                'host': utils.get_local_ip()}
+    xml_info = {
+        'uuid': server['id'],
+        'name': _name(server['int_id']),
+        'memory': int(server['flavor']['ram']) * 1024,
+        'vcpus': server['flavor']['vcpus'],
+        'basepath': basepath,
+        'mac_addr': server['mac_address'],
+        'bridge': 'virbr0',
+        'host': utils.get_local_ip()
+    }
 
     xml = str(Template(xml_template, searchList=[xml_info]))
 
@@ -70,7 +77,7 @@ class Controller(object):
         Get the active server domain
         """
         try:
-            domain = self.libvirt.lookupByName(server['domain'])
+            domain = self.libvirt.lookupByName(_name(server['int_id']))
         except libvirt.libvirtError:
             return
         return domain
@@ -112,7 +119,7 @@ class Controller(object):
         LOG.info('boot_server(server=%s)', server)
 
         self._connect()
-        xml = create_libvirt_xml(server)
+        xml = _create_libvirt_xml(server)
         self._create_domain(xml)
 
     def delete_server(self, server):

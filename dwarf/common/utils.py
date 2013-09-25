@@ -236,10 +236,6 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     return (stdout, stderr)
 
 
-def id2domain(sid):
-    return 'instance-d%07x' % int(sid)
-
-
 def timer_start(tid, interval, repeat, exit_on_retval,
                 func, *args, **kwargs):
     """

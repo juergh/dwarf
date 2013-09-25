@@ -5,6 +5,7 @@ from __future__ import print_function
 import logging
 import os
 import sqlite3 as sq3
+import uuid
 
 from time import gmtime, strftime
 
@@ -15,10 +16,11 @@ from dwarf.common import config
 LOG = logging.getLogger(__name__)
 CONF = config.CONFIG
 
-_DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id']
+_DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id',
+            'int_id']
 
 DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'image_id', 'flavor_id',
-                              'key_name', 'domain', 'mac_address', 'ip']
+                              'key_name', 'mac_address', 'ip']
 DB_KEYPAIRS_COLS = _DB_COLS + ['name', 'fingerprint', 'public_key']
 DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
                              'status', 'is_public', 'location', 'checksum',
@@ -101,14 +103,17 @@ class Table(object):
                                                 (self.table.rstrip('s'), val),
                                                 code=400)
 
+            # Create a new (UU)ID if necessary
             if not 'id' in kwargs:
-                # Get the highest row ID
-                rid = 1
-                cur.execute('SELECT max(cast(id as INT)) FROM %s' % self.table)
-                row = cur.fetchone()
-                if row[0] is not None:
-                    rid = int(row[0]) + 1
-                kwargs['id'] = rid
+                kwargs['id'] = str(uuid.uuid4())
+
+            # Autoincrement the integer ID
+            rid = 1
+            cur.execute('SELECT max(cast(int_id as INT)) FROM %s' % self.table)
+            row = cur.fetchone()
+            if row[0] is not None:
+                rid = int(row[0]) + 1
+            kwargs['int_id'] = rid
 
             # Fill in the missing row properties
             now = strftime('%Y-%m-%d %H:%M:%S', gmtime())

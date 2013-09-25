@@ -1,4 +1,5 @@
 <domain type='kvm'>
+    <uuid>${uuid}</uuid>
     <name>${name}</name>
     <memory>${memory}</memory>
     <os>

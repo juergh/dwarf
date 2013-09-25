@@ -53,7 +53,7 @@ def _ec2metadata_resources(server, keypair):
     """
     resources = {
         'meta-data': {
-            'ami-id': 'ami-%08x' % int(server['id']),
+            'ami-id': 'ami-00000000',
             'ami-launch-index': '0',
             'ami-manifest-path': 'FIXME',
             'block-device-mapping': {
@@ -63,7 +63,7 @@ def _ec2metadata_resources(server, keypair):
             },
             'hostname': 'TBD',
             'instance-action': 'None',
-            'instance-id': 'TBD',
+            'instance-id': 'i-%08x' % int(server['int_id']),
             'instance-type': 'dwarf.small',
             'local-hostname': 'TBD',
             'local-ipv4': 'None',

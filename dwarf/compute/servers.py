@@ -120,13 +120,13 @@ class Controller(object):
 
         # Add a new server to the database
         server = self.db.servers.add(name=name, image_id=image_id,
-                                     flavor_id=flavor_id, key_name=key_name)
+                                     flavor_id=flavor_id, key_name=key_name,
+                                     status='BUILDING')
+        server_id = server['id']
 
         # Generate some more server properties and update the database
-        domain = utils.id2domain(server['id'])
         mac_address = utils.generate_mac()
-        server = self.db.servers.update(id=server['id'], domain=domain,
-                                        mac_address=mac_address)
+        server = self.db.servers.update(id=server_id, mac_address=mac_address)
 
         # Extend the server details
         server = self._extend(server)
@@ -137,15 +137,19 @@ class Controller(object):
                                                image_file, image_id)
 
         # Create the server base directory and the disk images
-        basepath = os.path.join(CONF.instances_dir, domain)
+        basepath = os.path.join(CONF.instances_dir, server_id)
         os.makedirs(basepath)
         utils.create_local_images(basepath, base_images)
 
         # Finally boot the server
         self.virt.boot_server(server)
 
+        # Update the status of the server
+        server = self.db.servers.update(id=server_id, status='NETWORKING')
+
         # Schedule a timer to wait for the server to get its DHCP IP address
-        utils.timer_start(domain, 2, 60/2, [True], self._wait_for_ip, server)
+        utils.timer_start(server_id, 2, 60/2, [True],
+                          self._wait_for_ip, server)
 
         return utils.sanitize(server, SERVERS_INFO)
 
@@ -164,7 +168,7 @@ class Controller(object):
         self.virt.delete_server(server)
 
         # Purge all instance files
-        basepath = os.path.join(CONF.instances_dir, server['domain'])
+        basepath = os.path.join(CONF.instances_dir, server_id)
         if os.path.exists(basepath):
             shutil.rmtree(basepath)
 
@@ -175,8 +179,8 @@ class Controller(object):
         """
         Return the server console log
         """
-        console_log = os.path.join(CONF.instances_dir,
-                                   utils.id2domain(server_id), 'console.log')
+        console_log = os.path.join(CONF.instances_dir, server_id,
+                                   'console.log')
 
         # Make the console log readable
         utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
