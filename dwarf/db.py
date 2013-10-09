@@ -241,7 +241,7 @@ class Controller(object):
     def __init__(self):
         self.servers = Table('servers', DB_SERVERS_COLS, unique='name')
         self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS, unique='name')
-        self.images = Table('images', DB_IMAGES_COLS)
+        self.images = Table('images', DB_IMAGES_COLS, unique='id')
         self.flavors = Table('flavors', DB_FLAVORS_COLS, unique='id')
 
     def init(self):

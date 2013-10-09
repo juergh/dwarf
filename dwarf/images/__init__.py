@@ -50,30 +50,28 @@ class Controller(object):
         """
         LOG.info('add(image_md=%s)', image_md)
 
-        # Read the image data, store it in a temp location and calculate the
-        # md5 sum
-        tmp_file = '%s/tmp' % CONF.images_dir
-        with open(tmp_file, 'wb') as target:
+        # Add the new image to the database
+        image_md['status'] = 'SAVING'
+        image = self.db.images.add(**image_md)
+        image_id = image['id']
+
+        # Copy the image and calculate its MD5 sum
+        image_file = os.path.join(CONF.images_dir, image_id)
+        with open(image_file, 'wb') as fh:
             d = md5()
             while True:
                 buf = image_fh.read(4096)
                 if not buf:
                     break
                 d.update(buf)
-                target.write(buf)
+                fh.write(buf)
         md5sum = d.hexdigest()
 
-        # Rename the image file, use its md5sum as the new name
-        image_file = os.path.join(CONF.images_dir, md5sum)
-        os.rename(tmp_file, image_file)
+        # Update the image database entry
+        image = self.db.images.update(id=image_id, checksum=md5sum,
+                                      location='file://%s' % image_file,
+                                      status='ACTIVE')
 
-        # Add additional image metadata
-        image_md['checksum'] = md5sum
-        image_md['location'] = 'file://%s' % image_file
-        image_md['status'] = 'ACTIVE'
-
-        # Add the new image to the database
-        image = self.db.images.add(**image_md)
         return utils.sanitize(image, IMAGES_INFO)
 
     def delete(self, image_id):
@@ -82,14 +80,11 @@ class Controller(object):
         """
         LOG.info('delete(image_id=%s)', image_id)
 
-        # Get the image details
-        image = self.db.images.show(id=image_id)
-
         # Delete the image in the database
         self.db.images.delete(id=image_id)
 
         # Delete the image file
-        image_file = os.path.join(CONF.images_dir, image['checksum'])
+        image_file = os.path.join(CONF.images_dir, image_id)
         try:
             os.unlink(image_file)
         except OSError as ex:
