@@ -153,8 +153,8 @@ class ComputeApiThread(threading.Thread):
 
             bottle.abort(400)
 
-        # GET: nova flavor list
-        # GET: nova flavor show <flavor_id>
+        # GET: nova flavor-list
+        # GET: nova flavor-show <flavor_id>
         @app.get('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>')
         @exception.catchall
         def http_7(dummy_tenant_id, flavor_id):   # pylint: disable=W0612
@@ -171,6 +171,19 @@ class ComputeApiThread(threading.Thread):
             # nova flavor-show <flavor_id>
             else:
                 return {'flavor': compute.flavors.show(flavor_id)}
+
+        # POST: nova flavor-create
+        @app.post('/v1.1/<dummy_tenant_id>/flavors')
+        @exception.catchall
+        def http_8(dummy_tenant_id):   # pylint: disable=W0612
+            """
+            Flavors actions
+            """
+            if CONF.debug:
+                utils.show_request(bottle.request)
+
+            body = json.load(bottle.request.body)
+            return {'flavor': compute.flavors.add(body['flavor'])}
 
         # Start the HTTP server
         try:

@@ -22,13 +22,24 @@ class Controller(object):
         List all flavors
         """
         LOG.info('list()')
-        _flavors = self.db.flavors.list()
-        return utils.sanitize(_flavors, FLAVORS_INFO)
+
+        flavors = self.db.flavors.list()
+        return utils.sanitize(flavors, FLAVORS_INFO)
 
     def show(self, flavor_id):
         """
         Show flavor details
         """
         LOG.info('show(flavor_id=%s)', flavor_id)
-        _flavor = self.db.flavors.show(id=flavor_id)
-        return utils.sanitize(_flavor, FLAVORS_INFO)
+
+        flavor = self.db.flavors.show(id=flavor_id)
+        return utils.sanitize(flavor, FLAVORS_INFO)
+
+    def add(self, flavor):
+        """
+        Add a flavor
+        """
+        LOG.info('add(flavor=%s)', flavor)
+
+        new_flavor = self.db.flavors.add(**flavor)
+        return utils.sanitize(new_flavor, FLAVORS_INFO)
