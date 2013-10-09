@@ -26,14 +26,15 @@ class Controller(object):
         List all keypairs
         """
         LOG.info('list()')
-        _keypairs = self.db.keypairs.list()
-        return utils.sanitize(_keypairs, KEYPAIRS_INFO)
+
+        keypairs = self.db.keypairs.list()
+        return utils.sanitize(keypairs, KEYPAIRS_INFO)
 
     def add(self, keypair):
         """
         Add a keypair
         """
-        LOG.info('add()')
+        LOG.info('add(keypair=%s)', keypair)
 
         # Generate a new keypair if the request doesn't contain a public key
         if 'public_key' in keypair:
@@ -49,18 +50,20 @@ class Controller(object):
         fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
 
         # Add the keypair to the database
-        _keypair = self.db.keypairs.add(name=keypair['name'], fingerprint=fp,
-                                        public_key=public_key)
+        new_keypair = self.db.keypairs.add(name=keypair['name'],
+                                           fingerprint=fp,
+                                           public_key=public_key)
 
         if private_key is None:
-            return utils.sanitize(_keypair, KEYPAIRS_INFO)
+            return utils.sanitize(new_keypair, KEYPAIRS_INFO)
 
-        _keypair['private_key'] = private_key
-        return utils.sanitize(_keypair, KEYPAIRS_INFO + ('private_key', ))
+        new_keypair['private_key'] = private_key
+        return utils.sanitize(new_keypair, KEYPAIRS_INFO + ('private_key', ))
 
     def delete(self, keypair_name):
         """
         Delete a keypair
         """
         LOG.info('delete(name=%s)', keypair_name)
+
         self.db.keypairs.delete(name=keypair_name)
