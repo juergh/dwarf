@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from wsgiref.simple_server import WSGIRequestHandler
-
 import hashlib
 import logging
 import os
@@ -300,18 +298,3 @@ def delete_ec2metadata_route(ip, port):
              '--to-port', port],
             run_as_root=True,
             check_exit_code=False)
-
-
-class BottleRequestHandler(WSGIRequestHandler):
-    """
-    Bottle request handler class
-    """
-    def log_request(self, code='-', size='-'):
-        LOG.info('%s from %s to http://%s:%s%s %s %s',
-                 self.command,
-                 self.client_address[0],
-                 self.server.server_address[0],
-                 self.server.server_address[1],
-                 self.path,
-                 code,
-                 size)
