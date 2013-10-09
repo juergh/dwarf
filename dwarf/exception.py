@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import logging
-import sys
 
 from functools import wraps
 from bottle import response, abort
@@ -22,8 +21,7 @@ def catchall(func):
             response.content_type = 'application/json; charset=UTF-8'
             abort(e.code, e.message)
         except Exception as e:
-            (et, ei, tb) = sys.exc_info()
-            raise et, ei, tb
+            LOG.exception('caught unknown exception')
     return wrapper
 
 #class ProcessExecutionError(IOError):
