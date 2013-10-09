@@ -90,7 +90,11 @@ class Ec2MetadataThread(threading.Thread):
     server = None
 
     def stop(self):
-        self.server.stop()
+        # Stop the HTTP server
+        try:
+            self.server.stop()
+        except Exception:   # pylint: disable=W0703
+            LOG.exception('Failed to stop Ec2 metadata server')
 
     def run(self):
         """
@@ -155,10 +159,14 @@ class Ec2MetadataThread(threading.Thread):
             # Format and return the data
             return _ec2metadata_format(data)
 
-        host = CONF.ec2_metadata_host
-        port = CONF.ec2_metadata_port
-        self.server = http.BaseHTTPServer(host=host, port=port)
+        # Start the HTTP server
+        try:
+            host = CONF.ec2_metadata_host
+            port = CONF.ec2_metadata_port
+            self.server = http.BaseHTTPServer(host=host, port=port)
 
-        LOG.info('Ec2 metadata server listening on %s:%s', host, port)
-        bottle.run(app, server=self.server)
-        LOG.info('Ec2 metadata server shut down')
+            LOG.info('Ec2 metadata server listening on %s:%s', host, port)
+            bottle.run(app, server=self.server)
+            LOG.info('Ec2 metadata server shut down')
+        except Exception:   # pylint: disable=W0703
+            LOG.exception('Failed to start Ec2 metadata server')

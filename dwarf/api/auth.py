@@ -77,7 +77,11 @@ class AuthApiThread(threading.Thread):
     server = None
 
     def stop(self):
-        self.server.stop()
+        # Stop the HTTP server
+        try:
+            self.server.stop()
+        except Exception:   # pylint: disable=W0703
+            LOG.exception('Failed to stop Auth API server')
 
     def run(self):
         """
@@ -102,10 +106,14 @@ class AuthApiThread(threading.Thread):
 
             bottle.app(400)
 
-        host = '127.0.0.1'
-        port = CONF.auth_api_port
-        self.server = http.BaseHTTPServer(host=host, port=port)
+        # Start the HTTP server
+        try:
+            host = '127.0.0.1'
+            port = CONF.auth_api_port
+            self.server = http.BaseHTTPServer(host=host, port=port)
 
-        LOG.info('Auth API server listening on %s:%s', host, port)
-        bottle.run(app, server=self.server)
-        LOG.info('Auth API server shut down')
+            LOG.info('Auth API server listening on %s:%s', host, port)
+            bottle.run(app, server=self.server)
+            LOG.info('Auth API server shut down')
+        except Exception:   # pylint: disable=W0703
+            LOG.exception('Failed to start Auth API server')
