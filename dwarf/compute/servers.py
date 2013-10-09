@@ -188,3 +188,16 @@ class Controller(object):
         with open(console_log) as fh:
             data = fh.read()
         return data
+
+    def reboot(self, server_id, hard=False):
+        """
+        Reboot a server
+        """
+        LOG.info('reboot(server_id=%s, hard=%s)', server_id, hard)
+
+        server = self.db.servers.show(id=server_id)
+
+        utils.delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+        self.virt.delete_server(server)
+        self.virt.boot_server(server)
+        utils.add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)

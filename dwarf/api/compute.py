@@ -129,6 +129,7 @@ class ComputeApiThread(threading.Thread):
             return {'server': compute.servers.boot(body['server'])}
 
         # POST: nova console-log
+        # POST: nova reboot
         @app.post('/v1.1/<dummy_tenant_id>/servers/<server_id>/action')
         @exception.catchall
         def http_6(dummy_tenant_id, server_id):   # pylint: disable=W0612
@@ -138,10 +139,19 @@ class ComputeApiThread(threading.Thread):
             if CONF.debug:
                 utils.show_request(bottle.request)
 
-            # nova console-log
             body = json.load(bottle.request.body)
+
+            # nova console-log
             if 'os-getConsoleOutput' in body:
                 return {'output': compute.servers.console_log(server_id)}
+
+            # nova reboot
+            elif 'reboot' in body:
+                hard = body['reboot']['type'].lower() == 'hard'
+                compute.servers.reboot(server_id, hard)
+                return
+
+            bottle.abort(400)
 
         # GET: nova flavor list
         # GET: nova flavor show <flavor_id>
