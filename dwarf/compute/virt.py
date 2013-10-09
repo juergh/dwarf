@@ -24,30 +24,35 @@ def _create_libvirt_xml(server, force=False):
     basepath = os.path.join(CONF.instances_dir, server['id'])
     xml_file = os.path.join(basepath, 'libvirt.xml')
 
-    # Check if the XML file exists already and return its content
+    # Read the XML file if it exists already
     if not force and os.path.exists(xml_file):
+        LOG.info('read existing libvirt.xml for server %s', server['id'])
+
         with open(xml_file, 'r') as fh:
             xml = fh.read()
-        return xml
 
-    xml_template = open(os.path.join(os.path.dirname(__file__),
-                                     'libvirt.xml.template')).read()
+    # Otherwise create it
+    else:
+        LOG.info('create libvirt.xml for server %s', server['id'])
 
-    xml_info = {
-        'uuid': server['id'],
-        'name': _name(server['int_id']),
-        'memory': int(server['flavor']['ram']) * 1024,
-        'vcpus': server['flavor']['vcpus'],
-        'basepath': basepath,
-        'mac_addr': server['mac_address'],
-        'bridge': 'virbr0',
-        'host': utils.get_local_ip()
-    }
+        with open(os.path.join(os.path.dirname(__file__),
+                               'libvirt.xml.template'), 'r') as fh:
+            xml_template = fh.read()
 
-    xml = str(Template(xml_template, searchList=[xml_info]))
+        xml_info = {
+            'uuid': server['id'],
+            'name': _name(server['int_id']),
+            'memory': int(server['flavor']['ram']) * 1024,
+            'vcpus': server['flavor']['vcpus'],
+            'basepath': basepath,
+            'mac_addr': server['mac_address'],
+            'bridge': 'virbr0',
+            'host': utils.get_local_ip()
+        }
+        xml = str(Template(xml_template, searchList=[xml_info]))
 
-    with open(xml_file, 'w') as fh:
-        fh.write(xml)
+        with open(xml_file, 'w') as fh:
+            fh.write(xml)
 
     return xml
 
