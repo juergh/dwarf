@@ -112,7 +112,7 @@ def get_local_ip():
     return addr
 
 
-def get_ip(mac):
+def get_server_ip(mac):
     """
     Get the IP associated with the given MAC address
     """
@@ -125,7 +125,7 @@ def get_ip(mac):
                 addr = col[2]
                 break
 
-    LOG.info('get_ip(mac=%s) : %s', mac, addr)
+    LOG.info('get_server_ip(mac=%s) : %s', mac, addr)
     return addr
 
 

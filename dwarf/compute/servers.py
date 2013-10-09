@@ -94,7 +94,7 @@ class Controller(object):
         Update the DHCP assigned IP address
         """
         # Try to get the server's DHCP-assigned IP
-        ip = utils.get_ip(server['mac_address'])
+        ip = utils.get_server_ip(server['mac_address'])
         if ip is None:
             return False
 
