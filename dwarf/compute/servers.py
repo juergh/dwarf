@@ -23,6 +23,60 @@ SERVERS_INFO = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
                 'name', 'status', 'updated_at', 'addresses')
 
 
+def _create_disks(server):
+    """
+    Create the base (backing) and server disk images
+    """
+    server_id = server['id']
+    image_id = server['image']['id']
+    image_file = server['image']['location'][7:]   # remove 'file://'
+    disk_size = server['flavor']['disk']
+    disk_local_size = server['flavor'].get('ephemeral', 10)
+
+    # Create the base boot disk at:
+    # instances/_base/<image_id>_<disk_size>
+    base_disk = os.path.join(CONF.instances_base_dir,
+                             '%s_%s' % (image_id, disk_size))
+    if not os.path.exists(base_disk):
+        try:
+            utils.execute(['qemu-img', 'convert', '-O', 'raw', image_file,
+                           base_disk])
+            utils.execute(['qemu-img', 'resize', base_disk, '%sG' % disk_size])
+        except:
+            if os.path.exists(base_disk):
+                os.remove(base_disk)
+            raise
+
+    # Create the base ephemeral disk at:
+    # instances/_base/ephemeral_<disk_local_size>
+    base_disk_local = os.path.join(CONF.instances_base_dir,
+                                   'ephemeral_%s' % disk_local_size)
+    if not os.path.exists(base_disk_local):
+        try:
+            utils.execute(['qemu-img', 'create', '-f', 'raw', base_disk_local,
+                           '%sG' % disk_local_size])
+            utils.execute(['mkfs.ext3', '-F', '-L', 'ephemeral0',
+                           base_disk_local])
+        except:
+            if os.path.exists(base_disk_local):
+                os.remove(base_disk_local)
+            raise
+
+    # Create the server disk at:
+    # instances/<server_id>/disk
+    server_disk = os.path.join(CONF.instances_dir, server_id, 'disk')
+    utils.execute(['qemu-img', 'create', '-f', 'qcow2', '-o',
+                   'cluster_size=2M,backing_file=%s' % base_disk, server_disk])
+
+    # Create the server ephemeral disk at:
+    # instances/<server_id>/disk_local
+    server_disk_local = os.path.join(CONF.instances_dir, server_id,
+                                     'disk.local')
+    utils.execute(['qemu-img', 'create', '-f', 'qcow2', '-o',
+                   'cluster_size=2M,backing_file=%s' % base_disk_local,
+                   server_disk_local])
+
+
 class Controller(object):
 
     def __init__(self):
@@ -131,15 +185,9 @@ class Controller(object):
         # Extend the server details
         server = self._extend(server)
 
-        # Create the base images
-        image_file = server['image']['location'][7:]   # remove 'file://'
-        base_images = utils.create_base_images(CONF.instances_base_dir,
-                                               image_file, image_id)
-
-        # Create the server base directory and the disk images
-        basepath = os.path.join(CONF.instances_dir, server_id)
-        os.makedirs(basepath)
-        utils.create_local_images(basepath, base_images)
+        # Create the server directory and disk images
+        os.makedirs(os.path.join(CONF.instances_dir, server_id))
+        _create_disks(server)
 
         # Finally boot the server
         self.virt.boot_server(server)

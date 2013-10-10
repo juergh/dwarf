@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
-import hashlib
 import logging
 import os
 import random
 import signal
-import socket
 import subprocess
 import time
 
@@ -111,63 +109,6 @@ def get_server_ip(mac):
 
     LOG.info('get_server_ip(mac=%s) : %s', mac, addr)
     return addr
-
-
-def create_base_images(target_dir, image_file, image_id):
-    """
-    Create the boot and ephemeral disk base images if they don't exist
-    """
-    LOG.info('create_base_images(target_dir=%s, image_file=%s, image_id=%s)',
-             target_dir, image_file, image_id)
-
-    # Boot disk base image
-    sha1sum = hashlib.sha1(image_id).hexdigest()
-    boot_disk = '%s/%s' % (target_dir, sha1sum)
-    if not os.path.exists(boot_disk):
-        try:
-            execute(['qemu-img', 'convert', '-O', 'raw', image_file,
-                     boot_disk])
-            execute(['qemu-img', 'resize', boot_disk, '10G'])
-        except:
-            if os.path.exists(boot_disk):
-                os.remove(boot_disk)
-            raise
-
-    # Ephemeral disk base image
-    ephemeral_disk = '%s/ephemeral_0_10_None' % target_dir
-    if not os.path.exists(ephemeral_disk):
-        try:
-            execute(['qemu-img', 'create', '-f', 'raw', ephemeral_disk, '10G'])
-            execute(['mkfs.ext3', '-F', '-L', 'ephemeral0', ephemeral_disk])
-        except:
-            if os.path.exists(ephemeral_disk):
-                os.remove(ephemeral_disk)
-            raise
-
-    return {'boot-disk': boot_disk, 'ephemeral-disk': ephemeral_disk}
-
-
-def create_local_images(target_dir, base_images):
-    """
-    Create the boot and ephemeral disk images
-    """
-    LOG.info('create_local_images(target_dir=%s, base_images=%s)', target_dir,
-             base_images)
-
-    # Boot disk (disk)
-    disk = '%s/disk' % target_dir
-    execute(['qemu-img', 'create', '-f', 'qcow2', '-o',
-             'cluster_size=2M,backing_file=%s' % base_images['boot-disk'],
-             disk])
-
-    # Ephemeral disk (disk.local)
-    # TODO: variable size
-    disk_local = '%s/disk.local' % target_dir
-    execute(['qemu-img', 'create', '-f', 'qcow2', '-o',
-             'cluster_size=2M,backing_file=%s' % base_images['ephemeral-disk'],
-             disk_local])
-
-    return {'disk': disk, 'disk.local': disk_local}
 
 
 def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):

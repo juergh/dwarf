@@ -260,11 +260,11 @@ class Controller(object):
 
         # Hard-code the default flavors
         self.flavors.add(id=100, name='standard.xsmall', ram='512',
+                         disk='10', vcpus='1')
+        self.flavors.add(id=101, name='standard.small', ram='768',
                          disk='30', vcpus='1')
-        self.flavors.add(id=101, name='standard.small', ram='512',
-                         disk='60', vcpus='1')
-        self.flavors.add(id=102, name='standard.medium', ram='512',
-                         disk='120', vcpus='1')
+        self.flavors.add(id=102, name='standard.medium', ram='1024',
+                         disk='30', vcpus='1')
 
     def delete(self):
         """
