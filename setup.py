@@ -1,8 +1,14 @@
-import setuptools
+from setuptools import setup, find_packages
 
-setuptools.setup(
+setup(
     name='dwarf',
     version='0.0.1',
-    packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
+    summary='OpenStack API on top of libvirt/kvm',
+    author='Juerg Haefliger <juergh@gmail.com>',
+
+    packages=find_packages(exclude=['tests', 'tests.*']),
+    package_data={
+        '': ['*.template'],
+    },
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
 )
