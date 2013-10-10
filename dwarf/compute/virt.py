@@ -7,7 +7,6 @@ import os
 from Cheetah.Template import Template
 
 from dwarf.common import config
-from dwarf.common import utils
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
@@ -47,7 +46,6 @@ def _create_libvirt_xml(server, force=False):
             'basepath': basepath,
             'mac_addr': server['mac_address'],
             'bridge': 'virbr0',
-            'host': utils.get_local_ip()
         }
         xml = str(Template(xml_template, searchList=[xml_info]))
 

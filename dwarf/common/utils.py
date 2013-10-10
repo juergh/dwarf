@@ -96,22 +96,6 @@ def generate_mac():
     return ':'.join(['%02x' % x for x in mac])
 
 
-def get_local_ip():
-    """
-    Get the IP of the local machine
-    """
-    addr = '127.0.0.1'
-    try:
-        csock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        csock.connect(('8.8.8.8', 80))
-        (addr, dummy_port) = csock.getsockname()
-        csock.close()
-    except socket.error:
-        pass
-
-    return addr
-
-
 def get_server_ip(mac):
     """
     Get the IP associated with the given MAC address
