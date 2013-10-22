@@ -4,6 +4,8 @@ import bottle
 import logging
 import threading
 
+from tempfile import TemporaryFile
+
 import dwarf.images as dwarf_images
 
 from dwarf import exception
@@ -14,6 +16,60 @@ from dwarf.common import utils
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
+
+
+def _body_chunked(request):
+    """
+    Handle a chunked request body
+    """
+    def read_chunk(stream, length=None):
+        if length:
+            data = stream.read(length)
+            if stream.read(2) != b'\r\n':
+                raise ValueError("Malformed chunk in request")
+            return data
+        else:
+            data = b''
+            while True:
+                b1 = stream.read(1)
+                if not b1:
+                    break
+                if b1 == b'\r':
+                    b2 = stream.read(1)
+                    if not b2:
+                        data += b1
+                        break
+                    if b2 == b'\n':
+                        break
+                    data += b1 + b2
+                else:
+                    data += b1
+        return data
+
+    stream = request.environ['wsgi.input']
+    body = TemporaryFile(mode='w+b')
+    while True:
+        length = int(read_chunk(stream), 16)
+        part = read_chunk(stream, length)
+        if not part:
+            break
+        body.write(part)
+    request.environ['wsgi.input'] = body
+    body.seek(0)
+    return body
+
+
+def _request_body(request):
+    """
+    Wrapper for handling chunked request bodies
+    """
+    if (('Transfer-Encoding' in request.headers.keys() and
+         request.headers['Transfer-Encoding'].lower() == 'chunked')):
+        body = _body_chunked(request)
+        body.seek(0)
+        return body
+    else:
+        return request.body
 
 
 def _add_header(metadata):
@@ -48,9 +104,9 @@ class ImagesApiThread(threading.Thread):
         images = dwarf_images.Controller()
         app = bottle.Bottle()
 
-        # GET:    glance index
-        # HEAD:   glance show <image_id>
-        # DELETE: glance delete <image_id>
+        # GET:    glance image-list
+        # HEAD:   glance image-show <image_id>
+        # DELETE: glance image-delete <image_id>
         @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
         @app.route('//v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
         @exception.catchall
@@ -61,24 +117,24 @@ class ImagesApiThread(threading.Thread):
             if CONF.debug:
                 utils.show_request(bottle.request)
 
-            # glance index
+            # glance image-list
             if image_id == 'detail' and bottle.request.method == 'GET':
                 return {'images': images.list()}
 
-            # glance show <image_id>
+            # glance image-show <image_id>
             if image_id != 'detail' and bottle.request.method == 'HEAD':
                 image = images.show(image_id)
                 _add_header(image)
                 return
 
-            # glance delete <image_id>
+            # glance image-delete <image_id>
             if image_id != 'detail' and bottle.request.method == 'DELETE':
                 images.delete(image_id)
                 return
 
             bottle.abort(400, 'Unable to handle request')
 
-        # POST: glance add
+        # POST: glance image-create
         @app.route('/v1/images', method='POST')
         @app.route('//v1/images', method='POST')
         @exception.catchall
@@ -96,8 +152,8 @@ class ImagesApiThread(threading.Thread):
                     k = key.lower()[13:].replace('-', '_')
                     image_md[k] = bottle.request.headers[key]
 
-            # glance add
-            image_fh = bottle.request.body
+            # glance image-create
+            image_fh = _request_body(bottle.request)
             return {'image': images.add(image_fh, image_md)}
 
         # Start the HTTP server
