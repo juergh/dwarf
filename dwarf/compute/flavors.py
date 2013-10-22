@@ -5,7 +5,7 @@ from __future__ import print_function
 import logging
 
 from dwarf import db
-from dwarf.common import utils
+from dwarf import utils
 
 LOG = logging.getLogger(__name__)
 

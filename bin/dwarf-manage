@@ -13,7 +13,7 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 
 from dwarf import db as dwarf_db
 
-from dwarf.common import config
+from dwarf import config
 
 CONF = config.CONFIG
 

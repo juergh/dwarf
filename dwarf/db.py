@@ -10,7 +10,7 @@ import uuid
 from time import gmtime, strftime
 
 from dwarf import exception
-from dwarf.common import config
+from dwarf import config
 
 
 LOG = logging.getLogger(__name__)
