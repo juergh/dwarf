@@ -15,7 +15,7 @@ class Config(object):
         # Get the config data from file
         cfile = '/etc/dwarf.conf'
         if not os.path.exists(cfile):
-            cfile = os.path.join(os.path.dirname(__file__), '../../etc',
+            cfile = os.path.join(os.path.dirname(__file__), '../etc',
                                  'dwarf.conf')
 
         with open(cfile, 'r') as fh:

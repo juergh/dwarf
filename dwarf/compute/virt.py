@@ -6,7 +6,7 @@ import os
 
 from Cheetah.Template import Template
 
-from dwarf.common import config
+from dwarf import config
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)

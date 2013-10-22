@@ -11,8 +11,8 @@ import dwarf.images as dwarf_images
 from dwarf import exception
 from dwarf import http
 
-from dwarf.common import config
-from dwarf.common import utils
+from dwarf import config
+from dwarf import utils
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)

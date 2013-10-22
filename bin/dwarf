@@ -11,11 +11,11 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
+from dwarf import config
+
 from dwarf.api import auth
 from dwarf.api import compute
 from dwarf.api import images
-
-from dwarf.common import config
 
 from dwarf.compute import ec2metadata
 

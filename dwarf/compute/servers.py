@@ -8,8 +8,8 @@ import shutil
 
 from dwarf import db
 
-from dwarf.common import config
-from dwarf.common import utils
+from dwarf import config
+from dwarf import utils
 
 from dwarf.compute import flavors
 from dwarf.compute import images

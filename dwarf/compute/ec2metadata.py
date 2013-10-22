@@ -8,7 +8,7 @@ from dwarf import db as dwarf_db
 from dwarf import exception
 from dwarf import http
 
-from dwarf.common import config
+from dwarf import config
 
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
