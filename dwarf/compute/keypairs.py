@@ -6,7 +6,7 @@ import logging
 
 from base64 import b64encode, b64decode
 from hashlib import md5
-from M2Crypto import RSA
+from M2Crypto import RSA   # pylint: disable=F0401
 
 from dwarf import db
 from dwarf import utils
