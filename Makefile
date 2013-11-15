@@ -1,4 +1,4 @@
-all:
+all: tox
 
 tox:
 	tox
