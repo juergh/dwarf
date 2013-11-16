@@ -86,6 +86,7 @@ class Controller(object):
         # Delete the image file
         image_file = os.path.join(CONF.images_dir, image_id)
         try:
+            LOG.info('deleting image file %s', image_file)
             os.unlink(image_file)
         except OSError as ex:
             LOG.warn('failed to delete image %s (%s, %s)', image_file,
