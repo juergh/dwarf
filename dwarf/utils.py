@@ -77,11 +77,6 @@ def show_request(req):
         LOG.debug('%s = %s', key, req.headers[key])
     LOG.debug('---- END REQUEST HEADERS -----')
 
-#    if req.body:
-#        print("---- BEGIN REQUEST BODY -----")
-#        print('%s' % req.body)
-#        print("---- END REQUEST BODY -----")
-
 
 def generate_mac():
     """
