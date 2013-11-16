@@ -114,8 +114,7 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # glance image-list
             if image_id == 'detail' and bottle.request.method == 'GET':
@@ -142,8 +141,7 @@ class ImagesApiThread(threading.Thread):
             """
             Images actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # Parse the HTTP header
             image_md = {}

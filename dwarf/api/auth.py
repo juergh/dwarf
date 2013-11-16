@@ -97,8 +97,7 @@ class AuthApiThread(threading.Thread):
             """
             Tokens actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             body = json.load(bottle.request.body)
             if 'auth' in body:

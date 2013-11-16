@@ -43,8 +43,7 @@ class ComputeApiThread(threading.Thread):
             """
             Images actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # nova image-list
             if image_id == 'detail':
@@ -63,8 +62,7 @@ class ComputeApiThread(threading.Thread):
             """
             Keypairs actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # nova keypair-list
             if bottle.request.method == 'GET':
@@ -83,8 +81,7 @@ class ComputeApiThread(threading.Thread):
             """
             Keypair actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             compute.keypairs.delete(keypair_name)
 
@@ -98,8 +95,7 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # nova delete <server_id>
             if bottle.request.method == 'DELETE':
@@ -121,8 +117,7 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # nova boot
             body = json.load(bottle.request.body)
@@ -136,8 +131,7 @@ class ComputeApiThread(threading.Thread):
             """
             Servers actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             body = json.load(bottle.request.body)
 
@@ -161,8 +155,7 @@ class ComputeApiThread(threading.Thread):
             """
             Flavors actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             # nova flavor-list
             if flavor_id == 'detail':
@@ -179,8 +172,7 @@ class ComputeApiThread(threading.Thread):
             """
             Flavors actions
             """
-            if CONF.debug:
-                utils.show_request(bottle.request)
+            utils.show_request(bottle.request)
 
             body = json.load(bottle.request.body)
             return {'flavor': compute.flavors.add(body['flavor'])}
