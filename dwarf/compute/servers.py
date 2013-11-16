@@ -105,24 +105,6 @@ class Controller(object):
 
         return server
 
-#    def _reduce(self, server):
-#        """
-#        Reduce server details
-#        """
-#        if 'image' in server:
-#            server['image_id'] = server['image']['id']
-#            del server['image']
-#
-#        if 'flavor' in server:
-#            server['flavor_id'] = server['flavor']['id']
-#            del server['flavor']
-#
-#        if 'addresses' in server:
-#            server['ip'] = server['addresses']['private'][0]['addr']
-#            del server['addresses']
-#
-#        return server
-
     def list(self):
         """
         List all servers

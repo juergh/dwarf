@@ -32,7 +32,6 @@
 	    <source bridge="${bridge}"/>
             <model type="virtio"/>
         </interface>
-
         <serial type="file">
             <source path="${basepath}/console.log"/>
         </serial>
