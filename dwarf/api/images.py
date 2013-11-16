@@ -108,7 +108,6 @@ class ImagesApiThread(threading.Thread):
         # HEAD:   glance image-show <image_id>
         # DELETE: glance image-delete <image_id>
         @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
-        @app.route('//v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
         @exception.catchall
         def http_1(image_id):   # pylint: disable=W0612
             """
@@ -135,7 +134,6 @@ class ImagesApiThread(threading.Thread):
 
         # POST: glance image-create
         @app.route('/v1/images', method='POST')
-        @app.route('//v1/images', method='POST')
         @exception.catchall
         def http_2():   # pylint: disable=W0612
             """
