@@ -30,7 +30,7 @@ class ComputeApiThread(threading.Thread):
         """
         Compute API thread worker
         """
-        LOG.info('Starting compute API worker')
+        LOG.info('Starting Compute API worker')
 
         compute = dwarf_compute.Controller()
         app = bottle.Bottle()

@@ -13,9 +13,9 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 
 from dwarf import config
 
-from dwarf.api import auth
-from dwarf.api import compute
-from dwarf.api import images
+from dwarf.compute import api as compute_api
+from dwarf.identity import api as identity_api
+from dwarf.image import api as image_api
 
 from dwarf.compute import ec2metadata
 
@@ -41,9 +41,9 @@ if __name__ == '__main__':
 
     # Create the API (and Ec2 metadata) server threads
     THREADS = [
-        auth.AuthApiThread(),
-        compute.ComputeApiThread(),
-        images.ImagesApiThread(),
+        identity_api.IdentityApiThread(),
+        compute_api.ComputeApiThread(),
+        image_api.ImageApiThread(),
         ec2metadata.Ec2MetadataThread(),
     ]
 

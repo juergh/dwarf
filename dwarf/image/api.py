@@ -6,7 +6,7 @@ import threading
 
 from tempfile import TemporaryFile
 
-import dwarf.images as dwarf_images
+from dwarf.image import images as dwarf_images
 
 from dwarf import exception
 from dwarf import http
@@ -85,7 +85,7 @@ def _add_header(metadata):
             func('x-image-meta-%s' % key, []).append(str(val))
 
 
-class ImagesApiThread(threading.Thread):
+class ImageApiThread(threading.Thread):
     server = None
 
     def stop(self):
@@ -93,13 +93,13 @@ class ImagesApiThread(threading.Thread):
         try:
             self.server.stop()
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop Images API server')
+            LOG.exception('Failed to stop Image API server')
 
     def run(self):
         """
-        Images API thread worker
+        Image API thread worker
         """
-        LOG.info('Starting images API worker')
+        LOG.info('Starting Image API worker')
 
         images = dwarf_images.Controller()
         app = bottle.Bottle()
@@ -155,11 +155,11 @@ class ImagesApiThread(threading.Thread):
         # Start the HTTP server
         try:
             host = '127.0.0.1'
-            port = CONF.images_api_port
+            port = CONF.image_api_port
             self.server = http.BaseHTTPServer(host=host, port=port)
 
-            LOG.info('Images API server listening on %s:%s', host, port)
+            LOG.info('Image API server listening on %s:%s', host, port)
             bottle.run(app, server=self.server)
-            LOG.info('Images API server shut down')
+            LOG.info('Image API server shut down')
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start Images API server')
+            LOG.exception('Failed to start Image API server')

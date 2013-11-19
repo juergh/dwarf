@@ -8,7 +8,6 @@ import os
 from hashlib import md5
 
 from dwarf import db
-from dwarf import exception
 
 from dwarf import config
 from dwarf import utils

@@ -52,11 +52,11 @@ service_image = {
     "type": "image",
     "endpoints": [{
             "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.images_api_port,
+            "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
             "region": "dwarf-region",
             "versionId": "1.0",
-            "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.images_api_port,
-            "versionList": "http://127.0.0.1:%s" % CONF.images_api_port
+            "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
+            "versionList": "http://127.0.0.1:%s" % CONF.image_api_port
     }]
 }
 
@@ -73,7 +73,7 @@ post_tokens_reply = {
 }
 
 
-class AuthApiThread(threading.Thread):
+class IdentityApiThread(threading.Thread):
     server = None
 
     def stop(self):
@@ -81,13 +81,13 @@ class AuthApiThread(threading.Thread):
         try:
             self.server.stop()
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop Auth API server')
+            LOG.exception('Failed to stop Identity API server')
 
     def run(self):
         """
-        Auth API thread worker
+        Identity API thread worker
         """
-        LOG.info('Starting auth API worker')
+        LOG.info('Starting Identity API worker')
 
         app = bottle.Bottle()
 
@@ -108,11 +108,11 @@ class AuthApiThread(threading.Thread):
         # Start the HTTP server
         try:
             host = '127.0.0.1'
-            port = CONF.auth_api_port
+            port = CONF.identity_api_port
             self.server = http.BaseHTTPServer(host=host, port=port)
 
-            LOG.info('Auth API server listening on %s:%s', host, port)
+            LOG.info('Identity API server listening on %s:%s', host, port)
             bottle.run(app, server=self.server)
-            LOG.info('Auth API server shut down')
+            LOG.info('Identity API server shut down')
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start Auth API server')
+            LOG.exception('Failed to start Identity API server')
