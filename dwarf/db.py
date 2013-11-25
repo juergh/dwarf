@@ -81,11 +81,11 @@ class Table(object):
 
         return rows
 
-    def add(self, **kwargs):
+    def create(self, **kwargs):
         """
-        Add a new table row
+        Create a new table row
         """
-        LOG.info('%s : add(%s)', self.table, kwargs)
+        LOG.info('%s : create(%s)', self.table, kwargs)
 
         con = sq3.connect(CONF.dwarf_db)
         with con:
@@ -259,12 +259,12 @@ class Controller(object):
         self.flavors.init()
 
         # Hard-code the default flavors
-        self.flavors.add(id=100, name='standard.xsmall', ram='512',
-                         disk='10', vcpus='1')
-        self.flavors.add(id=101, name='standard.small', ram='768',
-                         disk='30', vcpus='1')
-        self.flavors.add(id=102, name='standard.medium', ram='1024',
-                         disk='30', vcpus='1')
+        self.flavors.create(id=100, name='standard.xsmall', ram='512',
+                            disk='10', vcpus='1')
+        self.flavors.create(id=101, name='standard.small', ram='768',
+                            disk='30', vcpus='1')
+        self.flavors.create(id=102, name='standard.medium', ram='1024',
+                            disk='30', vcpus='1')
 
     def delete(self):
         """

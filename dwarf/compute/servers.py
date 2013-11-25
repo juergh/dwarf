@@ -154,10 +154,10 @@ class Controller(object):
         flavor_id = server['flavorRef']
         key_name = server.get('key_name')
 
-        # Add a new server to the database
-        server = self.db.servers.add(name=name, image_id=image_id,
-                                     flavor_id=flavor_id, key_name=key_name,
-                                     status='BUILDING')
+        # Create a new server in the database
+        server = self.db.servers.create(name=name, image_id=image_id,
+                                        flavor_id=flavor_id, key_name=key_name,
+                                        status='BUILDING')
         server_id = server['id']
 
         # Generate some more server properties and update the database

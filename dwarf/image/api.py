@@ -150,7 +150,7 @@ class ImageApiThread(threading.Thread):
 
             # glance image-create
             image_fh = _request_body(bottle.request)
-            return {'image': images.add(image_fh, image_md)}
+            return {'image': images.create(image_fh, image_md)}
 
         # Start the HTTP server
         try:

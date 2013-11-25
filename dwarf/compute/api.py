@@ -175,7 +175,7 @@ class ComputeApiThread(threading.Thread):
             utils.show_request(bottle.request)
 
             body = json.load(bottle.request.body)
-            return {'flavor': compute.flavors.add(body['flavor'])}
+            return {'flavor': compute.flavors.create(body['flavor'])}
 
         # Start the HTTP server
         try:

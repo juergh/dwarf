@@ -35,11 +35,11 @@ class Controller(object):
         flavor = self.db.flavors.show(id=flavor_id)
         return utils.sanitize(flavor, FLAVORS_INFO)
 
-    def add(self, flavor):
+    def create(self, flavor):
         """
-        Add a flavor
+        Create a flavor
         """
-        LOG.info('add(flavor=%s)', flavor)
+        LOG.info('create(flavor=%s)', flavor)
 
-        new_flavor = self.db.flavors.add(**flavor)
+        new_flavor = self.db.flavors.create(**flavor)
         return utils.sanitize(new_flavor, FLAVORS_INFO)

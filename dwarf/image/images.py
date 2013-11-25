@@ -43,15 +43,15 @@ class Controller(object):
         image = self.db.images.show(id=image_id)
         return utils.sanitize(image, IMAGES_INFO)
 
-    def add(self, image_fh, image_md):
+    def create(self, image_fh, image_md):
         """
-        Add a new image
+        Create a new image
         """
-        LOG.info('add(image_md=%s)', image_md)
+        LOG.info('create(image_md=%s)', image_md)
 
-        # Add the new image to the database
+        # Create a new image in the database
         image_md['status'] = 'SAVING'
-        image = self.db.images.add(**image_md)
+        image = self.db.images.create(**image_md)
         image_id = image['id']
 
         # Copy the image and calculate its MD5 sum

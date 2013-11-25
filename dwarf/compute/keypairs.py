@@ -49,10 +49,10 @@ class Controller(object):
         fp_plain = md5(b64decode(public_key.split()[1])).hexdigest()
         fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
 
-        # Add the keypair to the database
-        new_keypair = self.db.keypairs.add(name=keypair['name'],
-                                           fingerprint=fp,
-                                           public_key=public_key)
+        # Create the new keypair in the database
+        new_keypair = self.db.keypairs.create(name=keypair['name'],
+                                              fingerprint=fp,
+                                              public_key=public_key)
 
         if private_key is None:
             return utils.sanitize(new_keypair, KEYPAIRS_INFO)
