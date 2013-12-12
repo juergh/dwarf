@@ -35,11 +35,13 @@ class ComputeApiThread(threading.Thread):
         compute = dwarf_compute.Controller()
         app = bottle.Bottle()
 
-        # GET: nova image-list
-        # GET: nova image-show <image_id>
+        #
+        # Images API
+        #
+
         @app.get('/v1.1/<dummy_tenant_id>/images/<image_id>')
         @exception.catchall
-        def http_1(dummy_tenant_id, image_id):   # pylint: disable=W0612
+        def images_1(dummy_tenant_id, image_id):   # pylint: disable=W0612
             """
             Images actions
             """
@@ -55,7 +57,7 @@ class ComputeApiThread(threading.Thread):
 
         @app.get('/v1.1/<dummy_tenant_id>/images')
         @exception.catchall
-        def http_1_1(dummy_tenant_id):   # pylint: disable=W0612
+        def images_2(dummy_tenant_id):   # pylint: disable=W0612
             """
             Images actions
             """
@@ -63,12 +65,14 @@ class ComputeApiThread(threading.Thread):
 
             return {'images': compute.images.list(detail=False)}
 
-        # GET:  nova keypair-list
-        # POST: nova keypair-add
+        #
+        # Keypairs API
+        #
+
         @app.get('/v1.1/<dummy_tenant_id>/os-keypairs')
         @app.post('/v1.1/<dummy_tenant_id>/os-keypairs')
         @exception.catchall
-        def http_2(dummy_tenant_id):   # pylint: disable=W0612
+        def keypairs_1(dummy_tenant_id):   # pylint: disable=W0612
             """
             Keypairs actions
             """
@@ -87,7 +91,7 @@ class ComputeApiThread(threading.Thread):
 
         @app.delete('/v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>')
         @exception.catchall
-        def http_3(dummy_tenant_id, keypair_name):   # pylint: disable=W0612
+        def keypairs_2(dummy_tenant_id, keypair_name):  # pylint: disable=W0612
             """
             Keypair actions
             """
@@ -95,13 +99,14 @@ class ComputeApiThread(threading.Thread):
 
             compute.keypairs.delete(keypair_name)
 
-        # GET: nova list
-        # GET: nova show <server_id>
-        # DELTET: nova delete <server id>
+        #
+        # Servers API
+        #
+
         @app.get('/v1.1/<dummy_tenant_id>/servers/<server_id>')
         @app.delete('/v1.1/<dummy_tenant_id>/servers/<server_id>')
         @exception.catchall
-        def http_4(dummy_tenant_id, server_id):   # pylint: disable=W0612
+        def servers_1(dummy_tenant_id, server_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -122,7 +127,7 @@ class ComputeApiThread(threading.Thread):
 
         @app.get('/v1.1/<dummy_tenant_id>/servers')
         @exception.catchall
-        def http_4_1(dummy_tenant_id):   # pylint: disable=W0612
+        def servers_2(dummy_tenant_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -130,10 +135,9 @@ class ComputeApiThread(threading.Thread):
 
             return {'servers': compute.servers.list(detail=False)}
 
-        # POST: nova boot
         @app.post('/v1.1/<dummy_tenant_id>/servers')
         @exception.catchall
-        def http_5(dummy_tenant_id):   # pylint: disable=W0612
+        def servers_3(dummy_tenant_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -143,11 +147,9 @@ class ComputeApiThread(threading.Thread):
             body = json.load(bottle.request.body)
             return {'server': compute.servers.boot(body['server'])}
 
-        # POST: nova console-log
-        # POST: nova reboot
         @app.post('/v1.1/<dummy_tenant_id>/servers/<server_id>/action')
         @exception.catchall
-        def http_6(dummy_tenant_id, server_id):   # pylint: disable=W0612
+        def servers_4(dummy_tenant_id, server_id):   # pylint: disable=W0612
             """
             Servers actions
             """
@@ -167,11 +169,13 @@ class ComputeApiThread(threading.Thread):
 
             bottle.abort(400)
 
-        # GET: nova flavor-list
-        # GET: nova flavor-show <flavor_id>
+        #
+        # Flavors API
+        #
+
         @app.get('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>')
         @exception.catchall
-        def http_7(dummy_tenant_id, flavor_id):   # pylint: disable=W0612
+        def flavors_1(dummy_tenant_id, flavor_id):   # pylint: disable=W0612
             """
             Flavors actions
             """
@@ -187,7 +191,7 @@ class ComputeApiThread(threading.Thread):
 
         @app.get('/v1.1/<dummy_tenant_id>/flavors')
         @exception.catchall
-        def http_7_1(dummy_tenant_id):   # pylint: disable=W0612
+        def flavors_2(dummy_tenant_id):   # pylint: disable=W0612
             """
             Flavors actions
             """
@@ -195,10 +199,9 @@ class ComputeApiThread(threading.Thread):
 
             return {'flavors': compute.flavors.list(detail=False)}
 
-        # POST: nova flavor-create
         @app.post('/v1.1/<dummy_tenant_id>/flavors')
         @exception.catchall
-        def http_8(dummy_tenant_id):   # pylint: disable=W0612
+        def flavors_3(dummy_tenant_id):   # pylint: disable=W0612
             """
             Flavors actions
             """
@@ -207,7 +210,10 @@ class ComputeApiThread(threading.Thread):
             body = json.load(bottle.request.body)
             return {'flavor': compute.flavors.create(body['flavor'])}
 
+        #
         # Start the HTTP server
+        #
+
         try:
             host = '127.0.0.1'
             port = CONF.compute_api_port

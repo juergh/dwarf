@@ -91,9 +91,13 @@ class IdentityApiThread(threading.Thread):
 
         app = bottle.Bottle()
 
+        #
+        # Tokens API
+        #
+
         @app.post('/v2.0/tokens')
         @exception.catchall
-        def http_1():   # pylint: disable=W0612
+        def tokens_1():   # pylint: disable=W0612
             """
             Tokens actions
             """
@@ -105,7 +109,10 @@ class IdentityApiThread(threading.Thread):
 
             bottle.app(400)
 
+        #
         # Start the HTTP server
+        #
+
         try:
             host = '127.0.0.1'
             port = CONF.identity_api_port

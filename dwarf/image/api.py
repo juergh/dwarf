@@ -104,12 +104,13 @@ class ImageApiThread(threading.Thread):
         images = dwarf_images.Controller()
         app = bottle.Bottle()
 
-        # GET:    glance image-list
-        # HEAD:   glance image-show <image_id>
-        # DELETE: glance image-delete <image_id>
+        #
+        # Images API
+        #
+
         @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
         @exception.catchall
-        def http_1(image_id):   # pylint: disable=W0612
+        def images_1(image_id):   # pylint: disable=W0612
             """
             Images actions
             """
@@ -132,10 +133,9 @@ class ImageApiThread(threading.Thread):
 
             bottle.abort(400, 'Unable to handle request')
 
-        # POST: glance image-create
         @app.route('/v1/images', method='POST')
         @exception.catchall
-        def http_2():   # pylint: disable=W0612
+        def images_2():   # pylint: disable=W0612
             """
             Images actions
             """
@@ -152,7 +152,10 @@ class ImageApiThread(threading.Thread):
             image_fh = _request_body(bottle.request)
             return {'image': images.create(image_fh, image_md)}
 
+        #
         # Start the HTTP server
+        #
+
         try:
             host = '127.0.0.1'
             port = CONF.image_api_port

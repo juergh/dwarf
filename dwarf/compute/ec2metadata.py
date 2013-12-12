@@ -120,9 +120,13 @@ class Ec2MetadataThread(threading.Thread):
         db = dwarf_db.Controller()
         app = bottle.Bottle()
 
+        #
+        # Ec2 API
+        #
+
         @app.get('<url:re:[a-z0-9-/.]*>')
         @exception.catchall
-        def http_1(url):   # pylint: disable=W0612
+        def ec2_1(url):   # pylint: disable=W0612
             """
             Ec2 metadata requests
             """
@@ -159,7 +163,10 @@ class Ec2MetadataThread(threading.Thread):
             # Format and return the data
             return _ec2metadata_format(data)
 
+        #
         # Start the HTTP server
+        #
+
         try:
             host = CONF.ec2_metadata_host
             port = CONF.ec2_metadata_port
