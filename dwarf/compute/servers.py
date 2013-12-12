@@ -19,8 +19,9 @@ from dwarf.compute import virt
 CONF = config.CONFIG
 LOG = logging.getLogger(__name__)
 
-SERVERS_INFO = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
-                'name', 'status', 'updated_at', 'addresses')
+SERVERS_INFO = ('id', 'links', 'name')
+SERVERS_DETAIL = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
+                  'name', 'status', 'updated_at', 'addresses')
 
 
 def _create_disks(server):
@@ -105,16 +106,19 @@ class Controller(object):
 
         return server
 
-    def list(self):
+    def list(self, detail=True):
         """
         List all servers
         """
-        LOG.info('list()')
+        LOG.info('list(detail=%s)', detail)
 
         servers = []
         for s in self.db.servers.list():
             servers.append(self._extend(s))
-        return utils.sanitize(servers, SERVERS_INFO)
+        if detail:
+            return utils.sanitize(servers, SERVERS_DETAIL)
+        else:
+            return utils.sanitize(servers, SERVERS_INFO)
 
     def show(self, server_id):
         """
@@ -123,7 +127,7 @@ class Controller(object):
         LOG.info('show(server_id=%s)', server_id)
 
         server = self.db.servers.show(id=server_id)
-        return utils.sanitize(self._extend(server), SERVERS_INFO)
+        return utils.sanitize(self._extend(server), SERVERS_DETAIL)
 
     def _wait_for_ip(self, server):
         """
@@ -181,7 +185,7 @@ class Controller(object):
         utils.timer_start(server_id, 2, 60/2, [True],
                           self._wait_for_ip, server)
 
-        return utils.sanitize(server, SERVERS_INFO)
+        return utils.sanitize(server, SERVERS_DETAIL)
 
     def delete(self, server_id):
         """

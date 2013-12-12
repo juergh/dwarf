@@ -53,6 +53,16 @@ class ComputeApiThread(threading.Thread):
             else:
                 return {'image': compute.images.show(image_id)}
 
+        @app.get('/v1.1/<dummy_tenant_id>/images')
+        @exception.catchall
+        def http_1_1(dummy_tenant_id):   # pylint: disable=W0612
+            """
+            Images actions
+            """
+            utils.show_request(bottle.request)
+
+            return {'images': compute.images.list(detail=False)}
+
         # GET:  nova keypair-list
         # POST: nova keypair-add
         @app.get('/v1.1/<dummy_tenant_id>/os-keypairs')
@@ -110,6 +120,16 @@ class ComputeApiThread(threading.Thread):
             else:
                 return {'server': compute.servers.show(server_id)}
 
+        @app.get('/v1.1/<dummy_tenant_id>/servers')
+        @exception.catchall
+        def http_4_1(dummy_tenant_id):   # pylint: disable=W0612
+            """
+            Servers actions
+            """
+            utils.show_request(bottle.request)
+
+            return {'servers': compute.servers.list(detail=False)}
+
         # POST: nova boot
         @app.post('/v1.1/<dummy_tenant_id>/servers')
         @exception.catchall
@@ -164,6 +184,16 @@ class ComputeApiThread(threading.Thread):
             # nova flavor-show <flavor_id>
             else:
                 return {'flavor': compute.flavors.show(flavor_id)}
+
+        @app.get('/v1.1/<dummy_tenant_id>/flavors')
+        @exception.catchall
+        def http_7_1(dummy_tenant_id):   # pylint: disable=W0612
+            """
+            Flavors actions
+            """
+            utils.show_request(bottle.request)
+
+            return {'flavors': compute.flavors.list(detail=False)}
 
         # POST: nova flavor-create
         @app.post('/v1.1/<dummy_tenant_id>/flavors')
