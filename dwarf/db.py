@@ -35,7 +35,7 @@ def _print_rows(objs):
     print('\n'.join(result) + '\n')
 
 
-def get_from_dict(keys, **kwargs):
+def _get_from_dict(keys, **kwargs):
     """
     Find key in dict and return (key, val) pair
     """
@@ -45,9 +45,14 @@ def get_from_dict(keys, **kwargs):
             return (key, val)
 
 
+def _now():
+    return strftime('%Y-%m-%d %H:%M:%S', gmtime())
+
+
 class Table(object):
 
-    def __init__(self, table, cols, unique=None):
+    def __init__(self, db, table, cols, unique=None):
+        self.db = db
         self.table = table
         self.cols = cols
         self.unique = unique
@@ -62,7 +67,7 @@ class Table(object):
         # 'id TEXT, name TEXT, status TEXT, key TEXT'
         fmt = ','.join(['%s TEXT' % c for c in self.cols])
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             cur = con.cursor()
             cur.execute('CREATE TABLE %s (%s)' % (self.table, fmt))
@@ -73,7 +78,7 @@ class Table(object):
         """
         LOG.info('%s : dump()', self.table)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             cur = con.cursor()
             cur.execute('SELECT * FROM %s' % self.table)
@@ -87,7 +92,7 @@ class Table(object):
         """
         LOG.info('%s : create(%s)', self.table, kwargs)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             cur = con.cursor()
 
@@ -116,7 +121,7 @@ class Table(object):
             kwargs['int_id'] = rid
 
             # Fill in the missing row properties
-            now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+            now = _now()
             kwargs['created_at'] = now
             kwargs['updated_at'] = now
             kwargs['deleted'] = 0
@@ -140,12 +145,12 @@ class Table(object):
         """
         LOG.info('%s : update(%s)', self.table, kwargs)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             cur = con.cursor()
 
             # Fill in the missing row properties
-            now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+            now = _now()
             kwargs['updated_at'] = now
 
             # Create the sqlite formatting string and values
@@ -169,9 +174,9 @@ class Table(object):
         Delete a table row
         """
         LOG.info('%s : delete(%s)', self.table, kwargs)
-        (key, val) = get_from_dict(['id', 'name'], **kwargs)
+        (key, val) = _get_from_dict(['id', 'name'], **kwargs)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             cur = con.cursor()
 
@@ -184,7 +189,7 @@ class Table(object):
                                          code=404)
 
             # Delete the row
-            now = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+            now = _now()
             cur.execute('UPDATE %s SET deleted_at=?, updated_at=?, deleted=?'
                         'WHERE %s=?' % (self.table, key), (now, now, 1, val))
 
@@ -194,7 +199,7 @@ class Table(object):
         """
         LOG.info('%s : list()', self.table)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             con.row_factory = sq3.Row
             cur = con.cursor()
@@ -214,9 +219,9 @@ class Table(object):
         Get a single table row, converted to a dict
         """
         LOG.info('%s : show(%s)', self.table, kwargs)
-        (key, val) = get_from_dict(['id', 'name', 'ip'], **kwargs)
+        (key, val) = _get_from_dict(['id', 'name', 'ip'], **kwargs)
 
-        con = sq3.connect(CONF.dwarf_db)
+        con = sq3.connect(self.db)
         with con:
             con.row_factory = sq3.Row
             cur = con.cursor()
@@ -238,21 +243,22 @@ class Table(object):
 
 class Controller(object):
 
-    def __init__(self):
-        self.servers = Table('servers', DB_SERVERS_COLS, unique='name')
-        self.keypairs = Table('keypairs', DB_KEYPAIRS_COLS, unique='name')
-        self.images = Table('images', DB_IMAGES_COLS, unique='id')
-        self.flavors = Table('flavors', DB_FLAVORS_COLS, unique='id')
+    def __init__(self, db=CONF.dwarf_db):
+        self.db = db
+        self.servers = Table(db, 'servers', DB_SERVERS_COLS, unique='name')
+        self.keypairs = Table(db, 'keypairs', DB_KEYPAIRS_COLS, unique='name')
+        self.images = Table(db, 'images', DB_IMAGES_COLS, unique='id')
+        self.flavors = Table(db, 'flavors', DB_FLAVORS_COLS, unique='id')
 
     def init(self):
         """
         Initialize the database
         """
-        if os.path.exists(CONF.dwarf_db):
+        if os.path.exists(self.db):
             print('Database exists already')
             return
 
-        LOG.info('Initializing database %s', CONF.dwarf_db)
+        LOG.info('Initializing database %s', self.db)
         self.servers.init()
         self.keypairs.init()
         self.images.init()
@@ -270,19 +276,19 @@ class Controller(object):
         """
         Delete the database
         """
-        if not os.path.exists(CONF.dwarf_db):
+        if not os.path.exists(self.db):
             print('Database does not exist')
             return
 
-        LOG.info('Deleting database %s', CONF.dwarf_db)
-        os.remove(CONF.dwarf_db)
+        LOG.info('Deleting database %s', self.db)
+        os.remove(self.db)
 
     def dump(self, table=None):
         """
         Dump a database table
         """
         if table is None:
-            con = sq3.connect(CONF.dwarf_db)
+            con = sq3.connect(self.db)
             with con:
                 cur = con.cursor()
                 cur.execute('SELECT * FROM sqlite_master')

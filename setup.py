@@ -6,7 +6,7 @@ setup(
     summary='OpenStack API on top of libvirt/kvm',
     author='Juerg Haefliger <juergh@gmail.com>',
 
-    packages=find_packages(exclude=['tests', 'tests.*']),
+    packages=find_packages(exclude=['tests']),
     package_data={
         '': ['*.template'],
     },

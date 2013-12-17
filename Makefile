@@ -11,6 +11,12 @@ pep8:
 pylint:
 	tox -e pylint
 
+test:
+	tox -e py27
+
+cover:
+	tox -e cover
+
 build:
 	rm -rf build/* || true
 	mkdir -p build/dwarf-$(VERSION)
