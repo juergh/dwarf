@@ -63,6 +63,12 @@ class Failure(DwarfException):
 
 class NotFound(DwarfException):
     message = '%(reason)s'
+    code = 404
+
+
+class Conflict(DwarfException):
+    message = '%(reason)s'
+    code = 409
 
 
 class ServerBootFailure(DwarfException):

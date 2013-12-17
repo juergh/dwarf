@@ -96,7 +96,7 @@ class Table(object):
         with con:
             cur = con.cursor()
 
-            # Check if the row exists already
+            # Check if the row already exists
             if self.unique:
                 key = self.unique
                 val = kwargs.get(key, None)
@@ -104,9 +104,9 @@ class Table(object):
                     cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
                                 (self.table, key), (val, 0))
                     if cur.fetchone():
-                        raise exception.Failure(reason='%s %s already exists' %
-                                                (self.table.rstrip('s'), val),
-                                                code=400)
+                        raise exception.Conflict(reason='%s %s already '
+                                                 'exists' %
+                                                 (self.table.rstrip('s'), val))
 
             # Create a new (UU)ID if necessary
             if not 'id' in kwargs:
@@ -185,8 +185,7 @@ class Table(object):
                         (self.table, key), (val, 0))
             if not cur.fetchone():
                 raise exception.NotFound(reason='%s %s not found' %
-                                         (self.table.rstrip('s'), val),
-                                         code=404)
+                                         (self.table.rstrip('s'), val))
 
             # Delete the row
             now = _now()
@@ -231,8 +230,7 @@ class Table(object):
 
         if not sq3_row:
             raise exception.NotFound(reason='%s %s not found' %
-                                     (self.table.rstrip('s'), val),
-                                     code=404)
+                                     (self.table.rstrip('s'), val))
 
         # Convert to a dict
         row = dict(zip(sq3_row.keys(), sq3_row))
