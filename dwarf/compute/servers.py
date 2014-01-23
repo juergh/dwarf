@@ -25,6 +25,7 @@ import shutil
 from dwarf import db
 
 from dwarf import config
+from dwarf import task
 from dwarf import utils
 
 from dwarf.compute import flavors
@@ -197,9 +198,8 @@ class Controller(object):
         # Update the status of the server
         server = self.db.servers.update(id=server_id, status='NETWORKING')
 
-        # Schedule a timer to wait for the server to get its DHCP IP address
-        utils.timer_start(server_id, 2, 60/2, [True],
-                          self._wait_for_ip, server)
+        # Schedule a task to wait for the server to get its DHCP IP address
+        task.start(server_id, 2, 60/2, [True], self._wait_for_ip, server)
 
         return utils.sanitize(server, SERVERS_DETAIL)
 
@@ -210,6 +210,9 @@ class Controller(object):
         LOG.info('delete(server_id=%s)', server_id)
 
         server = self.db.servers.show(id=server_id)
+
+        # Kill any running tasks associated with this server
+        task.stop(server_id)
 
         # Delete the iptables route for the Ec2 metadata service
         utils.delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)

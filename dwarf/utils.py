@@ -21,46 +21,10 @@ import os
 import random
 import signal
 import subprocess
-import time
-
-from threading import Thread
 
 from dwarf import exception
 
 LOG = logging.getLogger(__name__)
-
-_TIMER = {}
-
-
-class _Timer(Thread):
-
-    def __init__(self, tid, interval, repeat, exit_on_retval,
-                 func, *args, **kwargs):
-        super(_Timer, self).__init__()
-
-        self.tid = tid
-        self.interval = interval
-        self.repeat = repeat
-        self.exit_on_retval = exit_on_retval
-        self.check_retval = isinstance(exit_on_retval, list)
-
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-
-        self._stop = False
-
-    def run(self):
-        for dummy in range(self.repeat):
-            time.sleep(self.interval)
-            if self._stop:
-                break
-            retval = self.func(*self.args, **self.kwargs)
-            if self.check_retval and retval in self.exit_on_retval:
-                break
-
-    def stop(self):
-        self._stop = True
 
 
 def sanitize(obj, keys):
@@ -168,31 +132,6 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     if stderr:
         LOG.info('execute(stderr=%s)', stderr)
     return (stdout, stderr)
-
-
-def timer_start(tid, interval, repeat, exit_on_retval,
-                func, *args, **kwargs):
-    """
-    Start a new timer
-    """
-    LOG.info('timer_start(tid=%s, interval=%s, repeat=%s, exit_on_retval=%s, '
-             'func=%s, args=%s, kwargs=%s)', tid, interval, repeat,
-             exit_on_retval, func.__name__, args, kwargs)
-
-    t = _Timer(tid, interval, repeat, exit_on_retval, func, *args, **kwargs)
-    _TIMER[tid] = t
-    t.start()
-
-
-def timer_stop(tid):
-    """
-    Stop a running timer
-    """
-    LOG.info('timer_stop(tid=%s)', tid)
-
-    t = _TIMER[tid]
-    del _TIMER[tid]
-    t.stop()
 
 
 def add_ec2metadata_route(ip, port):
