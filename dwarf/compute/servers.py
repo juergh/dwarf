@@ -16,9 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import logging
+import random
 import os
 import shutil
 
@@ -39,6 +38,75 @@ LOG = logging.getLogger(__name__)
 SERVERS_INFO = ('id', 'links', 'name')
 SERVERS_DETAIL = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
                   'name', 'status', 'updated_at', 'addresses')
+
+
+def _generate_mac():
+    """
+    Generate a random MAC address
+    """
+    mac = [0x52, 0x54, 0x00,
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff)]
+    return ':'.join(['%02x' % x for x in mac])
+
+
+def _get_server_ip(mac):
+    """
+    Get the IP associated with the given MAC address
+    """
+    addr = None
+    leases = '/var/lib/libvirt/dnsmasq/default.leases'
+    with open(leases, 'r') as fh:
+        for line in fh.readlines():
+            col = line.split()
+            if col[1] == mac:
+                addr = col[2]
+                break
+
+    LOG.info('_get_server_ip(mac=%s) : %s', mac, addr)
+    return addr
+
+
+def _add_ec2metadata_route(ip, port):
+    """
+    Add the iptables route for the Ec2 metadata service
+    """
+    LOG.info('_add_ec2metadata_route(ip=%s, port=%s)', ip, port)
+
+    # Add the route
+    utils.execute(['iptables',
+                   '-t', 'nat',
+                   '-A', 'PREROUTING',
+                   '-s', ip,
+                   '-d', '169.254.169.254/32',
+                   '-p', 'tcp',
+                   '-m', 'tcp',
+                   '--dport', 80,
+                   '-j', 'REDIRECT',
+                   '--to-port', port],
+                  run_as_root=True)
+
+
+def _delete_ec2metadata_route(ip, port):
+    """
+    Delete a (compute) server from the metadata server
+    """
+    LOG.info('_delete_ec2metadata_route(ip=%s, port=%s)', ip, port)
+
+    # Delete the route
+    utils.execute(['iptables',
+                   '-t', 'nat',
+                   '-D', 'PREROUTING',
+                   '-s', ip,
+                   '-d', '169.254.169.254/32',
+                   '-p', 'tcp',
+                   '-m', 'tcp',
+                   '--dport', 80,
+                   '-j', 'REDIRECT',
+                   '--to-port', port],
+                  run_as_root=True,
+                  check_exit_code=False)
 
 
 def _create_disks(server):
@@ -151,7 +219,7 @@ class Controller(object):
         Update the DHCP assigned IP address
         """
         # Try to get the server's DHCP-assigned IP
-        ip = utils.get_server_ip(server['mac_address'])
+        ip = _get_server_ip(server['mac_address'])
         if ip is None:
             return False
 
@@ -160,7 +228,7 @@ class Controller(object):
                                         status='ACTIVE')
 
         # Add the iptables route for the Ec2 metadata service
-        utils.add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+        _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
         return True
 
@@ -182,14 +250,17 @@ class Controller(object):
         server_id = server['id']
 
         # Generate some more server properties and update the database
-        mac_address = utils.generate_mac()
+        mac_address = _generate_mac()
         server = self.db.servers.update(id=server_id, mac_address=mac_address)
 
         # Extend the server details
         server = self._extend(server)
 
-        # Create the server directory and disk images
-        os.makedirs(os.path.join(CONF.instances_dir, server_id))
+        # Create the server directory
+        basepath = os.path.join(CONF.instances_dir, server_id)
+        os.makedirs(basepath)
+
+        # Create the server disk images
         _create_disks(server)
 
         # Finally boot the server
@@ -198,7 +269,7 @@ class Controller(object):
         # Update the status of the server
         server = self.db.servers.update(id=server_id, status='NETWORKING')
 
-        # Schedule a task to wait for the server to get its DHCP IP address
+        # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60/2, [True], self._wait_for_ip, server)
 
         return utils.sanitize(server, SERVERS_DETAIL)
@@ -211,16 +282,16 @@ class Controller(object):
 
         server = self.db.servers.show(id=server_id)
 
-        # Kill any running tasks associated with this server
+        # Stop all running tasks associated with this server
         task.stop(server_id)
 
         # Delete the iptables route for the Ec2 metadata service
-        utils.delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+        _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
-        # Kill the running instance
+        # Kill the running server
         self.virt.delete_server(server)
 
-        # Purge all instance files
+        # Purge all server files
         basepath = os.path.join(CONF.instances_dir, server_id)
         if os.path.exists(basepath):
             shutil.rmtree(basepath)
@@ -250,7 +321,7 @@ class Controller(object):
 
         server = self.db.servers.show(id=server_id)
 
-        utils.delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+        _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
         self.virt.delete_server(server)
         self.virt.boot_server(server)
-        utils.add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+        _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)

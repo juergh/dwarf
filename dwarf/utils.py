@@ -18,7 +18,6 @@
 
 import logging
 import os
-import random
 import signal
 import subprocess
 
@@ -56,34 +55,6 @@ def show_request(req):
     for key in req.headers.keys():
         LOG.debug('%s = %s', key, req.headers[key])
     LOG.debug('---- END REQUEST HEADERS -----')
-
-
-def generate_mac():
-    """
-    Generate a random MAC address
-    """
-    mac = [0x52, 0x54, 0x00,
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff)]
-    return ':'.join(['%02x' % x for x in mac])
-
-
-def get_server_ip(mac):
-    """
-    Get the IP associated with the given MAC address
-    """
-    addr = None
-    leases = '/var/lib/libvirt/dnsmasq/default.leases'
-    with open(leases, 'r') as fh:
-        for line in fh.readlines():
-            col = line.split()
-            if col[1] == mac:
-                addr = col[2]
-                break
-
-    LOG.info('get_server_ip(mac=%s) : %s', mac, addr)
-    return addr
 
 
 def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
@@ -132,44 +103,3 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     if stderr:
         LOG.info('execute(stderr=%s)', stderr)
     return (stdout, stderr)
-
-
-def add_ec2metadata_route(ip, port):
-    """
-    Add the iptables route for the Ec2 metadata service
-    """
-    LOG.info('add_ec2metadata_route(ip=%s, port=%s)', ip, port)
-
-    # Add the route
-    execute(['iptables',
-             '-t', 'nat',
-             '-A', 'PREROUTING',
-             '-s', ip,
-             '-d', '169.254.169.254/32',
-             '-p', 'tcp',
-             '-m', 'tcp',
-             '--dport', 80,
-             '-j', 'REDIRECT',
-             '--to-port', port],
-            run_as_root=True)
-
-
-def delete_ec2metadata_route(ip, port):
-    """
-    Delete a (compute) server from the metadata server
-    """
-    LOG.info('delete_ec2metadata_route(ip=%s, port=%s)', ip, port)
-
-    # Delete the route
-    execute(['iptables',
-             '-t', 'nat',
-             '-D', 'PREROUTING',
-             '-s', ip,
-             '-d', '169.254.169.254/32',
-             '-p', 'tcp',
-             '-m', 'tcp',
-             '--dport', 80,
-             '-j', 'REDIRECT',
-             '--to-port', port],
-            run_as_root=True,
-            check_exit_code=False)
