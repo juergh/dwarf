@@ -77,6 +77,11 @@ class Failure(DwarfException):
     message = '%(reason)s'
 
 
+class Forbidden(DwarfException):
+    message = '%(reason)s'
+    code = 403
+
+
 class NotFound(DwarfException):
     message = '%(reason)s'
     code = 404

@@ -193,14 +193,23 @@ class Table(object):
 
         con = sq3.connect(self.db)
         with con:
+            con.row_factory = sq3.Row
             cur = con.cursor()
-
-            # Check if the row exists
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
                         (self.table, key), (val, 0))
-            if not cur.fetchone():
+            sq3_row = cur.fetchone()
+
+            # Check if the row exists
+            if not sq3_row:
                 raise exception.NotFound(reason='%s %s not found' %
                                          (self.table.rstrip('s'), val))
+
+            # Check if the row is protected
+            protected = dict(zip(sq3_row.keys(), sq3_row)).get('protected',
+                                                               'false').lower()
+            if protected == 'true':
+                raise exception.Forbidden(reason='%s %s is protected' %
+                                          (self.table.rstrip('s'), val))
 
             # Delete the row
             now = _now()
