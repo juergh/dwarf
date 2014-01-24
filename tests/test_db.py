@@ -229,6 +229,13 @@ class DbTestCase(unittest.TestCase):
         image = self.db.images.create(**IMAGE)
         self.assertEqual(image, IMAGE_DETAIL)
 
+    def test_db_delete_protected_image(self):
+        protected = deepcopy(IMAGE)
+        protected['protected'] = 'True'
+        image = self.db.images.create(**protected)
+        self.assertRaises(exception.Forbidden, self.db.images.delete,
+                          id=image['id'])
+
     #
     # Code coverage
     #
