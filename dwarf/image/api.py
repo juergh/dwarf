@@ -101,6 +101,16 @@ def _add_header(metadata):
             func('x-image-meta-%s' % key, []).append(str(val))
 
 
+def _from_headers(headers):
+    # Extract the image metadata from the HTTP headers
+    image_md = {}
+    for key in headers.keys():
+        if key.lower().startswith('x-image-meta-'):
+            k = key.lower()[13:].replace('-', '_')
+            image_md[k] = headers[key]
+    return image_md
+
+
 class ImageApiThread(threading.Thread):
     server = None
 
@@ -124,7 +134,8 @@ class ImageApiThread(threading.Thread):
         # Images API
         #
 
-        @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE'))
+        @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE',
+                                                    'PUT'))
         @exception.catchall
         def images_1(image_id):   # pylint: disable=W0612
             """
@@ -147,6 +158,11 @@ class ImageApiThread(threading.Thread):
                 images.delete(image_id)
                 return
 
+            # glance image-update <image_id>
+            if image_id != 'detail' and bottle.request.method == 'PUT':
+                image_md = _from_headers(bottle.request.headers)
+                return {'image': images.update(image_id, image_md)}
+
             bottle.abort(400, 'Unable to handle request')
 
         @app.route('/v1/images', method='POST')
@@ -158,11 +174,7 @@ class ImageApiThread(threading.Thread):
             utils.show_request(bottle.request)
 
             # Parse the HTTP header
-            image_md = {}
-            for key in bottle.request.headers.keys():
-                if key.lower().startswith('x-image-meta-'):
-                    k = key.lower()[13:].replace('-', '_')
-                    image_md[k] = bottle.request.headers[key]
+            image_md = _from_headers(bottle.request.headers)
 
             # glance image-create
             image_fh = _request_body(bottle.request)

@@ -106,3 +106,12 @@ class Controller(object):
         except OSError as ex:
             LOG.warn('failed to delete image %s (%s, %s)', image_file,
                      ex.errno, ex.strerror)
+
+    def update(self, image_id, image_md):
+        """
+        Update image metadata
+        """
+        LOG.info('update(image_id=%s, image_md=%s)', image_id, image_md)
+
+        image = self.db.images.update(id=image_id, **image_md)
+        return utils.sanitize(image, IMAGES_INFO)
