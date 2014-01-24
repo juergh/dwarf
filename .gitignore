@@ -3,3 +3,5 @@
 .tox/
 build/
 dwarf.egg-info/
+.coverage
+
