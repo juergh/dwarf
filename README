@@ -1,27 +1,93 @@
-Dwarf is a small tool to manage virtual machines similarly to the way Nova
-does but restricted to the local machine. Dwarf provides a subset of the same
-CLI commands as the Nova client and tries to emulate Nova behavior as closely
-as possible. It only runs on Linux using KVM as the hypervisor.
+Dwarf
+=====
 
-Since it's not packaged yet, things need to be setup manually prior to using
-Dwarf:
+In a nutshell, dwarf is OpenStack API on top of local libvirt/KVM. It supports
+a subset of the Keystone, Glance and Nova APIs to manage images and instances
+on the local machine.
 
-1) Install libvirt and KVM and virsh and virt-manager and all those goodies.
-   Make sure the permissions are set correctly so that a regular user can
-   launch VMs in 'system' mode, i.e. 'virsh --connect=qemmu:///system' needs to
-   work for the user who wants to run Dwarf.
 
-2) Run the 'tools/setup' script to add the Dwarf user and directory and give
-   a regular user permissions to run Dwarf. Run it like this
-   'sudo tools/setup <username>' where <username> is the name of the user who
-   wants to run Dwarf.
+Restrictions
+------------
 
-3) Initialize the Dwarf environment by running 'bin/dwarf env-init'.
+Lots :-) It only supports a subset of the OpenStack API and it currently
+doesn't do user authentication. Meaning everybody who can log into the machine
+can manipulate all images and instances managed through dwarf.
 
-Now you should be ready to use Dwarf. Run 'bin/dwarf -h' for a list of
-supported commands. The names and usages of the commands are copied from the
-Nova client with slight variations where they are required.
+Everything is serialized and blocking. All calls to dwarf will be served in the
+order they're received and only return after they've finished. There's no
+scheduling and background processing.
 
-For example, to boot an instance, one can specify a local image file rather
-than an ID from an image catalog, i.e.:
-$ bin/dwarf boot --image-file ./test-image.qcow2 server1
+
+Configuration
+-------------
+
+After installation, check that the settings in '/etc/dwarf.conf' match your
+environment. You need to restart dwarf if you make any modifications:
+$ sudo initctl restart dwarf
+
+If this is the first installation, initialize the dwarf database:
+$ sudo dwarf-manage db-delete
+$ sudo dwarf-manage db-init
+
+Set the OpenStack environment variables (modify the port number accordingly, if
+you changed it in the config file):
+$ export OS_AUTH_URL=http://localhost:35357/v2.0/
+$ export OS_COMPUTE_API_VERSION=1.1
+$ export OS_REGION_NAME=dwarf-region
+$ export OS_TENANT_NAME=dwarf-tenant
+$ export OS_USERNAME=dwarf-user
+$ export OS_PASSWORD=dwarf-password
+
+
+Supported OpenStack CLI commands
+--------------------------------
+
+At the moment, the following commands are supported:
+
+keystone token-get
+keystone catalog
+
+glance image-create
+glance image-delete
+glance image-list
+glance image-show
+glance image-update
+
+nova flavor-create
+nova flavor-list
+nova flavor-show
+
+nova image-list
+nova image-show
+
+nova keypair-add
+nova keypair-delete
+nova keypair-list
+
+nova boot
+nova console-log
+nova delete
+nova list
+nova reboot
+nova show
+
+
+Notes
+-----
+
+Default compute flavors are automatically added, check them with:
+$ nova flavor-list
+
+Before you can boot an instance, you need to add an image and a keypair:
+$ nova keypair-add <key name>
+$ glance image-create --name 'My Image Name' --file <image filename>
+
+When booting an instance, the instance will receive a DHCP IP address from
+libvirt's dnsmasq. It takes a bit until that happens, check the status with:
+$ nova show <instance ID or name>
+
+
+Debugging
+---------
+
+Check the log at /var/lib/dwarf/dwarf.log.

@@ -36,7 +36,7 @@ cover:
 build:
 	rm -rf build/* || true
 	mkdir -p build/dwarf-$(VERSION)
-	tar cvf - bin debian dwarf etc setup.py | \
+	tar cvf - bin debian dwarf etc setup.py README | \
 		(cd build/dwarf-$(VERSION) && tar xfp -)
 
 deb: build
