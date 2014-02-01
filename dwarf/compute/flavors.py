@@ -63,3 +63,11 @@ class Controller(object):
 
         new_flavor = self.db.flavors.create(**flavor)
         return utils.sanitize(new_flavor, FLAVORS_DETAIL)
+
+    def delete(self, flavor_id):
+        """
+        Delete a flavor
+        """
+        LOG.info('delete(flavor_id=%s)', flavor_id)
+
+        self.db.flavors.delete(id=flavor_id)

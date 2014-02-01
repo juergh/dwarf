@@ -190,12 +190,18 @@ class ComputeApiThread(threading.Thread):
         #
 
         @app.get('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>')
+        @app.delete('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>')
         @exception.catchall
         def flavors_1(dummy_tenant_id, flavor_id):   # pylint: disable=W0612
             """
             Flavors actions
             """
             utils.show_request(bottle.request)
+
+            # nova flavor-delete <flavor_id>
+            if bottle.request.method == 'DELETE':
+                compute.flavors.delete(flavor_id)
+                return
 
             # nova flavor-list
             if flavor_id == 'detail':

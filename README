@@ -54,6 +54,7 @@ glance image-show
 glance image-update
 
 nova flavor-create
+nova flavor-delete
 nova flavor-list
 nova flavor-show
 
