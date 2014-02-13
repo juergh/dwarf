@@ -93,10 +93,10 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     exit_code = p.returncode
 
     if not ignore_exit_code and exit_code not in check_exit_code:
-        raise exception.CommandExecutionFailure(code=exit_code,
-                                                reason='cmd: %s, stdout: %s, '
-                                                'stderr: %s' % (cmd, stdout,
-                                                                stderr))
+        raise exception.CommandExecutionFailure(reason='%s\nexit_code: %s\n'
+                                                'stdout: %s\nstderr: %s' %
+                                                (cmd, exit_code, stdout,
+                                                 stderr))
 
     if stdout:
         LOG.info('execute(stdout=%s)', stdout)

@@ -19,7 +19,7 @@
 import logging
 
 from functools import wraps
-from bottle import response, abort
+from bottle import abort
 
 LOG = logging.getLogger(__name__)
 
@@ -33,11 +33,11 @@ def catchall(func):
         try:
             return func(*args, **kwargs)
         except DwarfException as e:
-            LOG.warn('caught DwarfException: %s (%s)', e.code, e.message)
-            response.content_type = 'application/json; charset=UTF-8'
+            LOG.warn('Exception caught: %s (%s)', e.message, e.code)
             abort(e.code, e.message)
         except Exception as e:
-            LOG.exception('caught unknown exception')
+            LOG.exception('Unknown exception caught: %s', str(e))
+            abort(500, str(e))
     return wrapper
 
 
@@ -45,7 +45,7 @@ class DwarfException(Exception):
     """
     Base Dwarf exception
     """
-    message = "An unknown exception occurred"
+    message = 'Unknown failure'
     code = 500
 
     def __init__(self, **kwargs):
@@ -57,6 +57,7 @@ class DwarfException(Exception):
 
 class Failure(DwarfException):
     message = '%(reason)s'
+    code = 500
 
 
 class Forbidden(DwarfException):
@@ -74,17 +75,6 @@ class Conflict(DwarfException):
     code = 409
 
 
-class ServerBootFailure(DwarfException):
-    message = 'Failed to boot server: %(reason)s'
-
-
-class ServerDeleteFailure(DwarfException):
-    message = 'Failed to delete server: %(reason)s'
-
-
-class MetadataStartFailure(DwarfException):
-    message = 'Failed to start metadata server" %(reason)s'
-
-
 class CommandExecutionFailure(DwarfException):
-    message = 'Failed to run command" %(reason)s'
+    message = 'Failed to run command: %(reason)s'
+    code = 500
