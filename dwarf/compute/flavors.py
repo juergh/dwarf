@@ -71,3 +71,10 @@ class Controller(object):
         LOG.info('delete(flavor_id=%s)', flavor_id)
 
         self.db.flavors.delete(id=flavor_id)
+
+    def exists(self, flavor_id):
+        """
+        Check if a flavor exists
+        """
+        LOG.info('exists(flavor_id=%s)', flavor_id)
+        self.db.flavors.show(id=flavor_id)

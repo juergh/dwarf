@@ -243,6 +243,11 @@ class Controller(object):
         flavor_id = server['flavorRef']
         key_name = server.get('key_name')
 
+        # Sanity checks, will throw exceptions if they fail
+        self.images.exists(image_id)
+        self.flavors.exists(flavor_id)
+        self.keypairs.exists(key_name)
+
         # Create a new server in the database
         server = self.db.servers.create(name=name, image_id=image_id,
                                         flavor_id=flavor_id, key_name=key_name,

@@ -83,3 +83,10 @@ class Controller(object):
         LOG.info('delete(name=%s)', keypair_name)
 
         self.db.keypairs.delete(name=keypair_name)
+
+    def exists(self, keypair_name):
+        """
+        Check if a keypair exists
+        """
+        LOG.info('exists(name=%s)', keypair_name)
+        self.db.keypairs.show(name=keypair_name)
