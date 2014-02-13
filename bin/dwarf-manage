@@ -27,11 +27,10 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
+from dwarf import config
 from dwarf import db as dwarf_db
 
-from dwarf import config
-
-CONF = config.CONFIG
+CONF = config.Config()
 
 
 def _dec(name, *args, **kwargs):

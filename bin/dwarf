@@ -35,7 +35,7 @@ from dwarf.image import api as image_api
 
 from dwarf.compute import ec2metadata
 
-CONF = config.CONFIG
+CONF = config.Config()
 
 
 def cleanup(dummy_signal, dummy_frame):

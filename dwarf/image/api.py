@@ -24,13 +24,12 @@ from tempfile import TemporaryFile
 
 from dwarf.image import images as dwarf_images
 
+from dwarf import config
 from dwarf import exception
 from dwarf import http
-
-from dwarf import config
 from dwarf import utils
 
-CONF = config.CONFIG
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 

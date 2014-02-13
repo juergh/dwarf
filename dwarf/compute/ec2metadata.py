@@ -26,7 +26,7 @@ from dwarf import http
 
 from dwarf import config
 
-CONF = config.CONFIG
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 

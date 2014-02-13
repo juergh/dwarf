@@ -32,7 +32,7 @@ from dwarf.compute import images
 from dwarf.compute import keypairs
 from dwarf.compute import virt
 
-CONF = config.CONFIG
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 SERVERS_INFO = ('id', 'links', 'name')

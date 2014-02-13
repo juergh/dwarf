@@ -28,7 +28,7 @@ from dwarf import db
 from dwarf import config
 from dwarf import utils
 
-CONF = config.CONFIG
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 IMAGES_INFO = ('checksum', 'created_at', 'container_format', 'disk_format',

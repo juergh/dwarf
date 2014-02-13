@@ -25,7 +25,7 @@ import yaml
 LOG = logging.getLogger(__name__)
 
 
-class Config(object):
+class _Config(object):
 
     def __init__(self):
         # Get the config data from file
@@ -67,4 +67,14 @@ class Config(object):
             LOG.info('%s: %s', key, self._cfg[key])
 
 
-CONFIG = Config()
+_CONFIG = None
+
+
+def Config():
+    """
+    Factory function to return the already created object
+    """
+    global _CONFIG   # pylint: disable=W0603
+    if _CONFIG is None:
+        _CONFIG = _Config()
+    return _CONFIG

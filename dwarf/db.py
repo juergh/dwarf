@@ -27,9 +27,8 @@ from time import gmtime, strftime
 from dwarf import exception
 from dwarf import config
 
-
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
-CONF = config.CONFIG
 
 _DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id',
             'int_id']

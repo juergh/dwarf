@@ -24,7 +24,7 @@ from Cheetah.Template import Template
 
 from dwarf import config
 
-CONF = config.CONFIG
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 
