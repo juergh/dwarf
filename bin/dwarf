@@ -57,10 +57,10 @@ if __name__ == '__main__':
 
     # Create the API (and Ec2 metadata) server threads
     THREADS = [
-        identity_api.IdentityApiThread(),
-        compute_api.ComputeApiThread(),
-        image_api.ImageApiThread(),
-        ec2metadata.Ec2MetadataThread(),
+        identity_api.IdentityApiServer(),
+        compute_api.ComputeApiServer(),
+        image_api.ImageApiServer(),
+        ec2metadata.Ec2MetadataServer(),
     ]
 
     # Install the cleanup handler

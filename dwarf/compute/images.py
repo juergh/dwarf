@@ -20,9 +20,9 @@ from __future__ import print_function
 
 import logging
 
-from dwarf import db
-
 from dwarf import utils
+
+from dwarf.db import DB
 
 LOG = logging.getLogger(__name__)
 
@@ -33,16 +33,13 @@ IMAGES_DETAIL = ('created_at', 'id', 'is_public', 'links', 'name', 'size',
 
 class Controller(object):
 
-    def __init__(self):
-        self.db = db.Controller()
-
     def list(self, detail=True):
         """
         List all images
         """
         LOG.info('list(detail=%s)', detail)
 
-        images = self.db.images.list()
+        images = DB.images.list()
         if detail:
             return utils.sanitize(images, IMAGES_DETAIL)
         else:
@@ -54,7 +51,7 @@ class Controller(object):
         """
         LOG.info('show(image_id=%s)', image_id)
 
-        image = self.db.images.show(id=image_id)
+        image = DB.images.show(id=image_id)
         return utils.sanitize(image, IMAGES_DETAIL)
 
     def exists(self, image_id):
@@ -62,4 +59,7 @@ class Controller(object):
         Check if an image exists
         """
         LOG.info('exists(image_id=%s)', image_id)
-        self.db.images.show(id=image_id)
+        DB.images.show(id=image_id)
+
+
+IMAGES = Controller()

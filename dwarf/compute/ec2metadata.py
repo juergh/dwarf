@@ -18,13 +18,12 @@
 
 import bottle
 import logging
-import threading
 
-from dwarf import db as dwarf_db
-from dwarf import exception
-from dwarf import http
-
+from dwarf import api_server
 from dwarf import config
+from dwarf import exception
+
+from dwarf.db import DB
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -102,94 +101,72 @@ def _ec2metadata_resources(server, keypair):
     return resources
 
 
-class Ec2MetadataThread(threading.Thread):
-    server = None
+@exception.catchall
+def _route_ec2(url):
+    """
+    Route:  <url:re:[a-z0-9-/.]*>
+    Method: GET
+    """
+    # Supported API versions
+    versions = ['1.0',
+                '2007-01-19',
+                '2007-03-01',
+                '2007-08-29',
+                '2007-10-10',
+                '2007-12-15',
+                '2008-02-01',
+                '2008-09-01',
+                '2009-04-04']
 
-    def stop(self):
-        # Stop the HTTP server
-        try:
-            self.server.stop()
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop Ec2 metadata server')
+    # Client IP address
+    ip = bottle.request.remote_addr
 
-    def run(self):
-        """
-        Ec2 metadata thread worker
-        """
-        LOG.info('Starting Ec2 metadata worker')
+    # Database lookup
+    server = DB.servers.show(ip=ip)
+    keypair = DB.keypairs.show(name=server['key_name'])
 
-        # Cache to minimize database lookups
-        servers = {}
-        keypairs = {}
+    # Split the URL path into its individual components
+    path = url.strip('/')
+    components = path.split('/')
 
-        # Supported API versions
-        versions = ['1.0',
-                    '2007-01-19',
-                    '2007-03-01',
-                    '2007-08-29',
-                    '2007-10-10',
-                    '2007-12-15',
-                    '2008-02-01',
-                    '2008-09-01',
-                    '2009-04-04']
+    # Check if the requested API version (first path component) is supported
+    version = components.pop(0)
+    if version not in versions + ['latest']:
+        return _ec2metadata_format(versions)
 
-        db = dwarf_db.Controller()
-        app = bottle.Bottle()
+    # Get the client's metadata resources
+    data = _ec2metadata_resources(server, keypair)
 
-        #
-        # Ec2 API
-        #
+    # Walk through the path components
+    for c in components:
+        # Bail out if accessing hidden or non-existing keys
+        if c == '_key_name' or c not in data:
+            bottle.abort(404)
+        else:
+            data = data[c]
 
-        @app.get('<url:re:[a-z0-9-/.]*>')
-        @exception.catchall
-        def ec2_1(url):   # pylint: disable=W0612
-            """
-            Ec2 metadata requests
-            """
-            # Client IP address
-            ip = bottle.request.remote_addr
+    # Format and return the data
+    return _ec2metadata_format(data)
 
-            # Query the database if the server and keypair data of this client
-            # is not in the cache
-            if ip not in servers:
-                servers[ip] = db.servers.show(ip=ip)
-                keypairs[ip] = db.keypairs.show(name=servers[ip]['key_name'])
 
-            # Split the URL path into its individual components
-            path = url.strip('/')
-            components = path.split('/')
+def _add_routes(app):
+    """
+    Add routes to the server app
+    """
+    app.route('<url:re:[a-z0-9-/.]*>', method='GET')(_route_ec2)
 
-            # Check if the requested API version (first path component) is
-            # supported
-            version = components.pop(0)
-            if version not in versions + ['latest']:
-                return _ec2metadata_format(versions)
 
-            # Get the client's metadata resources
-            data = _ec2metadata_resources(servers[ip], keypairs[ip])
+def Ec2MetadataServer():
+    """
+    Instantiate and configure the API server
+    """
+    server = api_server.ApiServer()
 
-            # Walk through the path components
-            for c in components:
-                # Bail out if accessing hidden or non-existing keys
-                if c == '_key_name' or c not in data:
-                    bottle.abort(404)
-                else:
-                    data = data[c]
+    server.name = 'Ec2 metadata'
+    server.host = CONF.ec2_metadata_host
+    server.port = CONF.ec2_metadata_port
 
-            # Format and return the data
-            return _ec2metadata_format(data)
+    server.app = bottle.Bottle()
+    _add_routes(server.app)
 
-        #
-        # Start the HTTP server
-        #
-
-        try:
-            host = CONF.ec2_metadata_host
-            port = CONF.ec2_metadata_port
-            self.server = http.BaseHTTPServer(host=host, port=port)
-
-            LOG.info('Ec2 metadata server listening on %s:%s', host, port)
-            bottle.run(app, server=self.server)
-            LOG.info('Ec2 metadata server shut down')
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start Ec2 metadata server')
+    return server

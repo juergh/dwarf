@@ -19,11 +19,10 @@
 import bottle
 import json
 import logging
-import threading
 
+from dwarf import api_server
 from dwarf import config
 from dwarf import exception
-from dwarf import http
 from dwarf import utils
 
 CONF = config.Config()
@@ -76,7 +75,7 @@ service_image = {
 }
 
 
-post_tokens_reply = {
+tokens_reply = {
     "access": {
         "token": token,
         "user": user,
@@ -88,53 +87,38 @@ post_tokens_reply = {
 }
 
 
-class IdentityApiThread(threading.Thread):
-    server = None
+@exception.catchall
+def _route_tokens():
+    """
+    Route:  /v2.0/tokens
+    Method: POST
+    """
+    utils.show_request(bottle.request)
 
-    def stop(self):
-        # Stop the HTTP server
-        try:
-            self.server.stop()
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop Identity API server')
+    body = json.load(bottle.request.body)
+    if 'auth' in body:
+        return tokens_reply
 
-    def run(self):
-        """
-        Identity API thread worker
-        """
-        LOG.info('Starting Identity API worker')
 
-        app = bottle.Bottle()
+def _add_routes(app):
+    """
+    Add routes to the server app
+    """
+    app.route('/v2.0/tokens', method='POST')(_route_tokens)
 
-        #
-        # Tokens API
-        #
 
-        @app.post('/v2.0/tokens')
-        @exception.catchall
-        def tokens_1():   # pylint: disable=W0612
-            """
-            Tokens actions
-            """
-            utils.show_request(bottle.request)
+@exception.catchall
+def IdentityApiServer():
+    """
+    Instantiate and configure the API server
+    """
+    server = api_server.ApiServer()
 
-            body = json.load(bottle.request.body)
-            if 'auth' in body:
-                return post_tokens_reply
+    server.name = 'Identity'
+    server.host = '127.0.0.1'
+    server.port = CONF.identity_api_port
 
-            bottle.app(400)
+    server.app = bottle.Bottle()
+    _add_routes(server.app)
 
-        #
-        # Start the HTTP server
-        #
-
-        try:
-            host = '127.0.0.1'
-            port = CONF.identity_api_port
-            self.server = http.BaseHTTPServer(host=host, port=port)
-
-            LOG.info('Identity API server listening on %s:%s', host, port)
-            bottle.run(app, server=self.server)
-            LOG.info('Identity API server shut down')
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start Identity API server')
+    return server

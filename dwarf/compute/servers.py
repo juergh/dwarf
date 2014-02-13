@@ -21,16 +21,16 @@ import random
 import os
 import shutil
 
-from dwarf import db
-
 from dwarf import config
 from dwarf import task
 from dwarf import utils
 
-from dwarf.compute import flavors
-from dwarf.compute import images
-from dwarf.compute import keypairs
-from dwarf.compute import virt
+from dwarf.db import DB
+
+from dwarf.compute.flavors import FLAVORS
+from dwarf.compute.images import IMAGES
+from dwarf.compute.keypairs import KEYPAIRS
+from dwarf.compute.virt import VIRT
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -165,23 +165,16 @@ def _create_disks(server):
 
 class Controller(object):
 
-    def __init__(self):
-        self.db = db.Controller()
-        self.flavors = flavors.Controller()
-        self.images = images.Controller()
-        self.virt = virt.Controller()
-        self.keypairs = keypairs.Controller()
-
     def _extend(self, server):
         """
         Extend server details
         """
         if 'image_id' in server:
-            server['image'] = self.images.show(server['image_id'])
+            server['image'] = IMAGES.show(server['image_id'])
             del server['image_id']
 
         if 'flavor_id' in server:
-            server['flavor'] = self.flavors.show(server['flavor_id'])
+            server['flavor'] = FLAVORS.show(server['flavor_id'])
             del server['flavor_id']
 
         if 'ip' in server:
@@ -198,7 +191,7 @@ class Controller(object):
         LOG.info('list(detail=%s)', detail)
 
         servers = []
-        for s in self.db.servers.list():
+        for s in DB.servers.list():
             servers.append(self._extend(s))
         if detail:
             return utils.sanitize(servers, SERVERS_DETAIL)
@@ -211,7 +204,7 @@ class Controller(object):
         """
         LOG.info('show(server_id=%s)', server_id)
 
-        server = self.db.servers.show(id=server_id)
+        server = DB.servers.show(id=server_id)
         return utils.sanitize(self._extend(server), SERVERS_DETAIL)
 
     def _wait_for_ip(self, server):
@@ -224,8 +217,7 @@ class Controller(object):
             return False
 
         # Update the database and metadata server
-        server = self.db.servers.update(id=server['id'], ip=ip,
-                                        status='ACTIVE')
+        server = DB.servers.update(id=server['id'], ip=ip, status='ACTIVE')
 
         # Add the iptables route for the Ec2 metadata service
         _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
@@ -244,19 +236,19 @@ class Controller(object):
         key_name = server.get('key_name')
 
         # Sanity checks, will throw exceptions if they fail
-        self.images.exists(image_id)
-        self.flavors.exists(flavor_id)
-        self.keypairs.exists(key_name)
+        IMAGES.exists(image_id)
+        FLAVORS.exists(flavor_id)
+        KEYPAIRS.exists(key_name)
 
         # Create a new server in the database
-        server = self.db.servers.create(name=name, image_id=image_id,
-                                        flavor_id=flavor_id, key_name=key_name,
-                                        status='BUILDING')
+        server = DB.servers.create(name=name, image_id=image_id,
+                                   flavor_id=flavor_id, key_name=key_name,
+                                   status='BUILDING')
         server_id = server['id']
 
         # Generate some more server properties and update the database
         mac_address = _generate_mac()
-        server = self.db.servers.update(id=server_id, mac_address=mac_address)
+        server = DB.servers.update(id=server_id, mac_address=mac_address)
 
         # Extend the server details
         server = self._extend(server)
@@ -269,10 +261,10 @@ class Controller(object):
         _create_disks(server)
 
         # Finally boot the server
-        self.virt.boot_server(server)
+        VIRT.boot_server(server)
 
         # Update the status of the server
-        server = self.db.servers.update(id=server_id, status='NETWORKING')
+        server = DB.servers.update(id=server_id, status='NETWORKING')
 
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60/2, [True], self._wait_for_ip, server)
@@ -285,7 +277,7 @@ class Controller(object):
         """
         LOG.info('delete(server_id=%s)', server_id)
 
-        server = self.db.servers.show(id=server_id)
+        server = DB.servers.show(id=server_id)
 
         # Stop all running tasks associated with this server
         task.stop(server_id)
@@ -294,7 +286,7 @@ class Controller(object):
         _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
         # Kill the running server
-        self.virt.delete_server(server)
+        VIRT.delete_server(server)
 
         # Purge all server files
         basepath = os.path.join(CONF.instances_dir, server_id)
@@ -302,7 +294,7 @@ class Controller(object):
             shutil.rmtree(basepath)
 
         # Delete the database entry
-        self.db.servers.delete(id=server['id'])
+        DB.servers.delete(id=server['id'])
 
     def console_log(self, server_id):
         """
@@ -324,9 +316,12 @@ class Controller(object):
         """
         LOG.info('reboot(server_id=%s, hard=%s)', server_id, hard)
 
-        server = self.db.servers.show(id=server_id)
+        server = DB.servers.show(id=server_id)
 
         _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
-        self.virt.delete_server(server)
-        self.virt.boot_server(server)
+        VIRT.delete_server(server)
+        VIRT.boot_server(server)
         _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
+
+
+SERVERS = Controller()

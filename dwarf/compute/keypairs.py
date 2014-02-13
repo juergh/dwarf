@@ -24,8 +24,9 @@ from base64 import b64encode, b64decode
 from hashlib import md5
 from M2Crypto import RSA   # pylint: disable=F0401
 
-from dwarf import db
 from dwarf import utils
+
+from dwarf.db import DB
 
 LOG = logging.getLogger(__name__)
 
@@ -34,16 +35,13 @@ KEYPAIRS_INFO = ('fingerprint', 'name', 'public_key')
 
 class Controller(object):
 
-    def __init__(self):
-        self.db = db.Controller()
-
     def list(self):
         """
         List all keypairs
         """
         LOG.info('list()')
 
-        keypairs = self.db.keypairs.list()
+        keypairs = DB.keypairs.list()
         return utils.sanitize(keypairs, KEYPAIRS_INFO)
 
     def add(self, keypair):
@@ -66,9 +64,8 @@ class Controller(object):
         fp = ':'.join(a + b for (a, b) in zip(fp_plain[::2], fp_plain[1::2]))
 
         # Create the new keypair in the database
-        new_keypair = self.db.keypairs.create(name=keypair['name'],
-                                              fingerprint=fp,
-                                              public_key=public_key)
+        new_keypair = DB.keypairs.create(name=keypair['name'], fingerprint=fp,
+                                         public_key=public_key)
 
         if private_key is None:
             return utils.sanitize(new_keypair, KEYPAIRS_INFO)
@@ -82,11 +79,14 @@ class Controller(object):
         """
         LOG.info('delete(name=%s)', keypair_name)
 
-        self.db.keypairs.delete(name=keypair_name)
+        DB.keypairs.delete(name=keypair_name)
 
     def exists(self, keypair_name):
         """
         Check if a keypair exists
         """
         LOG.info('exists(name=%s)', keypair_name)
-        self.db.keypairs.show(name=keypair_name)
+        DB.keypairs.show(name=keypair_name)
+
+
+KEYPAIRS = Controller()

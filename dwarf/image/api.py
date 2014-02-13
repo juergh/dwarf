@@ -18,16 +18,15 @@
 
 import bottle
 import logging
-import threading
 
 from tempfile import TemporaryFile
 
-from dwarf.image import images as dwarf_images
-
+from dwarf import api_server
 from dwarf import config
 from dwarf import exception
-from dwarf import http
 from dwarf import utils
+
+from dwarf.image.images import IMAGES
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -110,86 +109,73 @@ def _from_headers(headers):
     return image_md
 
 
-class ImageApiThread(threading.Thread):
-    server = None
+@exception.catchall
+def _route_images_id(image_id):
+    """
+    Route:  /v1/images/<image_id>
+    Method: GET, HEAD, DELETE, PUT
+    """
+    utils.show_request(bottle.request)
 
-    def stop(self):
-        # Stop the HTTP server
-        try:
-            self.server.stop()
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop Image API server')
+    # glance image-list
+    if image_id == 'detail' and bottle.request.method == 'GET':
+        return {'images': IMAGES.list()}
 
-    def run(self):
-        """
-        Image API thread worker
-        """
-        LOG.info('Starting Image API worker')
+    # glance image-show <image_id>
+    if image_id != 'detail' and bottle.request.method == 'HEAD':
+        image = IMAGES.show(image_id)
+        _add_header(image)
+        return
 
-        images = dwarf_images.Controller()
-        app = bottle.Bottle()
+    # glance image-delete <image_id>
+    if image_id != 'detail' and bottle.request.method == 'DELETE':
+        IMAGES.delete(image_id)
+        return
 
-        #
-        # Images API
-        #
+    # glance image-update <image_id>
+    if image_id != 'detail' and bottle.request.method == 'PUT':
+        image_md = _from_headers(bottle.request.headers)
+        return {'image': IMAGES.update(image_id, image_md)}
 
-        @app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE',
-                                                    'PUT'))
-        @exception.catchall
-        def images_1(image_id):   # pylint: disable=W0612
-            """
-            Images actions
-            """
-            utils.show_request(bottle.request)
+    bottle.abort(400, 'Unable to handle request')
 
-            # glance image-list
-            if image_id == 'detail' and bottle.request.method == 'GET':
-                return {'images': images.list()}
 
-            # glance image-show <image_id>
-            if image_id != 'detail' and bottle.request.method == 'HEAD':
-                image = images.show(image_id)
-                _add_header(image)
-                return
+@exception.catchall
+def _route_images():
+    """
+    Route:  /v1/images
+    Method: GET
+    """
+    utils.show_request(bottle.request)
 
-            # glance image-delete <image_id>
-            if image_id != 'detail' and bottle.request.method == 'DELETE':
-                images.delete(image_id)
-                return
+    # Parse the HTTP header
+    image_md = _from_headers(bottle.request.headers)
 
-            # glance image-update <image_id>
-            if image_id != 'detail' and bottle.request.method == 'PUT':
-                image_md = _from_headers(bottle.request.headers)
-                return {'image': images.update(image_id, image_md)}
+    # glance image-create
+    image_fh = _request_body(bottle.request)
+    return {'image': IMAGES.create(image_fh, image_md)}
 
-            bottle.abort(400, 'Unable to handle request')
 
-        @app.route('/v1/images', method='POST')
-        @exception.catchall
-        def images_2():   # pylint: disable=W0612
-            """
-            Images actions
-            """
-            utils.show_request(bottle.request)
+def _add_routes(app):
+    """
+    Add routes to the server app
+    """
+    app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE',
+                                               'PUT'))(_route_images_id)
+    app.route('/v1/images', method='POST')(_route_images)
 
-            # Parse the HTTP header
-            image_md = _from_headers(bottle.request.headers)
 
-            # glance image-create
-            image_fh = _request_body(bottle.request)
-            return {'image': images.create(image_fh, image_md)}
+def ImageApiServer():
+    """
+    Instantiate and configure the API server
+    """
+    server = api_server.ApiServer()
 
-        #
-        # Start the HTTP server
-        #
+    server.name = 'Image'
+    server.host = '127.0.0.1'
+    server.port = CONF.image_api_port
 
-        try:
-            host = '127.0.0.1'
-            port = CONF.image_api_port
-            self.server = http.BaseHTTPServer(host=host, port=port)
+    server.app = bottle.Bottle()
+    _add_routes(server.app)
 
-            LOG.info('Image API server listening on %s:%s', host, port)
-            bottle.run(app, server=self.server)
-            LOG.info('Image API server shut down')
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start Image API server')
+    return server

@@ -151,3 +151,6 @@ class Controller(object):
         domain = self._get_domain(server)
         self._destroy_domain(domain)
         self._undefine_domain(domain)
+
+
+VIRT = Controller()

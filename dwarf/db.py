@@ -324,3 +324,6 @@ class Controller(object):
             rows = obj.dump()
 
         _print_rows(rows)
+
+
+DB = Controller()
