@@ -149,13 +149,6 @@ def _route_ec2(url):
     return _ec2metadata_format(data)
 
 
-def _add_routes(app):
-    """
-    Add routes to the server app
-    """
-    app.route('<url:re:[a-z0-9-/.]*>', method='GET')(_route_ec2)
-
-
 def Ec2MetadataServer():
     """
     Instantiate and configure the API server
@@ -167,6 +160,8 @@ def Ec2MetadataServer():
     server.port = CONF.ec2_metadata_port
 
     server.app = bottle.Bottle()
-    _add_routes(server.app)
+    server.app.route('<url:re:[a-z0-9-/.]*>',
+                     method='GET',
+                     callback=_route_ec2)
 
     return server

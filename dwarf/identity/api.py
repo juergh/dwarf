@@ -100,13 +100,6 @@ def _route_tokens():
         return tokens_reply
 
 
-def _add_routes(app):
-    """
-    Add routes to the server app
-    """
-    app.route('/v2.0/tokens', method='POST')(_route_tokens)
-
-
 @exception.catchall
 def IdentityApiServer():
     """
@@ -119,6 +112,8 @@ def IdentityApiServer():
     server.port = CONF.identity_api_port
 
     server.app = bottle.Bottle()
-    _add_routes(server.app)
+    server.app.route('/v2.0/tokens',
+                     method='POST',
+                     callback=_route_tokens)
 
     return server

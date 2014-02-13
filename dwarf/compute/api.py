@@ -188,34 +188,6 @@ def _route_flavors(dummy_tenant_id):
     return {'flavors': FLAVORS.list(detail=False)}
 
 
-def _add_routes(app):
-    """
-    Add routes to the server app
-    """
-    # Images
-    app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
-              method='GET')(_route_images_id)
-    app.route('/v1.1/<dummy_tenant_id>/images',
-              method='GET')(_route_images)
-    # Keypairs
-    app.route('/v1.1/<dummy_tenant_id>/os-keypairs',
-              method=('GET', 'POST'))(_route_os_keypairs)
-    app.route('/v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>',
-              method='DELETE')(_route_os_keypairs_name)
-    # Servers
-    app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>',
-              method=('GET', 'DELETE'))(_route_servers_id)
-    app.route('/v1.1/<dummy_tenant_id>/servers',
-              method=('GET', 'POST'))(_route_servers)
-    app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>/action',
-              method='POST')(_route_servers_id_action)
-    # Flavors
-    app.route('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>',
-              method=('GET', 'DELETE'))(_route_flavors_id)
-    app.route('/v1.1/<dummy_tenant_id>/flavors',
-              method=('GET', 'POST'))(_route_flavors)
-
-
 def ComputeApiServer():
     """
     Instantiate and configure the API server
@@ -227,6 +199,32 @@ def ComputeApiServer():
     server.port = CONF.compute_api_port
 
     server.app = bottle.Bottle()
-    _add_routes(server.app)
+    server.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
+                     method='GET',
+                     callback=_route_images_id)
+    server.app.route('/v1.1/<dummy_tenant_id>/images',
+                     method='GET',
+                     callback=_route_images)
+    server.app.route('/v1.1/<dummy_tenant_id>/os-keypairs',
+                     method=('GET', 'POST'),
+                     callback=_route_os_keypairs)
+    server.app.route('/v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>',
+                     method='DELETE',
+                     callback=_route_os_keypairs_name)
+    server.app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>',
+                     method=('GET', 'DELETE'),
+                     callback=_route_servers_id)
+    server.app.route('/v1.1/<dummy_tenant_id>/servers',
+                     method=('GET', 'POST'),
+                     callback=_route_servers)
+    server.app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>/action',
+                     method='POST',
+                     callback=_route_servers_id_action)
+    server.app.route('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>',
+                     method=('GET', 'DELETE'),
+                     callback=_route_flavors_id)
+    server.app.route('/v1.1/<dummy_tenant_id>/flavors',
+                     method=('GET', 'POST'),
+                     callback=_route_flavors)
 
     return server

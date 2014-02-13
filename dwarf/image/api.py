@@ -156,15 +156,6 @@ def _route_images():
     return {'image': IMAGES.create(image_fh, image_md)}
 
 
-def _add_routes(app):
-    """
-    Add routes to the server app
-    """
-    app.route('/v1/images/<image_id>', method=('GET', 'HEAD', 'DELETE',
-                                               'PUT'))(_route_images_id)
-    app.route('/v1/images', method='POST')(_route_images)
-
-
 def ImageApiServer():
     """
     Instantiate and configure the API server
@@ -176,6 +167,11 @@ def ImageApiServer():
     server.port = CONF.image_api_port
 
     server.app = bottle.Bottle()
-    _add_routes(server.app)
+    server.app.route('/v1/images/<image_id>',
+                     method=('GET', 'HEAD', 'DELETE', 'PUT'),
+                     callback=_route_images_id)
+    server.app.route('/v1/images',
+                     method='POST',
+                     callback=_route_images)
 
     return server
