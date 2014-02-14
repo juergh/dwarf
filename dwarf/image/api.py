@@ -166,7 +166,6 @@ def ImageApiServer():
     server.host = '127.0.0.1'
     server.port = CONF.image_api_port
 
-    server.app = bottle.Bottle()
     server.app.route('/v1/images/<image_id>',
                      method=('GET', 'HEAD', 'DELETE', 'PUT'),
                      callback=_route_images_id)

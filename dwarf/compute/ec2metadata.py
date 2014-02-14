@@ -159,7 +159,6 @@ def Ec2MetadataServer():
     server.host = CONF.ec2_metadata_host
     server.port = CONF.ec2_metadata_port
 
-    server.app = bottle.Bottle()
     server.app.route('<url:re:[a-z0-9-/.]*>',
                      method='GET',
                      callback=_route_ec2)

@@ -198,7 +198,6 @@ def ComputeApiServer():
     server.host = '127.0.0.1'
     server.port = CONF.compute_api_port
 
-    server.app = bottle.Bottle()
     server.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
                      method='GET',
                      callback=_route_images_id)

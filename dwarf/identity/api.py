@@ -111,7 +111,6 @@ def IdentityApiServer():
     server.host = '127.0.0.1'
     server.port = CONF.identity_api_port
 
-    server.app = bottle.Bottle()
     server.app.route('/v2.0/tokens',
                      method='POST',
                      callback=_route_tokens)

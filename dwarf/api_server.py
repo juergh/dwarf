@@ -58,7 +58,7 @@ class _BaseHTTPServer(bottle.ServerAdapter):
 
 
 class ApiServer(threading.Thread):
-    app = None
+    app = bottle.Bottle()
     server = None
     name = ''
     host = ''
