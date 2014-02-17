@@ -233,12 +233,13 @@ class Controller(object):
         name = server['name']
         image_id = server['imageRef']
         flavor_id = server['flavorRef']
-        key_name = server.get('key_name')
+        key_name = server.get('key_name', None)
 
         # Sanity checks, will throw exceptions if they fail
         IMAGES.exists(image_id)
         FLAVORS.exists(flavor_id)
-        KEYPAIRS.exists(key_name)
+        if key_name is not None:
+            KEYPAIRS.exists(key_name)
 
         # Create a new server in the database
         server = DB.servers.create(name=name, image_id=image_id,
