@@ -49,6 +49,6 @@ clean:
 	@rm -r dwarf.egg-info 2>/dev/null || :
 
 deepclean: clean
-	@rm -rf build 2>/dev/null || :
+	@rm -rf build .tox 2>/dev/null || :
 
 .PHONY: build
