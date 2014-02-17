@@ -25,10 +25,6 @@ After installation, check that the settings in '/etc/dwarf.conf' match your
 environment. You need to restart dwarf if you make any modifications:
 $ sudo initctl restart dwarf
 
-If this is the first installation, initialize the dwarf database:
-$ sudo -c 'dwarf-manage db-delete' dwarf
-$ sudo -c 'dwarf-manage db-init' dwarf
-
 Set the OpenStack environment variables (modify the port number accordingly, if
 you changed it in the config file):
 $ export OS_AUTH_URL=http://localhost:35357/v2.0/
