@@ -28,8 +28,7 @@ from dwarf import utils
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
-
-token = {
+TOKEN = {
     "id": "0011223344556677",
     "expires": "2100-01-01T00:00:00-00:00",
     "tenant": {
@@ -38,15 +37,13 @@ token = {
     }
 }
 
-
-user = {
+USER = {
     "id": "1000",
     "name": "dwarf-user",
     "roles": []
 }
 
-
-service_compute = {
+SERVICE_COMPUTE = {
     "name": "Compute",
     "type": "compute",
     "endpoints": [{
@@ -60,8 +57,7 @@ service_compute = {
     }]
 }
 
-
-service_image = {
+SERVICE_IMAGE = {
     "name": "Image Management",
     "type": "image",
     "endpoints": [{
@@ -74,14 +70,13 @@ service_image = {
     }]
 }
 
-
-tokens_reply = {
+TOKENS_RESPONSE = {
     "access": {
-        "token": token,
-        "user": user,
+        "token": TOKEN,
+        "user": USER,
         "serviceCatalog": [
-            service_compute,
-            service_image
+            SERVICE_COMPUTE,
+            SERVICE_IMAGE
         ]
     }
 }
@@ -97,7 +92,7 @@ def _route_tokens():
 
     body = json.load(bottle.request.body)
     if 'auth' in body:
-        return tokens_reply
+        return TOKENS_RESPONSE
 
 
 @exception.catchall
