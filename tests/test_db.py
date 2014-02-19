@@ -148,6 +148,7 @@ class DbTestCase(unittest.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
         self.db = dwarf_db.Controller(db='test_db')
+        self.db.delete()
         self.db.init()
 
     def tearDown(self):
