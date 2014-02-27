@@ -20,7 +20,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dwarf',
-    version='0.1.0',
+    version='0.1.1',
     summary='OpenStack API on top of libvirt/kvm',
     author='Juerg Haefliger <juerg.haefliger@hp.com>',
 
