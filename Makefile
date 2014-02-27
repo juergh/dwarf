@@ -42,6 +42,9 @@ build:
 deb: build
 	cd build/dwarf-$(VERSION) && debuild -i -us -uc
 
+src: build
+	cd build/dwarf-$(VERSION) && debuild -S -sa
+
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
 		\( -name '*~' -o -name '*.pyc' \) -type f -print | \
@@ -50,5 +53,6 @@ clean:
 
 deepclean: clean
 	@rm -rf build .tox 2>/dev/null || :
+	./debian/rules clean
 
 .PHONY: build
