@@ -45,6 +45,9 @@ deb: build
 src: build
 	cd build/dwarf-$(VERSION) && debuild -S -sa
 
+ppa: src
+	cd build && dput ppa:juergh/dwarf dwarf_$(VERSION)_source.changes
+
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
 		\( -name '*~' -o -name '*.pyc' \) -type f -print | \
