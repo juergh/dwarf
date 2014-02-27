@@ -22,7 +22,7 @@ setup(
     name='dwarf',
     version='0.1.0',
     summary='OpenStack API on top of libvirt/kvm',
-    author='Juerg Haefliger <juergh@gmail.com>',
+    author='Juerg Haefliger <juerg.haefliger@hp.com>',
 
     packages=find_packages(exclude=['tests']),
     package_data={

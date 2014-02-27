@@ -1,5 +1,5 @@
 Source: dwarf
-Maintainer: Juerg Haefliger <juergh@gmail.com>
+Maintainer: Juerg Haefliger <juerg.haefliger@hp.com>
 Section: python
 Priority: optional
 Build-Depends: debhelper,
