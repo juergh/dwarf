@@ -20,13 +20,16 @@ from setuptools import setup, find_packages
 
 setup(
     name='dwarf',
-    version='0.1.2',
-    summary='OpenStack API on top of libvirt/kvm',
-    author='Juerg Haefliger <juerg.haefliger@hp.com>',
-
+    version='0.1.3',
     packages=find_packages(exclude=['tests']),
     package_data={
         '': ['*.template'],
     },
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
+
+    author='Juerg Haefliger',
+    author_email='juerg.haefliger@hp.com',
+    description='OpenStack API on top of libvirt/kvm',
+    license='Apache 2.0',
+    url='https://github.com/juergh/dwarf'
 )
