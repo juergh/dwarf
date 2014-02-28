@@ -20,7 +20,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dwarf',
-    version='0.1.3',
+    version='0.1.4',
     packages=find_packages(exclude=['tests']),
     package_data={
         '': ['*.template'],

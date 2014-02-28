@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION = $(shell head -1 ./debian/changelog | awk '{print $$2}' | tr -d '()')
+VERSION = $(shell head -1 changelog | awk '{print $$2}' | tr -d '()')
+R=$(shell lsb_release -cs)
 
 all: tox
 
@@ -33,7 +34,10 @@ test:
 cover:
 	tox -e cover
 
-build:
+changelog:
+	sed -s 's/RELEASE/$(R)/' changelog > debian/changelog
+
+build: clean changelog
 	rm -rf build/* || true
 	mkdir -p build/dwarf-$(VERSION)
 	tar cvf - bin debian dwarf etc setup.py README | \
@@ -58,4 +62,4 @@ deepclean: clean
 	@rm -rf build .tox 2>/dev/null || :
 	./debian/rules clean
 
-.PHONY: build
+.PHONY: build changelog
