@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION = $(shell head -1 ./debian/changelog | awk '{print $$2}' | tr -d '()')
+R ?= $(shell lsb_release -cs)
 
-all: tox
+DEB_VERSION = $(shell head -1 changelog | awk '{print $$2}' | tr -d '()')
+
+SRC_VERSION = $(shell echo $(DEB_VERSION) | awk -F- '{print $$1}')
+SRC_NAME = dwarf-$(SRC_VERSION)
 
 tox:
 	tox
@@ -33,20 +36,25 @@ test:
 cover:
 	tox -e cover
 
-build:
-	rm -rf build/* || true
-	mkdir -p build/dwarf-$(VERSION)
-	tar cvf - bin debian dwarf etc setup.py README | \
-		(cd build/dwarf-$(VERSION) && tar xfp -)
+orig: clean
+	rm -rf build || true
+	mkdir -p build/$(SRC_NAME)
+	tar -cvf - bin dwarf etc setup.py README | \
+		tar -C build/$(SRC_NAME) -xf -
+	cd build && tar -czvf dwarf_$(SRC_VERSION).orig.tar.gz $(SRC_NAME)
 
-deb: build
-	cd build/dwarf-$(VERSION) && debuild -i -us -uc
+distro: orig
+	tar -cvf - debian | tar -C build/$(SRC_NAME) -xf -
+	sed -s 's/RELEASE/$(R)/' changelog > build/$(SRC_NAME)/debian/changelog
 
-src: build
-	cd build/dwarf-$(VERSION) && debuild -S -sa
+deb: distro
+	cd build/$(SRC_NAME) && debuild -uc -us
+
+src: distro
+	cd build/$(SRC_NAME) && debuild -S -sa
 
 ppa: src
-	cd build && dput ppa:juergh/dwarf dwarf_$(VERSION)_source.changes
+	cd build && dput ppa:juergh/dwarf dwarf_$(DEB_VERSION)_source.changes
 
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
@@ -58,4 +66,4 @@ deepclean: clean
 	@rm -rf build .tox 2>/dev/null || :
 	./debian/rules clean
 
-.PHONY: build
+.PHONY: build changelog
