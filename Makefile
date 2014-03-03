@@ -16,10 +16,9 @@
 
 R ?= $(shell lsb_release -cs)
 
-DEB_VERSION = $(shell head -1 changelog | awk '{print $$2}' | tr -d '()')
-
-SRC_VERSION = $(shell echo $(DEB_VERSION) | awk -F- '{print $$1}')
-SRC_NAME = dwarf-$(SRC_VERSION)
+DEB_VERSION = $(shell head -1 changelog | awk '{print $$2}' | tr -d '()' | \
+	sed 's/RELEASE/$(R)/')
+DEB_NAME = dwarf_$(DEB_VERSION)
 
 tox:
 	tox
@@ -36,25 +35,20 @@ test:
 cover:
 	tox -e cover
 
-orig: clean
-	rm -rf build || true
-	mkdir -p build/$(SRC_NAME)
-	tar -cvf - bin dwarf etc setup.py README | \
-		tar -C build/$(SRC_NAME) -xf -
-	cd build && tar -czvf dwarf_$(SRC_VERSION).orig.tar.gz $(SRC_NAME)
+tarball: clean
+	./tools/build tarball
 
-distro: orig
-	tar -cvf - debian | tar -C build/$(SRC_NAME) -xf -
-	sed -s 's/RELEASE/$(R)/' changelog > build/$(SRC_NAME)/debian/changelog
+release: tarball
+	./tools/build release $(R) $(DEB_NAME)
 
-deb: distro
-	cd build/$(SRC_NAME) && debuild -uc -us
+deb: release
+	cd build/$(DEB_NAME) && debuild -uc -us
 
-src: distro
-	cd build/$(SRC_NAME) && debuild -S -sa
+src: release
+	cd build/$(DEB_NAME) && debuild -S -sa
 
 ppa: src
-	cd build && dput ppa:juergh/dwarf dwarf_$(DEB_VERSION)_source.changes
+	cd build && dput ppa:juergh/dwarf $(DEB_NAME)_source.changes
 
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
@@ -65,5 +59,3 @@ clean:
 deepclean: clean
 	@rm -rf build .tox 2>/dev/null || :
 	./debian/rules clean
-
-.PHONY: build changelog
