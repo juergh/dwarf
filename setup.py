@@ -16,20 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from glob import glob
 from setuptools import setup, find_packages
 
 setup(
     name='dwarf',
     version='0.1.4',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     package_data={
         '': ['*.template'],
     },
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
+    data_files=[('/etc/', glob('etc/*.conf')),
+                ('/etc/sudoers.d/', glob('etc/sudoers.d/*'))],
 
     author='Juerg Haefliger',
     author_email='juerg.haefliger@hp.com',
     description='OpenStack API on top of libvirt/kvm',
-    license='Apache 2.0',
+    license='Apache License 2.0',
     url='https://github.com/juergh/dwarf'
 )
