@@ -14,12 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-R ?= $(shell lsb_release -cs)
-
-DEB_VERSION = $(shell head -1 changelog | awk '{print $$2}' | tr -d '()' | \
-	sed 's/RELEASE/$(R)/')
-DEB_NAME = dwarf_$(DEB_VERSION)
-
 tox:
 	tox
 
@@ -35,21 +29,6 @@ test:
 cover:
 	tox -e cover
 
-tarball: clean
-	./tools/build tarball
-
-release: tarball
-	./tools/build release $(R) $(DEB_NAME)
-
-deb: release
-	cd build/$(DEB_NAME) && debuild -uc -us
-
-src: release
-	cd build/$(DEB_NAME) && debuild -S -sa
-
-ppa: src
-	cd build && dput ppa:juergh/dwarf $(DEB_NAME)_source.changes
-
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
 		\( -name '*~' -o -name '*.pyc' \) -type f -print | \
@@ -57,5 +36,4 @@ clean:
 	@rm -r dwarf.egg-info 2>/dev/null || :
 
 deepclean: clean
-	@rm -rf build .tox 2>/dev/null || :
-	./debian/rules clean
+	@rm -rf .tox 2>/dev/null || :
