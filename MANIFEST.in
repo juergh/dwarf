@@ -1,0 +1,4 @@
+include ChangeLog
+include LICENSE
+include README
+recursive-include etc *
