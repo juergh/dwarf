@@ -16,11 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import setuptools
+
+
+def get_version():
+    with open(os.path.join(os.path.dirname(__file__), 'ChangeLog'), 'r') as fh:
+        version = fh.next().strip()
+    return version[1:]
+
 
 setuptools.setup(
     name='dwarf',
-    version='0.1.4',
+    version=get_version(),
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     package_data={'': ['*.template']},
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
