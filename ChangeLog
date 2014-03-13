@@ -1,3 +1,8 @@
+v0.1.5
+  * Move the base config to a dict
+  * Remove distro specifics
+  * Minor tweaks and fixes of the build env
+
 v0.1.4-1
   * Append release string to the package version (for launchpad/PPA)
   * Add packaging script tools/build
