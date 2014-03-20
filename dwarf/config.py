@@ -35,6 +35,19 @@ _BASE_CONFIG = {
     'dwarf_log': '/var/lib/dwarf/dwarf.log',
 }
 
+_DEFAULT_CONFIG = {
+    'debug': True,
+
+    'libvirt_domain_type': 'kvm',
+
+    'identity_api_port': 35357,
+    'compute_api_port': 8774,
+    'image_api_port': 9292,
+
+    'ec2_metadata_host': '192.168.122.1',
+    'ec2_metadata_port': 8080,
+}
+
 
 class _Config(object):
 
@@ -53,6 +66,11 @@ class _Config(object):
         # Add base config information
         for (key, val) in _BASE_CONFIG.iteritems():
             cfg[key] = val
+
+        # Add default config information
+        for (key, val) in _DEFAULT_CONFIG.iteritems():
+            if key not in cfg:
+                cfg[key] = val
 
         # Add the config data as attributes to our object
         for (key, val) in cfg.iteritems():

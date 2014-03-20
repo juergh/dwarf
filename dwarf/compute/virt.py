@@ -55,6 +55,7 @@ def _create_libvirt_xml(server, force=False):
             xml_template = fh.read()
 
         xml_info = {
+            'domain_type': CONF.libvirt_domain_type,
             'uuid': server['id'],
             'name': _name(server['int_id']),
             'memory': int(server['flavor']['ram']) * 1024,

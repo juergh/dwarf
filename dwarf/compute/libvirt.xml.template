@@ -1,4 +1,4 @@
-<domain type="kvm">
+<domain type="${domain_type}">
     <uuid>${uuid}</uuid>
     <name>${name}</name>
     <memory>${memory}</memory>
