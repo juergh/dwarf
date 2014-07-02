@@ -270,7 +270,7 @@ class Controller(object):
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60/2, [True], self._wait_for_ip, server)
 
-        return utils.sanitize(server, SERVERS_DETAIL)
+        return utils.sanitize(self._extend(server), SERVERS_DETAIL)
 
     def delete(self, server_id):
         """
