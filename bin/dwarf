@@ -36,16 +36,13 @@ from dwarf.image import api as image_api
 from dwarf.compute import ec2metadata
 
 CONF = config.Config()
-
+THREADS = []
 
 def cleanup(dummy_signal, dummy_frame):
     for thread in THREADS:
         thread.stop()
 
-
-if __name__ == '__main__':
-    global THREADS   # pylint: disable=W0603
-
+def main():
     # Set up the logger
     _filename = CONF.dwarf_log
     _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
@@ -56,12 +53,12 @@ if __name__ == '__main__':
     CONF.dump_options()
 
     # Create the API (and Ec2 metadata) server threads
-    THREADS = [
+    THREADS.extend([
         identity_api.IdentityApiServer(),
         compute_api.ComputeApiServer(),
         image_api.ImageApiServer(),
         ec2metadata.Ec2MetadataServer(),
-    ]
+    ])
 
     # Install the cleanup handler
     signal.signal(signal.SIGINT, cleanup)
@@ -76,3 +73,6 @@ if __name__ == '__main__':
     for thread in THREADS:
         while thread.is_alive():
             thread.join(3600)
+
+if __name__ == '__main__':
+    main()

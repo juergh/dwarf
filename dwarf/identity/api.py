@@ -47,13 +47,12 @@ SERVICE_COMPUTE = {
     "name": "Compute",
     "type": "compute",
     "endpoints": [{
-            "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:%s/v1.1/1000" %
-            CONF.compute_api_port,
-            "region": "dwarf-region",
-            "versionId": "1.1",
-            "versionInfo": "http://127.0.0.1:%s/v1.1" % CONF.compute_api_port,
-            "versionList": "http://127.0.0.1:%s" % CONF.compute_api_port
+        "tenantId": "1000",
+        "publicURL": "http://127.0.0.1:%s/v1.1/1000" % CONF.compute_api_port,
+        "region": "dwarf-region",
+        "versionId": "1.1",
+        "versionInfo": "http://127.0.0.1:%s/v1.1" % CONF.compute_api_port,
+        "versionList": "http://127.0.0.1:%s" % CONF.compute_api_port
     }]
 }
 
@@ -61,12 +60,12 @@ SERVICE_IMAGE = {
     "name": "Image Management",
     "type": "image",
     "endpoints": [{
-            "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
-            "region": "dwarf-region",
-            "versionId": "1.0",
-            "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
-            "versionList": "http://127.0.0.1:%s" % CONF.image_api_port
+        "tenantId": "1000",
+        "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
+        "region": "dwarf-region",
+        "versionId": "1.0",
+        "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
+        "versionList": "http://127.0.0.1:%s" % CONF.image_api_port
     }]
 }
 
