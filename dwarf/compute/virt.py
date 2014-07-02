@@ -16,11 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import libvirt   # pylint: disable=F0401
+import libvirt
 import logging
 import os
 
-from Cheetah.Template import Template
+from string import Template
 
 from dwarf import config
 
@@ -64,7 +64,7 @@ def _create_libvirt_xml(server, force=False):
             'mac_addr': server['mac_address'],
             'bridge': 'virbr0',
         }
-        xml = str(Template(xml_template, searchList=[xml_info]))
+        xml = Template(xml_template).substitute(xml_info)
 
         with open(xml_file, 'w') as fh:
             fh.write(xml)
