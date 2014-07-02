@@ -123,7 +123,7 @@ class Table(object):
                                                  (self.table.rstrip('s'), val))
 
             # Create a new (UU)ID if necessary
-            if not 'id' in kwargs:
+            if 'id' not in kwargs:
                 kwargs['id'] = str(uuid.uuid4())
 
             # Autoincrement the integer ID
