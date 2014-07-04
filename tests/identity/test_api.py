@@ -96,7 +96,7 @@ class ApiTestCase(unittest.TestCase):
         super(ApiTestCase, self).setUp()
 
     def tearDown(self):
-        super(ApiTestCase, self).setUp()
+        super(ApiTestCase, self).tearDown()
 
     def mock_request(self, request, headers, body):
         request.headers = headers

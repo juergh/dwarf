@@ -152,7 +152,7 @@ class DbTestCase(unittest.TestCase):
         self.db.init()
 
     def tearDown(self):
-        super(DbTestCase, self).setUp()
+        super(DbTestCase, self).tearDown()
         self.db.delete()
 
     def test_db_init(self):
