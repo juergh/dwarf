@@ -35,15 +35,16 @@ _BASE_CONFIG = {
 }
 
 _DEFAULT_CONFIG = {
-    'debug': True,
+    'debug': False,
 
     'libvirt_domain_type': 'kvm',
+    'libvirt_bridge_name': 'dwbr0',
 
     'identity_api_port': 35357,
     'compute_api_port': 8774,
     'image_api_port': 9292,
 
-    'ec2_metadata_host': '192.168.122.1',
+    'ec2_metadata_host': '10.10.10.1',
     'ec2_metadata_port': 8080,
 }
 

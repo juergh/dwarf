@@ -34,13 +34,20 @@ from dwarf.identity import api as identity_api
 from dwarf.image import api as image_api
 
 from dwarf.compute import ec2metadata
+from dwarf.compute.virt import VIRT
 
 CONF = config.Config()
 THREADS = []
 
+
 def cleanup(dummy_signal, dummy_frame):
+    # Stop all threads
     for thread in THREADS:
         thread.stop()
+
+    # Delete the network
+    VIRT.delete_network()
+
 
 def main():
     # Set up the logger
@@ -52,6 +59,13 @@ def main():
     # Dump the config options
     CONF.dump_options()
 
+    # Install the cleanup handler
+    signal.signal(signal.SIGINT, cleanup)
+    signal.signal(signal.SIGTERM, cleanup)
+
+    # Create the network
+    VIRT.create_network()
+
     # Create the API (and Ec2 metadata) server threads
     THREADS.extend([
         identity_api.IdentityApiServer(),
@@ -59,10 +73,6 @@ def main():
         image_api.ImageApiServer(),
         ec2metadata.Ec2MetadataServer(),
     ])
-
-    # Install the cleanup handler
-    signal.signal(signal.SIGINT, cleanup)
-    signal.signal(signal.SIGTERM, cleanup)
 
     # Start all threads
     for thread in THREADS:
@@ -73,6 +83,7 @@ def main():
     for thread in THREADS:
         while thread.is_alive():
             thread.join(3600)
+
 
 if __name__ == '__main__':
     main()

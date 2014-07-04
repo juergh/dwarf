@@ -156,7 +156,7 @@ def Ec2MetadataServer():
     server = api_server.ApiServer()
 
     server.name = 'Ec2 metadata'
-    server.host = CONF.ec2_metadata_host
+    server.host = CONF.libvirt_bridge_ip
     server.port = CONF.ec2_metadata_port
 
     server.app.route('<url:re:[a-z0-9-/.]*>',

@@ -56,7 +56,7 @@ def _get_server_ip(mac):
     Get the IP associated with the given MAC address
     """
     addr = None
-    leases = '/var/lib/libvirt/dnsmasq/default.leases'
+    leases = '/var/lib/libvirt/dnsmasq/dwarf.leases'
     with open(leases, 'r') as fh:
         for line in fh.readlines():
             col = line.split()
@@ -66,47 +66,6 @@ def _get_server_ip(mac):
 
     LOG.info('_get_server_ip(mac=%s) : %s', mac, addr)
     return addr
-
-
-def _add_ec2metadata_route(ip, port):
-    """
-    Add the iptables route for the Ec2 metadata service
-    """
-    LOG.info('_add_ec2metadata_route(ip=%s, port=%s)', ip, port)
-
-    # Add the route
-    utils.execute(['iptables',
-                   '-t', 'nat',
-                   '-A', 'PREROUTING',
-                   '-s', ip,
-                   '-d', '169.254.169.254/32',
-                   '-p', 'tcp',
-                   '-m', 'tcp',
-                   '--dport', 80,
-                   '-j', 'REDIRECT',
-                   '--to-port', port],
-                  run_as_root=True)
-
-
-def _delete_ec2metadata_route(ip, port):
-    """
-    Delete a (compute) server from the metadata server
-    """
-    LOG.info('_delete_ec2metadata_route(ip=%s, port=%s)', ip, port)
-
-    # Delete the route
-    utils.execute(['iptables',
-                   '-t', 'nat',
-                   '-D', 'PREROUTING',
-                   '-s', ip,
-                   '-d', '169.254.169.254/32',
-                   '-p', 'tcp',
-                   '-m', 'tcp',
-                   '--dport', 80,
-                   '-j', 'REDIRECT',
-                   '--to-port', port],
-                  run_as_root=True,
-                  check_exit_code=False)
 
 
 def _create_disks(server):
@@ -219,9 +178,6 @@ class Controller(object):
         # Update the database and metadata server
         server = DB.servers.update(id=server['id'], ip=ip, status='ACTIVE')
 
-        # Add the iptables route for the Ec2 metadata service
-        _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
-
         return True
 
     def boot(self, server):
@@ -283,9 +239,6 @@ class Controller(object):
         # Stop all running tasks associated with this server
         task.stop(server_id)
 
-        # Delete the iptables route for the Ec2 metadata service
-        _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
-
         # Kill the running server
         VIRT.delete_server(server)
 
@@ -319,10 +272,8 @@ class Controller(object):
 
         server = DB.servers.show(id=server_id)
 
-        _delete_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
         VIRT.delete_server(server)
         VIRT.boot_server(server)
-        _add_ec2metadata_route(server['ip'], CONF.ec2_metadata_port)
 
 
 SERVERS = Controller()

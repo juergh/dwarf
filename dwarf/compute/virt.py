@@ -19,10 +19,12 @@
 import libvirt
 import logging
 import os
+import uuid
 
 from string import Template
 
 from dwarf import config
+from dwarf import utils
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -51,7 +53,7 @@ def _create_domain_xml(server, force=False):
         LOG.info('create libvirt.xml for server %s', server['id'])
 
         with open(os.path.join(os.path.dirname(__file__),
-                               'libvirt.xml'), 'r') as fh:
+                               'libvirt-domain.xml'), 'r') as fh:
             xml_template = fh.read()
 
         xml_info = {
@@ -62,7 +64,7 @@ def _create_domain_xml(server, force=False):
             'vcpus': server['flavor']['vcpus'],
             'basepath': basepath,
             'mac_addr': server['mac_address'],
-            'bridge': 'virbr0',
+            'bridge': CONF.libvirt_bridge_name,
         }
         xml = Template(xml_template).substitute(xml_info)
 
@@ -70,6 +72,25 @@ def _create_domain_xml(server, force=False):
             fh.write(xml)
 
     return xml
+
+
+def _create_net_xml():
+    """
+    Create a libvirt XML for the network bridge
+    """
+    with open(os.path.join(os.path.dirname(__file__),
+                           'libvirt-net.xml'), 'r') as fh:
+        xml_template = fh.read()
+
+    xml_info = {
+        'uuid': str(uuid.uuid4()),
+        'bridge': CONF.libvirt_bridge_name,
+        'ip': CONF.libvirt_bridge_ip,
+        'dhcp_start': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3]+['2']),
+        'dhcp_end': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3]+['255']),
+    }
+
+    return Template(xml_template).substitute(xml_info)
 
 
 class Controller(object):
@@ -152,6 +173,71 @@ class Controller(object):
         domain = self._get_domain(server)
         self._destroy_domain(domain)
         self._undefine_domain(domain)
+
+    def create_network(self):
+        """
+        Create the network
+        """
+        LOG.info('create_network()')
+
+        self._connect()
+        try:
+            # Check if the network exists already
+            net = self.libvirt.networkLookupByName('dwarf')
+            return
+        except libvirt.libvirtError:
+            pass
+
+        # Define and create (start) the network
+        xml = _create_net_xml()
+        net = self.libvirt.networkDefineXML(xml)
+        net.create()
+        net.setAutostart(1)
+
+        # Add the iptables route for the Ec2 metadata service
+        utils.execute(['iptables',
+                       '-t', 'nat',
+                       '-A', 'PREROUTING',
+                       '-s', '%s/24' % CONF.libvirt_bridge_ip,
+                       '-d', '169.254.169.254/32',
+                       '-p', 'tcp',
+                       '-m', 'tcp',
+                       '--dport', 80,
+                       '-j', 'REDIRECT',
+                       '--to-port', CONF.ec2_metadata_port],
+                      run_as_root=True,
+                      check_exit_code=False)
+
+    def delete_network(self):
+        """
+        Delete the network
+        """
+        LOG.info('delete_network()')
+
+        self._connect()
+        try:
+            # Check if the network exists already
+            net = self.libvirt.networkLookupByName('dwarf')
+        except libvirt.libvirtError:
+            return
+
+        # Destroy (stop) and undefine the network
+        net.destroy()
+        net.undefine()
+
+        # Delete the iptables route for the Ec2 metadata service
+        utils.execute(['iptables',
+                       '-t', 'nat',
+                       '-D', 'PREROUTING',
+                       '-s', '%s/24' % CONF.libvirt_bridge_ip,
+                       '-d', '169.254.169.254/32',
+                       '-p', 'tcp',
+                       '-m', 'tcp',
+                       '--dport', 80,
+                       '-j', 'REDIRECT',
+                       '--to-port', CONF.ec2_metadata_port],
+                      run_as_root=True,
+                      check_exit_code=False)
 
 
 VIRT = Controller()
