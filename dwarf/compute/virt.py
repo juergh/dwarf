@@ -32,9 +32,9 @@ def _name(sid):
     return 'dwarf-%08x' % int(sid)
 
 
-def _create_libvirt_xml(server, force=False):
+def _create_domain_xml(server, force=False):
     """
-    Create a libvirt XML file for the server
+    Create a libvirt XML file for the domain
     """
     basepath = os.path.join(CONF.instances_dir, server['id'])
     xml_file = os.path.join(basepath, 'libvirt.xml')
@@ -51,7 +51,7 @@ def _create_libvirt_xml(server, force=False):
         LOG.info('create libvirt.xml for server %s', server['id'])
 
         with open(os.path.join(os.path.dirname(__file__),
-                               'libvirt.xml.template'), 'r') as fh:
+                               'libvirt.xml'), 'r') as fh:
             xml_template = fh.read()
 
         xml_info = {
@@ -139,7 +139,7 @@ class Controller(object):
         LOG.info('boot_server(server=%s)', server)
 
         self._connect()
-        xml = _create_libvirt_xml(server)
+        xml = _create_domain_xml(server)
         self._create_domain(xml)
 
     def delete_server(self, server):

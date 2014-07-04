@@ -30,7 +30,7 @@ setuptools.setup(
     name='dwarf',
     version=get_version(),
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
-    package_data={'': ['*.template']},
+    package_data={'': ['*.xml']},
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
 
     author='Juerg Haefliger',
