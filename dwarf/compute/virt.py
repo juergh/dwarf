@@ -239,5 +239,18 @@ class Controller(object):
                       run_as_root=True,
                       check_exit_code=False)
 
+    def get_dhcp_lease(self, server):
+        """
+        Get DHCP lease information
+        """
+        LOG.info('get_dhcp_lease(server=%s)', server)
+
+        with open('/var/lib/libvirt/dnsmasq/dwarf.leases', 'r') as fh:
+            for line in fh.readlines():
+                col = line.split()
+                if col[1] == server['mac_address']:
+                    return {'expires': col[0], 'hwaddr': col[1], 'ip': col[2],
+                            'hostname': col[3], 'clientid': col[4]}
+
 
 VIRT = Controller()

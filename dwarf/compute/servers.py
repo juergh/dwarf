@@ -51,23 +51,6 @@ def _generate_mac():
     return ':'.join(['%02x' % x for x in mac])
 
 
-def _get_server_ip(mac):
-    """
-    Get the IP associated with the given MAC address
-    """
-    addr = None
-    leases = '/var/lib/libvirt/dnsmasq/dwarf.leases'
-    with open(leases, 'r') as fh:
-        for line in fh.readlines():
-            col = line.split()
-            if col[1] == mac:
-                addr = col[2]
-                break
-
-    LOG.info('_get_server_ip(mac=%s) : %s', mac, addr)
-    return addr
-
-
 def _create_disks(server):
     """
     Create the base (backing) and server disk images
@@ -122,6 +105,21 @@ def _create_disks(server):
                    server_disk_local])
 
 
+def _update_ip(server):
+    """
+    Update the DHCP assigned IP address
+    """
+    # Get the DHCP lease information
+    lease = VIRT.get_dhcp_lease(server)
+    if lease is None:
+        return
+
+    # Update the database
+    server = DB.servers.update(id=server['id'], ip=lease['ip'],
+                               status='ACTIVE')
+    return lease['ip']
+
+
 class Controller(object):
 
     def _extend(self, server):
@@ -165,20 +163,6 @@ class Controller(object):
 
         server = DB.servers.show(id=server_id)
         return utils.sanitize(self._extend(server), SERVERS_DETAIL)
-
-    def _wait_for_ip(self, server):
-        """
-        Update the DHCP assigned IP address
-        """
-        # Try to get the server's DHCP-assigned IP
-        ip = _get_server_ip(server['mac_address'])
-        if ip is None:
-            return False
-
-        # Update the database and metadata server
-        server = DB.servers.update(id=server['id'], ip=ip, status='ACTIVE')
-
-        return True
 
     def boot(self, server):
         """
@@ -224,7 +208,7 @@ class Controller(object):
         server = DB.servers.update(id=server_id, status='NETWORKING')
 
         # Start a task to wait for the server to get its DHCP IP address
-        task.start(server_id, 2, 60/2, [True], self._wait_for_ip, server)
+        task.start(server_id, 2, 60/2, _update_ip, server)
 
         return utils.sanitize(self._extend(server), SERVERS_DETAIL)
 

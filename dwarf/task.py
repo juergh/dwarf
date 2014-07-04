@@ -23,37 +23,17 @@ from threading import Thread
 
 LOG = logging.getLogger(__name__)
 
-_TASK = {}
-
-
-def _add_task(tid, task):
-    LOG.info('_add_task(tid=%s, task=%s)', tid, task)
-    _TASK[tid] = task
-
-
-def _get_task(tid):
-    LOG.info('_get_task(tid=%s)', tid)
-    return _TASK.get(tid, None)
-
-
-def _pop_task(tid):
-    LOG.info('_pop_task(tid=%s)', tid)
-    return _TASK.pop(tid, None)
+_TASKS = {}
 
 
 class _Task(Thread):
 
-    def __init__(self, tid, interval, repeat, exit_on_retval, func, *args,
-                 **kwargs):
+    def __init__(self, tid, interval, repeat, func, *args, **kwargs):
         super(_Task, self).__init__()
-
-        _add_task(tid, self)
 
         self.tid = tid
         self.interval = interval
         self.repeat = repeat
-        self.exit_on_retval = exit_on_retval
-        self.check_retval = isinstance(exit_on_retval, list)
 
         self.func = func
         self.args = args
@@ -61,30 +41,31 @@ class _Task(Thread):
 
         self._stop = False
 
+        _TASKS[tid] = self
+        self.start()
+
     def run(self):
         for dummy in range(self.repeat):
-            time.sleep(self.interval)
             if self._stop:
                 break
             retval = self.func(*self.args, **self.kwargs)
-            if self.check_retval and retval in self.exit_on_retval:
+            if retval is not None:
                 break
-        _pop_task(self.tid)
+            time.sleep(self.interval)
+        _TASKS.pop(self.tid, None)
 
     def stop(self):
         self._stop = True
 
 
-def start(tid, interval, repeat, exit_on_retval, func, *args, **kwargs):
+def start(tid, interval, repeat, func, *args, **kwargs):
     """
     Start a new task
     """
-    LOG.info('start(tid=%s, interval=%s, repeat=%s, exit_on_retval=%s, '
-             'func=%s, args=%s, kwargs=%s)', tid, interval, repeat,
-             exit_on_retval, func.__name__, args, kwargs)
+    LOG.info('start(tid=%s, interval=%s, repeat=%s, func=%s, args=%s, '
+             'kwargs=%s)', tid, interval, repeat, func.__name__, args, kwargs)
 
-    t = _Task(tid, interval, repeat, exit_on_retval, func, *args, **kwargs)
-    t.start()
+    _Task(tid, interval, repeat, func, *args, **kwargs)
 
 
 def stop(tid):
@@ -93,6 +74,6 @@ def stop(tid):
     """
     LOG.info('stop(tid=%s)', tid)
 
-    t = _get_task(tid)
+    t = _TASKS.get(tid, None)
     if t is not None:
         t.stop()
