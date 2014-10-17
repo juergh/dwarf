@@ -248,7 +248,7 @@ class Controller(object):
 
         with open(console_log) as fh:
             data = fh.read()
-        return data
+        return unicode(data, errors='ignore')
 
     def reboot(self, server_id, hard=False):
         """
