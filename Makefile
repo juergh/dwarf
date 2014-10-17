@@ -37,3 +37,11 @@ clean:
 
 deepclean: clean
 	@rm -rf .tox 2>/dev/null || :
+
+tgz: VERSION = $(shell git tag | sort -n | tail -1 | tr -d 'v')
+tgz:
+	git archive --format=tar --prefix=dwarf-$(VERSION)/ master | \
+		gzip -9 > ../dwarf-$(VERSION).tar.gz
+
+run:
+	sudo su -s /bin/sh -c './bin/dwarf' dwarf
