@@ -22,7 +22,7 @@ import setuptools
 
 def get_version():
     with open(os.path.join(os.path.dirname(__file__), 'ChangeLog'), 'r') as fh:
-        version = fh.next().strip()
+        version = fh.readline().strip()
     return version[1:]
 
 
