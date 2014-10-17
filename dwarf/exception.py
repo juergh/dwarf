@@ -35,7 +35,7 @@ def catchall(func):
         except DwarfException as e:
             LOG.warn('Exception caught: %s (%s)', e.message, e.code)
             abort(e.code, e.message)
-        except Exception as e:
+        except Exception as e:   # pylint: disable=W0703
             LOG.exception('Unknown exception caught: %s', str(e))
             abort(500, str(e))
     return wrapper
