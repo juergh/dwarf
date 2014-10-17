@@ -238,6 +238,8 @@ class Controller(object):
         """
         Return the server console log
         """
+        LOG.info('console_log(server_id=%s)', server_id)
+
         console_log = os.path.join(CONF.instances_dir, server_id,
                                    'console.log')
 
