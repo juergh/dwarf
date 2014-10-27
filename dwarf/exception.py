@@ -19,7 +19,7 @@
 import logging
 
 from functools import wraps
-from bottle import abort
+from bottle import abort, BottleException
 
 LOG = logging.getLogger(__name__)
 
@@ -33,8 +33,13 @@ def catchall(func):
         try:
             return func(*args, **kwargs)
         except DwarfException as e:
-            LOG.warn('Exception caught: %s (%s)', e.message, e.code)
+            # Turn internal dwarf exceptions into bottle aborts
+            LOG.warn('Dwarf exception caught: %s (%s)', e.message, e.code)
             abort(e.code, e.message)
+        except BottleException as e:
+            # Re-raise bottle exceptions
+            LOG.warn('Bottle exception caught: %s (%s)', e.message, e.code)
+            raise
         except Exception as e:   # pylint: disable=W0703
             LOG.exception('Unknown exception caught: %s', str(e))
             abort(500, str(e))
