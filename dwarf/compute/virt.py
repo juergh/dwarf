@@ -36,7 +36,7 @@ DOMAIN_SHUTDOWN = 3
 DOMAIN_CRASHED = 4
 DOMAIN_SUSPENDED = 5
 
-LIBVIRT_DOMAIN_STATE = {
+_LIBVIRT_DOMAIN_STATE = {
     libvirt.VIR_DOMAIN_NOSTATE: DOMAIN_NOSTATE,
     libvirt.VIR_DOMAIN_RUNNING: DOMAIN_RUNNING,
     libvirt.VIR_DOMAIN_BLOCKED: DOMAIN_RUNNING,
@@ -156,8 +156,7 @@ class Controller(object):
         except libvirt.libvirtError as e:
             if e.get_error_code() == libvirt.VIR_ERR_OPERATION_INVALID:
                 # Check if the instance is already shut down
-                state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
-                if state == DOMAIN_SHUTDOWN:
+                if self._info_domain(domain)['state'] == DOMAIN_SHUTDOWN:
                     return
             raise
 
@@ -175,11 +174,23 @@ class Controller(object):
         """
         if domain is None:
             return
-
-        state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
-        if state == DOMAIN_RUNNING:
+        if self._info_domain(domain)['state'] == DOMAIN_RUNNING:
             return
+
         domain.create()
+
+    def _info_domain(self, domain):
+        """
+        Return the libvirt domain info
+        """
+        if domain is None:
+            return
+
+        info = dict(zip(['state', 'max_mem', 'memory', 'nr_virt_cpu',
+                         'cpu_time'], domain.info()))
+        # Normalize the domain state
+        info['state'] = _LIBVIRT_DOMAIN_STATE[info['state']]
+        return info
 
     def _shutdown_domain(self, domain, hard):
         """
@@ -187,10 +198,9 @@ class Controller(object):
         """
         if domain is None:
             return
-
-        state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
-        if state != DOMAIN_RUNNING:
+        if self._info_domain(domain)['state'] != DOMAIN_RUNNING:
             return
+
         if hard:
             self._destroy_domain(domain)
         else:
@@ -239,6 +249,18 @@ class Controller(object):
         self._connect()
         domain = self._get_domain(server)
         self._shutdown_domain(domain, hard)
+
+    def info_server(self, server):
+        """
+        Return the server info
+        """
+        LOG.info('info_server(server=%s)', server)
+
+        self._connect()
+        domain = self._get_domain(server)
+        info = self._info_domain(domain)
+        LOG.info('info = %s', info)
+        return info
 
     def create_network(self):
         """

@@ -45,6 +45,8 @@ _DEFAULT_CONFIG = {
     'compute_api_port': 8774,
     'image_api_port': 9292,
     'ec2_metadata_port': 8080,
+
+    'server_soft_reboot_timeout': 30,
 }
 
 

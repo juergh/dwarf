@@ -20,11 +20,13 @@ import logging
 import random
 import os
 import shutil
+import time
 
 from dwarf import config
 from dwarf import task
 from dwarf import utils
 
+from dwarf.compute import virt
 from dwarf.db import DB
 
 from dwarf.compute.flavors import FLAVORS
@@ -256,10 +258,22 @@ class Controller(object):
         """
         LOG.info('reboot(server_id=%s, hard=%s)', server_id, hard)
 
-        server = DB.servers.show(id=server_id)
+        self.stop(server_id, hard=hard)
 
-        VIRT.delete_server(server)
-        VIRT.boot_server(server)
+        # Check the state of the server
+        server = DB.servers.show(id=server_id)
+        for dummy in range(0, CONF.server_soft_reboot_timeout/2):
+            state = VIRT.info_server(server)['state']
+            if state != virt.DOMAIN_RUNNING:
+                break
+            time.sleep(2)
+
+        # Shut the server down hard if it ignored the soft request
+        if hard is False and state == virt.DOMAIN_RUNNING:
+            self.stop(server_id, hard=True)
+            time.sleep(2)
+
+        self.start(server_id)
 
     def start(self, server_id):
         """
