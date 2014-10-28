@@ -261,5 +261,23 @@ class Controller(object):
         VIRT.delete_server(server)
         VIRT.boot_server(server)
 
+    def start(self, server_id):
+        """
+        Start a server
+        """
+        LOG.info('start(server_id=%s)', server_id)
+
+        server = DB.servers.show(id=server_id)
+        VIRT.start_server(server)
+
+    def stop(self, server_id, hard=False):
+        """
+        Stop a server
+        """
+        LOG.info('stop(server_id=%s, hard=%s)', server_id, hard)
+
+        server = DB.servers.show(id=server_id)
+        VIRT.stop_server(server, hard)
+
 
 SERVERS = Controller()

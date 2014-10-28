@@ -141,13 +141,23 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
     if 'os-getConsoleOutput' in body:
         return {'output': SERVERS.console_log(server_id)}
 
+    # nova start
+    elif 'os-start' in body:
+        SERVERS.start(server_id)
+        return
+
+    # nova stop
+    elif 'os-stop' in body:
+        SERVERS.stop(server_id)
+        return
+
     # nova reboot
     elif 'reboot' in body:
         hard = body['reboot']['type'].lower() == 'hard'
         SERVERS.reboot(server_id, hard)
         return
 
-    bottle.abort(400)
+    raise exception.Failure(code=400, reason='There is no such action')
 
 
 @exception.catchall

@@ -29,6 +29,24 @@ from dwarf import utils
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
+DOMAIN_NOSTATE = 0
+DOMAIN_RUNNING = 1
+DOMAIN_PAUSED = 2
+DOMAIN_SHUTDOWN = 3
+DOMAIN_CRASHED = 4
+DOMAIN_SUSPENDED = 5
+
+LIBVIRT_DOMAIN_STATE = {
+    libvirt.VIR_DOMAIN_NOSTATE: DOMAIN_NOSTATE,
+    libvirt.VIR_DOMAIN_RUNNING: DOMAIN_RUNNING,
+    libvirt.VIR_DOMAIN_BLOCKED: DOMAIN_RUNNING,
+    libvirt.VIR_DOMAIN_PAUSED: DOMAIN_PAUSED,
+    libvirt.VIR_DOMAIN_SHUTDOWN: DOMAIN_SHUTDOWN,
+    libvirt.VIR_DOMAIN_SHUTOFF: DOMAIN_SHUTDOWN,
+    libvirt.VIR_DOMAIN_CRASHED: DOMAIN_CRASHED,
+    libvirt.VIR_DOMAIN_PMSUSPENDED: DOMAIN_SUSPENDED,
+}
+
 
 def _name(sid):
     return 'dwarf-%08x' % int(sid)
@@ -105,12 +123,15 @@ class Controller(object):
         if self.libvirt is None:
             self.libvirt = libvirt.open('qemu:///system')
 
-    def _create_domain(self, xml, flags=0):
+    # -------------------------------------------------------------------------
+    # Libvirt domain operations (private)
+
+    def _create_domain(self, xml):
         """
         Create the libvirt domain and start it
         """
         domain = self.libvirt.defineXML(xml)
-        domain.createWithFlags(flags)
+        domain.create()
         return domain
 
     def _get_domain(self, server):
@@ -133,14 +154,10 @@ class Controller(object):
         try:
             domain.destroy()
         except libvirt.libvirtError as e:
-            retval = e.get_error_code()
-            if retval == libvirt.VIR_ERR_OPERATION_INVALID:
-                # If the instance is already shut off, we get this:
-                # Code=5 Error=Requested operation is not valid:
-                # domain is not running
-                (state, dummy_max_mem, dummy_mem, dummy_vcpus, dummy_time) = \
-                    domain.info()
-                if state == 5:
+            if e.get_error_code() == libvirt.VIR_ERR_OPERATION_INVALID:
+                # Check if the instance is already shut down
+                state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
+                if state == DOMAIN_SHUTDOWN:
                     return
             raise
 
@@ -150,8 +167,37 @@ class Controller(object):
         """
         if domain is None:
             return
-
         domain.undefine()
+
+    def _start_domain(self, domain):
+        """
+        Start a libvirt domain
+        """
+        if domain is None:
+            return
+
+        state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
+        if state == DOMAIN_RUNNING:
+            return
+        domain.create()
+
+    def _shutdown_domain(self, domain, hard):
+        """
+        Shutdown a libvirt domain
+        """
+        if domain is None:
+            return
+
+        state = LIBVIRT_DOMAIN_STATE[domain.info()[0]]
+        if state != DOMAIN_RUNNING:
+            return
+        if hard:
+            self._destroy_domain(domain)
+        else:
+            domain.shutdown()
+
+    # -------------------------------------------------------------------------
+    # Server operations (public)
 
     def boot_server(self, server):
         """
@@ -173,6 +219,26 @@ class Controller(object):
         domain = self._get_domain(server)
         self._destroy_domain(domain)
         self._undefine_domain(domain)
+
+    def start_server(self, server):
+        """
+        Start a server
+        """
+        LOG.info('start_server(server=%s)', server)
+
+        self._connect()
+        domain = self._get_domain(server)
+        self._start_domain(domain)
+
+    def stop_server(self, server, hard=False):
+        """
+        Stop a server
+        """
+        LOG.info('stop_server(server=%s, hard=%s)', server, hard)
+
+        self._connect()
+        domain = self._get_domain(server)
+        self._shutdown_domain(domain, hard)
 
     def create_network(self):
         """
