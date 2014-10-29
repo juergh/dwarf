@@ -41,6 +41,22 @@ SERVERS_INFO = ('id', 'links', 'name')
 SERVERS_DETAIL = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
                   'name', 'status', 'updated_at', 'addresses')
 
+SERVER_BUILDING = 'building'
+SERVER_ACTIVE = 'active'
+SERVER_STOPPED = 'stopped'
+SERVER_PAUSED = 'paused'
+SERVER_SUSPENDED = 'suspended'
+SERVER_ERROR = 'error'
+
+_VIRT_SERVER_STATE = {
+    virt.DOMAIN_NOSTATE: SERVER_BUILDING,
+    virt.DOMAIN_RUNNING: SERVER_ACTIVE,
+    virt.DOMAIN_PAUSED: SERVER_PAUSED,
+    virt.DOMAIN_SHUTDOWN: SERVER_STOPPED,
+    virt.DOMAIN_CRASHED: SERVER_ERROR,
+    virt.DOMAIN_SUSPENDED: SERVER_SUSPENDED,
+}
+
 
 def _generate_mac():
     """
@@ -107,26 +123,24 @@ def _create_disks(server):
                    server_disk_local])
 
 
-def _update_ip(server):
-    """
-    Update the DHCP assigned IP address
-    """
-    # Get the DHCP lease information
-    lease = VIRT.get_dhcp_lease(server)
-    if lease is None:
-        return
-
-    # Update the database
-    server = DB.servers.update(id=server['id'], ip=lease['ip'],
-                               status='ACTIVE')
-    return lease['ip']
-
-
 class Controller(object):
+
+    def _update_ip(self, server):
+        """
+        Update the DHCP assigned IP address
+        """
+        # Get the DHCP lease information
+        lease = VIRT.get_dhcp_lease(server)
+        if lease is None:
+            return
+
+        # Update the database
+        server = DB.servers.update(id=server['id'], ip=lease['ip'])
+        return lease['ip']
 
     def _extend(self, server):
         """
-        Extend server details
+        Extend the server details
         """
         if 'image_id' in server:
             server['image'] = IMAGES.show(server['image_id'])
@@ -143,6 +157,17 @@ class Controller(object):
 
         return server
 
+    def _update_status(self, server):
+        """
+        Update the (volatile) status of the server
+        """
+        info = VIRT.info_server(server)
+        server['status'] = _VIRT_SERVER_STATE[info['state']]
+        return server
+
+    # -------------------------------------------------------------------------
+    # Server operations (public)
+
     def list(self, detail=True):
         """
         List all servers
@@ -151,7 +176,7 @@ class Controller(object):
 
         servers = []
         for s in DB.servers.list():
-            servers.append(self._extend(s))
+            servers.append(self._extend(self._update_status(s)))
         if detail:
             return utils.sanitize(servers, SERVERS_DETAIL)
         else:
@@ -164,7 +189,8 @@ class Controller(object):
         LOG.info('show(server_id=%s)', server_id)
 
         server = DB.servers.show(id=server_id)
-        return utils.sanitize(self._extend(server), SERVERS_DETAIL)
+        return utils.sanitize(self._extend(self._update_status(server)),
+                              SERVERS_DETAIL)
 
     def boot(self, server):
         """
@@ -186,7 +212,7 @@ class Controller(object):
         # Create a new server in the database
         server = DB.servers.create(name=name, image_id=image_id,
                                    flavor_id=flavor_id, key_name=key_name,
-                                   status='BUILDING')
+                                   status=SERVER_BUILDING)
         server_id = server['id']
 
         # Generate some more server properties and update the database
@@ -206,13 +232,11 @@ class Controller(object):
         # Finally boot the server
         VIRT.boot_server(server)
 
-        # Update the status of the server
-        server = DB.servers.update(id=server_id, status='NETWORKING')
-
         # Start a task to wait for the server to get its DHCP IP address
-        task.start(server_id, 2, 60/2, _update_ip, server)
+        task.start(server_id, 2, 60/2, self._update_ip, server)
 
-        return utils.sanitize(self._extend(server), SERVERS_DETAIL)
+        return utils.sanitize(self._extend(self._update_status(server)),
+                              SERVERS_DETAIL)
 
     def delete(self, server_id):
         """
@@ -260,16 +284,16 @@ class Controller(object):
 
         self.stop(server_id, hard=hard)
 
-        # Check the state of the server
+        # Check the status of the server
         server = DB.servers.show(id=server_id)
         for dummy in range(0, CONF.server_soft_reboot_timeout/2):
-            state = VIRT.info_server(server)['state']
-            if state != virt.DOMAIN_RUNNING:
+            server = self._update_status(server)
+            if server['status'] != SERVER_ACTIVE:
                 break
             time.sleep(2)
 
         # Shut the server down hard if it ignored the soft request
-        if hard is False and state == virt.DOMAIN_RUNNING:
+        if hard is False and server['status'] == SERVER_ACTIVE:
             self.stop(server_id, hard=True)
             time.sleep(2)
 
