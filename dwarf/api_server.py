@@ -18,7 +18,10 @@
 
 import bottle
 import logging
+import socket
 import threading
+
+from time import sleep
 
 from wsgiref.simple_server import make_server
 from wsgiref.simple_server import WSGIRequestHandler
@@ -54,31 +57,61 @@ class _BaseHTTPServer(bottle.ServerAdapter):
         self.srv.serve_forever()
 
     def stop(self):
-        self.srv.shutdown()
+        if self.srv:
+            self.srv.shutdown()
 
 
 class ApiServer(threading.Thread):
-    app = bottle.Bottle()
-    server = None
-    name = ''
-    host = ''
-    port = 0
+    """
+    Generic API server class
+    """
+
+    def __init__(self, sname, host, port):
+        threading.Thread.__init__(self)
+
+        self.server = None
+        self.app = bottle.Bottle()
+
+        self.sname = sname
+        self.host = host
+        self.port = port
+
+    def setup(self):
+        pass
+
+    def teardown(self):
+        pass
 
     def run(self):
         """
         Start the server
         """
-        LOG.info('Starting %s API server', self.name)
+        self.setup()
+
+        LOG.info('Starting %s API server', self.sname)
+
+        # Check if we can bind to the address. We need to retry for a bit until
+        # the dwarf network comes up.
+        sock = socket.socket(socket.AF_INET)
+        for dummy in range(0, 15):
+            try:
+                sock.bind((self.host, self.port))
+                sock.close()
+                break
+            except Exception:   # pylint: disable=W0703
+                sleep(1)
 
         try:
             self.server = _BaseHTTPServer(host=self.host, port=self.port)
 
-            LOG.info('%s API server listening on %s:%s', self.name, self.host,
+            # Start the bottle server
+            LOG.info('%s API server listening on %s:%s', self.sname, self.host,
                      self.port)
             bottle.run(self.app, server=self.server)
-            LOG.info('%s API server shut down', self.name)
+            LOG.info('%s API server shut down', self.sname)
+
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start %s API server', self.name)
+            LOG.exception('Failed to start %s API server', self.sname)
 
     def stop(self):
         """
@@ -87,4 +120,6 @@ class ApiServer(threading.Thread):
         try:
             self.server.stop()
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop %s API server', self.name)
+            LOG.exception('Failed to stop %s API server', self.sname)
+
+        self.teardown()

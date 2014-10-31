@@ -168,6 +168,22 @@ class Controller(object):
     # -------------------------------------------------------------------------
     # Server operations (public)
 
+    def setup(self):
+        """
+        Setup on start
+        """
+        LOG.info('setup()')
+
+        VIRT.create_network()
+
+    def teardown(self):
+        """
+        Teardown on exit
+        """
+        LOG.info('teardown()')
+
+        VIRT.delete_network()
+
     def list(self, detail=True):
         """
         List all servers

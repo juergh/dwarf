@@ -156,21 +156,28 @@ def _route_images():
     return {'image': IMAGES.create(image_fh, image_md)}
 
 
+class _ImageApiServer(api_server.ApiServer):
+    def __init__(self):
+        super(_ImageApiServer, self).__init__('Image',
+                                              '127.0.0.1',
+                                              CONF.image_api_port)
+
+        self.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),
+                       method=('GET', 'HEAD', 'DELETE', 'PUT'),
+                       callback=_route_images_id)
+        self.app.route(('/v1/images', '//v1/images'),
+                       method='POST',
+                       callback=_route_images)
+
+
+_API_SERVER = None
+
+
 def ImageApiServer():
     """
-    Instantiate and configure the API server
+    Factory function to return the already created object
     """
-    server = api_server.ApiServer()
-
-    server.name = 'Image'
-    server.host = '127.0.0.1'
-    server.port = CONF.image_api_port
-
-    server.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),
-                     method=('GET', 'HEAD', 'DELETE', 'PUT'),
-                     callback=_route_images_id)
-    server.app.route(('/v1/images', '//v1/images'),
-                     method='POST',
-                     callback=_route_images)
-
-    return server
+    global _API_SERVER   # pylint: disable=W0603
+    if _API_SERVER is None:
+        _API_SERVER = _ImageApiServer()
+    return _API_SERVER

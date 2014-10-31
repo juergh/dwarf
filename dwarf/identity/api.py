@@ -94,19 +94,25 @@ def _route_tokens():
         return TOKENS_RESPONSE
 
 
-@exception.catchall
+class _IdentityApiServer(api_server.ApiServer):
+    def __init__(self):
+        super(_IdentityApiServer, self).__init__('Identity',
+                                                 '127.0.0.1',
+                                                 CONF.identity_api_port)
+
+        self.app.route('/v2.0/tokens',
+                       method='POST',
+                       callback=_route_tokens)
+
+
+_API_SERVER = None
+
+
 def IdentityApiServer():
     """
-    Instantiate and configure the API server
+    Factory function to return the already created object
     """
-    server = api_server.ApiServer()
-
-    server.name = 'Identity'
-    server.host = '127.0.0.1'
-    server.port = CONF.identity_api_port
-
-    server.app.route('/v2.0/tokens',
-                     method='POST',
-                     callback=_route_tokens)
-
-    return server
+    global _API_SERVER   # pylint: disable=W0603
+    if _API_SERVER is None:
+        _API_SERVER = _IdentityApiServer()
+    return _API_SERVER

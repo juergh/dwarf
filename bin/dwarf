@@ -29,12 +29,11 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 
 from dwarf import config
 
+from dwarf.compute import ec2metadata
+
 from dwarf.compute import api as compute_api
 from dwarf.identity import api as identity_api
 from dwarf.image import api as image_api
-
-from dwarf.compute import ec2metadata
-from dwarf.compute.virt import VIRT
 
 CONF = config.Config()
 THREADS = []
@@ -44,10 +43,6 @@ def cleanup(dummy_signal, dummy_frame):
     # Stop all threads
     for thread in THREADS:
         thread.stop()
-
-    # Delete the network
-    VIRT.delete_network()
-
 
 def main():
     # Set up the logger
@@ -62,9 +57,6 @@ def main():
     # Install the cleanup handler
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
-
-    # Create the network
-    VIRT.create_network()
 
     # Create the API (and Ec2 metadata) server threads
     THREADS.extend([
