@@ -1,3 +1,10 @@
+v0.1.6
+  * Return true server state from libvirt rather than the database
+  * Add server start and stop actions, fix reboot action
+  * Create a dedicated network bridge dwbr0
+  * Add more config options
+  * Various fixes and code refactoring
+
 v0.1.5
   * Move the base config to a dict
   * Remove distro specifics
