@@ -23,6 +23,7 @@ import shutil
 import time
 
 from dwarf import config
+from dwarf import exception
 from dwarf import task
 from dwarf import utils
 
@@ -143,7 +144,11 @@ class Controller(object):
         Extend the server details
         """
         if 'image_id' in server:
-            server['image'] = IMAGES.show(server['image_id'])
+            try:
+                server['image'] = IMAGES.show(server['image_id'])
+            except exception.NotFound:
+                LOG.warning('No such image: %s', server['image_id'])
+                server['image'] = {'id': 'unknown'}
             del server['image_id']
 
         if 'flavor_id' in server:
