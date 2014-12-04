@@ -76,16 +76,16 @@ def _ec2metadata_resources(server, keypair):
                 'root': '/dev/vda',
                 'ephemeral0': '/dev/vdb',
             },
-            'hostname': 'TBD',
+            'hostname': server['name'],
             'instance-action': 'None',
             'instance-id': 'i-%08x' % int(server['int_id']),
             'instance-type': 'dwarf.small',
-            'local-hostname': 'TBD',
+            'local-hostname': server['name'],
             'local-ipv4': 'None',
             'placement': {
-                'availability-zone': 'nova',
+                'availability-zone': 'dwarf',
             },
-            'public-hostname': 'dwarf-host',
+            'public-hostname': '',
             'public-keys': {
                 '0': {
                     '_key_name': server['key_name'],
