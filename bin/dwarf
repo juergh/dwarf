@@ -27,6 +27,9 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
+# Import the logging module first so that stdout and stderr are redirected
+# to the logfile as soon as possible
+from dwarf import log   # pylint: disable=W0611
 from dwarf import config
 
 from dwarf.compute import ec2metadata
@@ -36,6 +39,7 @@ from dwarf.identity import api as identity_api
 from dwarf.image import api as image_api
 
 CONF = config.Config()
+LOG = logging.getLogger(__name__)
 THREADS = []
 
 
@@ -44,12 +48,9 @@ def cleanup(dummy_signal, dummy_frame):
     for thread in THREADS:
         thread.stop()
 
+
 def main():
-    # Set up the logger
-    _filename = CONF.dwarf_log
-    _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
-    _level = logging.DEBUG if CONF.debug else logging.INFO
-    logging.basicConfig(filename=_filename, format=_format, level=_level)
+    LOG.info('Dwarf starting')
 
     # Dump the config options
     CONF.dump_options()
@@ -75,6 +76,8 @@ def main():
     for thread in THREADS:
         while thread.is_alive():
             thread.join(3600)
+
+    LOG.info('Dwarf stopped')
 
 
 if __name__ == '__main__':
