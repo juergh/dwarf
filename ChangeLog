@@ -1,3 +1,8 @@
+v0.1.7
+  * Redirect python's stdout and stderr to the logger
+  * Provide some more instance data through the EC2 metadata service
+  * Handle deleted images for existing servers
+
 v0.1.6
   * Return true server state from libvirt rather than the database
   * Add server start and stop actions, fix reboot action
