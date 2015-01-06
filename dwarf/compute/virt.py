@@ -24,6 +24,7 @@ import uuid
 from string import Template
 
 from dwarf import config
+from dwarf import exception
 from dwarf import utils
 
 CONF = config.Config()
@@ -270,62 +271,39 @@ class Controller(object):
 
         self._connect()
         try:
-            # Check if the network exists already
+            # Check if the network already exists
             net = self.libvirt.networkLookupByName('dwarf')
-            return
-        except libvirt.libvirtError:
-            pass
+        except libvirt.libvirtError as e:
+            if e.get_error_code() != libvirt.VIR_ERR_NO_NETWORK:
+                # Unexpected error
+                raise
+            # Define the network
+            xml = _create_net_xml()
+            net = self.libvirt.networkDefineXML(xml)
 
-        # Define and create (start) the network
-        xml = _create_net_xml()
-        net = self.libvirt.networkDefineXML(xml)
-        net.create()
+        # Configure the network to automatically start on host boot
         net.setAutostart(1)
 
-        # Add the iptables route for the Ec2 metadata service
-        utils.execute(['iptables',
-                       '-t', 'nat',
-                       '-A', 'PREROUTING',
-                       '-s', '%s/24' % CONF.libvirt_bridge_ip,
-                       '-d', '169.254.169.254/32',
-                       '-p', 'tcp',
-                       '-m', 'tcp',
-                       '--dport', 80,
-                       '-j', 'REDIRECT',
-                       '--to-port', CONF.ec2_metadata_port],
-                      run_as_root=True,
-                      check_exit_code=False)
+        # Create (start) the network
+        if net.isActive() == 0:
+            net.create()
 
-    def delete_network(self):
-        """
-        Delete the network
-        """
-        LOG.info('delete_network()')
-
-        self._connect()
+        # Add the iptables rule for the Ec2 metadata service
+        rule = ['PREROUTING',
+                '-t', 'nat',
+                '-s', '%s/24' % CONF.libvirt_bridge_ip,
+                '-d', '169.254.169.254/32',
+                '-p', 'tcp',
+                '-m', 'tcp',
+                '--dport', 80,
+                '-j', 'REDIRECT',
+                '--to-port', CONF.ec2_metadata_port]
         try:
-            # Check if the network exists already
-            net = self.libvirt.networkLookupByName('dwarf')
-        except libvirt.libvirtError:
-            return
-
-        # Destroy (stop) and undefine the network
-        net.destroy()
-        net.undefine()
-
-        # Delete the iptables route for the Ec2 metadata service
-        utils.execute(['iptables',
-                       '-t', 'nat',
-                       '-D', 'PREROUTING',
-                       '-s', '%s/24' % CONF.libvirt_bridge_ip,
-                       '-d', '169.254.169.254/32',
-                       '-p', 'tcp',
-                       '-m', 'tcp',
-                       '--dport', 80,
-                       '-j', 'REDIRECT',
-                       '--to-port', CONF.ec2_metadata_port],
-                      run_as_root=True,
-                      check_exit_code=False)
+            utils.execute(['iptables', '-C'] + rule,
+                          run_as_root=True, check_exit_code=0)
+        except exception.CommandExecutionError:
+            utils.execute(['iptables', '-A'] + rule,
+                          run_as_root=True, check_exit_code=0)
 
     def get_dhcp_lease(self, server):
         """

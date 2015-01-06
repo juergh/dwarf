@@ -189,8 +189,6 @@ class Controller(object):
         """
         LOG.info('teardown()')
 
-        # self.virt.delete_network()
-
     def list(self, detail=True):
         """
         List all servers
