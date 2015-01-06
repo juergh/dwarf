@@ -21,12 +21,13 @@ import logging
 
 from dwarf import api_server
 from dwarf import config
+from dwarf import db
 from dwarf import exception
-
-from dwarf.db import DB
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
+
+DB = db.Controller()
 
 
 def _ec2metadata_format(data):

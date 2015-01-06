@@ -25,13 +25,18 @@ from dwarf import config
 from dwarf import exception
 from dwarf import utils
 
-from dwarf.compute.flavors import FLAVORS
-from dwarf.compute.keypairs import KEYPAIRS
-from dwarf.compute.images import IMAGES
-from dwarf.compute.servers import SERVERS
+from dwarf.compute import flavors
+from dwarf.compute import images
+from dwarf.compute import keypairs
+from dwarf.compute import servers
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
+
+FLAVORS = flavors.Controller()
+IMAGES = images.Controller()
+KEYPAIRS = keypairs.Controller()
+SERVERS = servers.Controller()
 
 
 @exception.catchall

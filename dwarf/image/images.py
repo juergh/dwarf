@@ -24,9 +24,8 @@ import os
 from hashlib import md5
 
 from dwarf import config
+from dwarf import db
 from dwarf import utils
-
-from dwarf.db import DB
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -39,13 +38,16 @@ IMAGES_INFO = ('checksum', 'created_at', 'container_format', 'disk_format',
 
 class Controller(object):
 
+    def __init__(self):
+        self.db = db.Controller()
+
     def list(self):
         """
         List all images
         """
         LOG.info('list()')
 
-        images = DB.images.list()
+        images = self.db.images.list()
         return utils.sanitize(images, IMAGES_INFO)
 
     def show(self, image_id):
@@ -53,7 +55,7 @@ class Controller(object):
         Show image details
         """
         LOG.info('show(image_id=%s)', image_id)
-        image = DB.images.show(id=image_id)
+        image = self.db.images.show(id=image_id)
         return utils.sanitize(image, IMAGES_INFO)
 
     def create(self, image_fh, image_md):
@@ -64,7 +66,7 @@ class Controller(object):
 
         # Create a new image in the database
         image_md['status'] = 'SAVING'
-        image = DB.images.create(**image_md)
+        image = self.db.images.create(**image_md)
         image_id = image['id']
 
         # Copy the image and calculate its MD5 sum
@@ -80,9 +82,9 @@ class Controller(object):
         md5sum = d.hexdigest()
 
         # Update the image database entry
-        image = DB.images.update(id=image_id, checksum=md5sum,
-                                 location='file://%s' % image_file,
-                                 status='ACTIVE')
+        image = self.db.images.update(id=image_id, checksum=md5sum,
+                                      location='file://%s' % image_file,
+                                      status='ACTIVE')
 
         return utils.sanitize(image, IMAGES_INFO)
 
@@ -93,7 +95,7 @@ class Controller(object):
         LOG.info('delete(image_id=%s)', image_id)
 
         # Delete the image in the database
-        DB.images.delete(id=image_id)
+        self.db.images.delete(id=image_id)
 
         # Delete the image file
         image_file = os.path.join(CONF.images_dir, image_id)
@@ -110,8 +112,5 @@ class Controller(object):
         """
         LOG.info('update(image_id=%s, image_md=%s)', image_id, image_md)
 
-        image = DB.images.update(id=image_id, **image_md)
+        image = self.db.images.update(id=image_id, **image_md)
         return utils.sanitize(image, IMAGES_INFO)
-
-
-IMAGES = Controller()

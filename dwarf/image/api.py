@@ -26,10 +26,12 @@ from dwarf import config
 from dwarf import exception
 from dwarf import utils
 
-from dwarf.image.images import IMAGES
+from dwarf.image import images
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
+
+IMAGES = images.Controller()
 
 
 def _body_chunked(request):

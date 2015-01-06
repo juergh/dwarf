@@ -23,16 +23,15 @@ import shutil
 import time
 
 from dwarf import config
+from dwarf import db
 from dwarf import exception
 from dwarf import task
 from dwarf import utils
 
+from dwarf.compute import flavors
+from dwarf.compute import images
+from dwarf.compute import keypairs
 from dwarf.compute import virt
-from dwarf.db import DB
-
-from dwarf.compute.flavors import FLAVORS
-from dwarf.compute.images import IMAGES
-from dwarf.compute.keypairs import KEYPAIRS
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -126,6 +125,10 @@ def _create_disks(server):
 class Controller(object):
 
     def __init__(self):
+        self.db = db.Controller()
+        self.flavors = flavors.Controller()
+        self.images = images.Controller()
+        self.keypairs = keypairs.Controller()
         self.virt = virt.Controller()
 
     def _update_ip(self, server):
@@ -138,7 +141,7 @@ class Controller(object):
             return
 
         # Update the database
-        server = DB.servers.update(id=server['id'], ip=lease['ip'])
+        server = self.db.servers.update(id=server['id'], ip=lease['ip'])
         return lease['ip']
 
     def _extend(self, server):
@@ -147,14 +150,14 @@ class Controller(object):
         """
         if 'image_id' in server:
             try:
-                server['image'] = IMAGES.show(server['image_id'])
+                server['image'] = self.images.show(server['image_id'])
             except exception.NotFound:
                 LOG.warning('No such image: %s', server['image_id'])
                 server['image'] = {'id': 'unknown'}
             del server['image_id']
 
         if 'flavor_id' in server:
-            server['flavor'] = FLAVORS.show(server['flavor_id'])
+            server['flavor'] = self.flavors.show(server['flavor_id'])
             del server['flavor_id']
 
         if 'ip' in server:
@@ -196,7 +199,7 @@ class Controller(object):
         LOG.info('list(detail=%s)', detail)
 
         servers = []
-        for s in DB.servers.list():
+        for s in self.db.servers.list():
             servers.append(self._extend(self._update_status(s)))
         if detail:
             return utils.sanitize(servers, SERVERS_DETAIL)
@@ -209,7 +212,7 @@ class Controller(object):
         """
         LOG.info('show(server_id=%s)', server_id)
 
-        server = DB.servers.show(id=server_id)
+        server = self.db.servers.show(id=server_id)
         return utils.sanitize(self._extend(self._update_status(server)),
                               SERVERS_DETAIL)
 
@@ -225,20 +228,20 @@ class Controller(object):
         key_name = server.get('key_name', None)
 
         # Sanity checks, will throw exceptions if they fail
-        IMAGES.exists(image_id)
-        FLAVORS.exists(flavor_id)
+        self.images.exists(image_id)
+        self.flavors.exists(flavor_id)
         if key_name is not None:
-            KEYPAIRS.exists(key_name)
+            self.keypairs.exists(key_name)
 
         # Create a new server in the database
-        server = DB.servers.create(name=name, image_id=image_id,
-                                   flavor_id=flavor_id, key_name=key_name,
-                                   status=SERVER_BUILDING)
+        server = self.db.servers.create(name=name, image_id=image_id,
+                                        flavor_id=flavor_id, key_name=key_name,
+                                        status=SERVER_BUILDING)
         server_id = server['id']
 
         # Generate some more server properties and update the database
         mac_address = _generate_mac()
-        server = DB.servers.update(id=server_id, mac_address=mac_address)
+        server = self.db.servers.update(id=server_id, mac_address=mac_address)
 
         # Extend the server details
         server = self._extend(server)
@@ -265,7 +268,7 @@ class Controller(object):
         """
         LOG.info('delete(server_id=%s)', server_id)
 
-        server = DB.servers.show(id=server_id)
+        server = self.db.servers.show(id=server_id)
 
         # Stop all running tasks associated with this server
         task.stop(server_id)
@@ -279,7 +282,7 @@ class Controller(object):
             shutil.rmtree(basepath)
 
         # Delete the database entry
-        DB.servers.delete(id=server['id'])
+        self.db.servers.delete(id=server['id'])
 
     def console_log(self, server_id):
         """
@@ -306,7 +309,7 @@ class Controller(object):
         self.stop(server_id, hard=hard)
 
         # Check the status of the server
-        server = DB.servers.show(id=server_id)
+        server = self.db.servers.show(id=server_id)
         for dummy in range(0, CONF.server_soft_reboot_timeout/2):
             server = self._update_status(server)
             if server['status'] != SERVER_ACTIVE:
@@ -326,7 +329,7 @@ class Controller(object):
         """
         LOG.info('start(server_id=%s)', server_id)
 
-        server = DB.servers.show(id=server_id)
+        server = self.db.servers.show(id=server_id)
         self.virt.start_server(server)
 
     def stop(self, server_id, hard=False):
@@ -335,8 +338,5 @@ class Controller(object):
         """
         LOG.info('stop(server_id=%s, hard=%s)', server_id, hard)
 
-        server = DB.servers.show(id=server_id)
+        server = self.db.servers.show(id=server_id)
         self.virt.stop_server(server, hard)
-
-
-SERVERS = Controller()
