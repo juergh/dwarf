@@ -339,6 +339,3 @@ class Controller(object):
                 if col[1] == server['mac_address']:
                     return {'expires': col[0], 'hwaddr': col[1], 'ip': col[2],
                             'hostname': col[3], 'clientid': col[4]}
-
-
-VIRT = Controller()

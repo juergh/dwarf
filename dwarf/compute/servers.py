@@ -33,7 +33,6 @@ from dwarf.db import DB
 from dwarf.compute.flavors import FLAVORS
 from dwarf.compute.images import IMAGES
 from dwarf.compute.keypairs import KEYPAIRS
-from dwarf.compute.virt import VIRT
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -126,12 +125,15 @@ def _create_disks(server):
 
 class Controller(object):
 
+    def __init__(self):
+        self.virt = virt.Controller()
+
     def _update_ip(self, server):
         """
         Update the DHCP assigned IP address
         """
         # Get the DHCP lease information
-        lease = VIRT.get_dhcp_lease(server)
+        lease = self.virt.get_dhcp_lease(server)
         if lease is None:
             return
 
@@ -166,7 +168,7 @@ class Controller(object):
         """
         Update the (volatile) status of the server
         """
-        info = VIRT.info_server(server)
+        info = self.virt.info_server(server)
         server['status'] = _VIRT_SERVER_STATE[info['state']]
         return server
 
@@ -179,7 +181,7 @@ class Controller(object):
         """
         LOG.info('setup()')
 
-        VIRT.create_network()
+        self.virt.create_network()
 
     def teardown(self):
         """
@@ -187,7 +189,7 @@ class Controller(object):
         """
         LOG.info('teardown()')
 
-        VIRT.delete_network()
+        # self.virt.delete_network()
 
     def list(self, detail=True):
         """
@@ -251,7 +253,7 @@ class Controller(object):
         _create_disks(server)
 
         # Finally boot the server
-        VIRT.boot_server(server)
+        self.virt.boot_server(server)
 
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60/2, self._update_ip, server)
@@ -271,7 +273,7 @@ class Controller(object):
         task.stop(server_id)
 
         # Kill the running server
-        VIRT.delete_server(server)
+        self.virt.delete_server(server)
 
         # Purge all server files
         basepath = os.path.join(CONF.instances_dir, server_id)
@@ -327,7 +329,7 @@ class Controller(object):
         LOG.info('start(server_id=%s)', server_id)
 
         server = DB.servers.show(id=server_id)
-        VIRT.start_server(server)
+        self.virt.start_server(server)
 
     def stop(self, server_id, hard=False):
         """
@@ -336,7 +338,7 @@ class Controller(object):
         LOG.info('stop(server_id=%s, hard=%s)', server_id, hard)
 
         server = DB.servers.show(id=server_id)
-        VIRT.stop_server(server, hard)
+        self.virt.stop_server(server, hard)
 
 
 SERVERS = Controller()
