@@ -28,7 +28,7 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
 from dwarf import config
-from dwarf import db as dwarf_db
+from dwarf import db
 
 CONF = config.Config()
 
@@ -55,21 +55,21 @@ def add_arg(*args, **kwargs):
 
 @add_help('initialize the database')
 def do_db_init(dummy_args):
-    db = dwarf_db.Controller()
-    db.init()
+    _db = db.Controller()
+    _db.init()
 
 
 @add_help('delete the database')
 def do_db_delete(dummy_args):
-    db = dwarf_db.Controller()
-    db.delete()
+    _db = db.Controller()
+    _db.delete()
 
 
 @add_help('dump the database')
 @add_arg('table', help='table name', nargs='?', default=None)
 def do_db_dump(args):
-    db = dwarf_db.Controller()
-    db.dump(args.table)
+    _db = db.Controller()
+    _db.dump(args.table)
 
 
 def add_subcommand_parsers(parser, module):
