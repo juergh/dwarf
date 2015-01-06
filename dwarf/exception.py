@@ -80,6 +80,6 @@ class Conflict(DwarfException):
     code = 409
 
 
-class CommandExecutionFailure(DwarfException):
+class CommandExecutionError(DwarfException):
     message = 'Failed to run command: %(reason)s'
     code = 500
