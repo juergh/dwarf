@@ -117,12 +117,28 @@ class Controller(object):
     def __init__(self):
         self.libvirt = None
 
+    def _test_connect(self):
+        """
+        Test the connection to the libvirt daemon
+        """
+        try:
+            self.libvirt.getLibVersion()
+            return True
+        except libvirt.libvirtError as e:
+            if e.get_error_code() in (libvirt.VIR_ERR_SYSTEM_ERROR,
+                                      libvirt.VIR_ERR_INTERNAL_ERROR):
+                LOG.debug('Connection to libvirt broke')
+                return False
+            raise
+
     def _connect(self):
         """
         Open a connection to the libvirt daemon
         """
-        if self.libvirt is None:
-            self.libvirt = libvirt.open('qemu:///system')
+        if self.libvirt is None or not self._test_connect():
+            uri = 'qemu:///system'
+            LOG.debug('Connecting to libvirt (%s)', uri)
+            self.libvirt = libvirt.open(uri)
 
     # -------------------------------------------------------------------------
     # Libvirt domain operations (private)
