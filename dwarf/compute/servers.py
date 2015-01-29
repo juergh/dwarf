@@ -172,7 +172,8 @@ class Controller(object):
         Update the (volatile) status of the server
         """
         info = self.virt.info_server(server)
-        server['status'] = _VIRT_SERVER_STATE[info['state']]
+        if info and 'state' in info:
+            server['status'] = _VIRT_SERVER_STATE[info['state']]
         return server
 
     # -------------------------------------------------------------------------
