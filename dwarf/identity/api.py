@@ -99,6 +99,38 @@ TOKENS_RESPONSE = {
 }
 
 
+VERSIONS_RESPONSE = {
+    "versions": {
+        "values": [{
+            "id": "v2.0",
+            "links": [{
+                "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
+                                                CONF.identity_api_port),
+                "rel": "self"
+            }],
+            "media-types": [{
+                "base": "application/json",
+                "type": "application/vnd.openstack.identity-v2.0+json"
+            }],
+            "status": "stable",
+            "updated": "2014-04-17T00:00:00Z",
+        }]
+    }
+}
+
+
+@exception.catchall
+def _route_versions():
+    """
+    Route:  /
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    bottle.response.status = 300
+    return VERSIONS_RESPONSE
+
+
 @exception.catchall
 def _route_tokens():
     """
@@ -118,6 +150,9 @@ class _IdentityApiServer(api_server.ApiServer):
                                                  CONF.bind_host,
                                                  CONF.identity_api_port)
 
+        self.app.route("/",
+                       method="GET",
+                       callback=_route_versions)
         self.app.route('/v2.0/tokens',
                        method='POST',
                        callback=_route_tokens)
