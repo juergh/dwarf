@@ -207,7 +207,7 @@ class _ComputeApiServer(api_server.ApiServer):
 
     def __init__(self):
         super(_ComputeApiServer, self).__init__('Compute',
-                                                '127.0.0.1',
+                                                CONF.bind_host,
                                                 CONF.compute_api_port)
 
         self.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',

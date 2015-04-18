@@ -48,11 +48,20 @@ SERVICE_COMPUTE = {
     "type": "compute",
     "endpoints": [{
         "tenantId": "1000",
-        "publicURL": "http://127.0.0.1:%s/v1.1/1000" % CONF.compute_api_port,
+        "publicURL": "http://%s:%s/v1.1/1000" % (
+            CONF.bind_host,
+            CONF.compute_api_port,
+        ),
         "region": "dwarf-region",
         "versionId": "1.1",
-        "versionInfo": "http://127.0.0.1:%s/v1.1" % CONF.compute_api_port,
-        "versionList": "http://127.0.0.1:%s" % CONF.compute_api_port
+        "versionInfo": "http://%s:%s/v1.1" % (
+            CONF.bind_host,
+            CONF.compute_api_port,
+        ),
+        "versionList": "http://%s:%s" % (
+            CONF.bind_host,
+            CONF.compute_api_port,
+        )
     }]
 }
 
@@ -61,11 +70,20 @@ SERVICE_IMAGE = {
     "type": "image",
     "endpoints": [{
         "tenantId": "1000",
-        "publicURL": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
+        "publicURL": "http://%s:%s/v1.0" % (
+            CONF.bind_host,
+            CONF.image_api_port,
+        ),
         "region": "dwarf-region",
         "versionId": "1.0",
-        "versionInfo": "http://127.0.0.1:%s/v1.0" % CONF.image_api_port,
-        "versionList": "http://127.0.0.1:%s" % CONF.image_api_port
+        "versionInfo": "http://%s:%s/v1.0" % (
+            CONF.bind_host,
+            CONF.image_api_port,
+        ),
+        "versionList": "http://%s:%s" % (
+            CONF.bind_host,
+            CONF.image_api_port,
+        )
     }]
 }
 
@@ -97,7 +115,7 @@ def _route_tokens():
 class _IdentityApiServer(api_server.ApiServer):
     def __init__(self):
         super(_IdentityApiServer, self).__init__('Identity',
-                                                 '127.0.0.1',
+                                                 CONF.bind_host,
                                                  CONF.identity_api_port)
 
         self.app.route('/v2.0/tokens',

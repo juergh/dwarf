@@ -41,6 +41,7 @@ _DEFAULT_CONFIG = {
     'libvirt_bridge_name': 'dwbr0',
     'libvirt_bridge_ip': '10.10.10.1',
 
+    'bind_host': '127.0.0.1',
     'identity_api_port': 35357,
     'compute_api_port': 8774,
     'image_api_port': 9292,

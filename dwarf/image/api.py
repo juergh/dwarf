@@ -161,7 +161,7 @@ def _route_images():
 class _ImageApiServer(api_server.ApiServer):
     def __init__(self):
         super(_ImageApiServer, self).__init__('Image',
-                                              '127.0.0.1',
+                                              CONF.bind_host,
                                               CONF.image_api_port)
 
         self.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),
