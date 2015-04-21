@@ -48,20 +48,14 @@ SERVICE_COMPUTE = {
     "type": "compute",
     "endpoints": [{
         "tenantId": "1000",
-        "publicURL": "http://%s:%s/v1.1/1000" % (
-            CONF.bind_host,
-            CONF.compute_api_port,
-        ),
+        "publicURL": "http://%s:%s/v1.1/1000" % (CONF.bind_host,
+                                                 CONF.compute_api_port),
         "region": "dwarf-region",
         "versionId": "1.1",
-        "versionInfo": "http://%s:%s/v1.1" % (
-            CONF.bind_host,
-            CONF.compute_api_port,
-        ),
-        "versionList": "http://%s:%s" % (
-            CONF.bind_host,
-            CONF.compute_api_port,
-        )
+        "versionInfo": "http://%s:%s/v1.1" % (CONF.bind_host,
+                                              CONF.compute_api_port),
+        "versionList": "http://%s:%s" % (CONF.bind_host,
+                                         CONF.compute_api_port)
     }]
 }
 
@@ -70,20 +64,14 @@ SERVICE_IMAGE = {
     "type": "image",
     "endpoints": [{
         "tenantId": "1000",
-        "publicURL": "http://%s:%s/v1.0" % (
-            CONF.bind_host,
-            CONF.image_api_port,
-        ),
+        "publicURL": "http://%s:%s/v1.0" % (CONF.bind_host,
+                                            CONF.image_api_port),
         "region": "dwarf-region",
         "versionId": "1.0",
-        "versionInfo": "http://%s:%s/v1.0" % (
-            CONF.bind_host,
-            CONF.image_api_port,
-        ),
-        "versionList": "http://%s:%s" % (
-            CONF.bind_host,
-            CONF.image_api_port,
-        )
+        "versionInfo": "http://%s:%s/v1.0" % (CONF.bind_host,
+                                              CONF.image_api_port),
+        "versionList": "http://%s:%s" % (CONF.bind_host,
+                                         CONF.image_api_port)
     }]
 }
 
