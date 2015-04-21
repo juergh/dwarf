@@ -44,4 +44,4 @@ tgz:
 		gzip -9 > ../dwarf-$(VERSION).tar.gz
 
 run:
-	sudo su -s /bin/sh -c './bin/dwarf' dwarf
+	sudo su -s /bin/sh -c './bin/dwarf -s' dwarf

@@ -38,14 +38,20 @@ class _StreamToLogger(object):
             self.logger.log(self.level, message)
 
 
-# Set up the logger
-_filename = CONF.dwarf_log
-_format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
-_level = logging.DEBUG if CONF.debug else logging.INFO
-logging.basicConfig(filename=_filename, format=_format, level=_level)
+def init_logger():
+    # Configure the logger
+    fmt = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
+    lvl = logging.DEBUG if CONF.debug else logging.INFO
+    if isinstance(CONF.dwarf_log, file):
+        logging.basicConfig(stream=CONF.dwarf_log, format=fmt, level=lvl)
+    else:
+        logging.basicConfig(filename=CONF.dwarf_log, format=fmt, level=lvl)
 
-# Redirect stdout and stderr to the logger
-# This needs to run very early before the bottle module is imported
-_logger = logging.getLogger(__name__)
-sys.stdout = _StreamToLogger(_logger, logging.INFO)
-sys.stderr = _StreamToLogger(_logger, logging.ERROR)
+    # Redirect stdout and stderr to the logger
+    # This needs to run very early before the bottle module is imported
+    logger = logging.getLogger(__name__)
+    sys.stdout = _StreamToLogger(logger, logging.INFO)
+    sys.stderr = _StreamToLogger(logger, logging.ERROR)
+
+
+init_logger()

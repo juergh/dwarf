@@ -17,8 +17,10 @@
 
 from __future__ import print_function
 
+import argparse
 import logging
 import os
+import sys
 import yaml
 
 LOG = logging.getLogger(__name__)
@@ -51,42 +53,56 @@ _DEFAULT_CONFIG = {
 }
 
 
+def _parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--stdout', action='store_true',
+                        help='Log to stdout instead of the logfile')
+    return parser.parse_args()
+
+
 class _Config(object):
 
     def __init__(self):
+        # Parse the commandline arguments
+        args = _parse_arguments()
+
         # Get the config data from file
         cfile = os.path.join(os.path.dirname(__file__), '../etc', 'dwarf.conf')
         if not os.path.exists(cfile):
             cfile = '/etc/dwarf.conf'
         with open(cfile, 'r') as fh:
-            cfg = yaml.load(fh)
+            opts = yaml.load(fh)
 
         # Handle empty config files
-        if cfg is None:
-            cfg = {}
+        if opts is None:
+            opts = {}
 
         # Add base config information
         for (key, val) in _BASE_CONFIG.iteritems():
-            cfg[key] = val
+            opts[key] = val
 
         # Add default config information
         for (key, val) in _DEFAULT_CONFIG.iteritems():
-            if key not in cfg:
-                cfg[key] = val
+            if key not in opts:
+                opts[key] = val
+
+        # Commandline arguments take precedence over config file options
+        if args.stdout:
+            opts['dwarf_log'] = sys.stdout
 
         # Add the config data as attributes to our object
-        for (key, val) in cfg.iteritems():
+        for (key, val) in opts.iteritems():
             setattr(self, key, val)
 
         # Store for later use
-        self._cfg = cfg
+        self._options = opts
 
     def dump_options(self):
         """
         Dump the options to the logfile
         """
-        for key in sorted(self._cfg.iterkeys()):
-            LOG.info('%s: %s', key, self._cfg[key])
+        for key in sorted(self._options.iterkeys()):
+            LOG.info('%s: %s', key, self._options[key])
 
 
 _CONFIG = None
