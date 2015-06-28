@@ -38,7 +38,7 @@ class _StreamToLogger(object):
             self.logger.log(self.level, message)
 
 
-def init_logger():
+def init_logger(redirect_stdio=True):
     # Configure the logger
     fmt = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
     lvl = logging.DEBUG if CONF.debug else logging.INFO
@@ -47,11 +47,13 @@ def init_logger():
     else:
         logging.basicConfig(filename=CONF.dwarf_log, format=fmt, level=lvl)
 
-    # Redirect stdout and stderr to the logger
-    # This needs to run very early before the bottle module is imported
-    logger = logging.getLogger(__name__)
-    sys.stdout = _StreamToLogger(logger, logging.INFO)
-    sys.stderr = _StreamToLogger(logger, logging.ERROR)
+    if redirect_stdio:
+        # Redirect stdout and stderr to the logger
+        logger = logging.getLogger(__name__)
+        sys.stdout = _StreamToLogger(logger, logging.INFO)
+        sys.stderr = _StreamToLogger(logger, logging.ERROR)
 
-
-init_logger()
+        # Hack to redirect bottle's stdout and stderr
+        import bottle
+        bottle._stdout = sys.stdout.write   # pylint: disable=W0212
+        bottle._stderr = sys.stderr.write   # pylint: disable=W0212

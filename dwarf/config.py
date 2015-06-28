@@ -17,10 +17,8 @@
 
 from __future__ import print_function
 
-import argparse
 import logging
 import os
-import sys
 import yaml
 
 LOG = logging.getLogger(__name__)
@@ -53,19 +51,9 @@ _DEFAULT_CONFIG = {
 }
 
 
-def _parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--stdout', action='store_true',
-                        help='Log to stdout instead of the logfile')
-    return parser.parse_args()
-
-
 class _Config(object):
 
     def __init__(self):
-        # Parse the commandline arguments
-        args = _parse_arguments()
-
         # Get the config data from file
         cfile = os.path.join(os.path.dirname(__file__), '../etc', 'dwarf.conf')
         if not os.path.exists(cfile):
@@ -86,16 +74,19 @@ class _Config(object):
             if key not in opts:
                 opts[key] = val
 
-        # Commandline arguments take precedence over config file options
-        if args.stdout:
-            opts['dwarf_log'] = sys.stdout
-
         # Add the config data as attributes to our object
         for (key, val) in opts.iteritems():
             setattr(self, key, val)
 
         # Store for later use
         self._options = opts
+
+    def set_option(self, key, val):
+        """
+        Set a config option
+        """
+        setattr(self, key, val)
+        self._options[key] = val
 
     def dump_options(self):
         """

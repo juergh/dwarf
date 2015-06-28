@@ -17,7 +17,6 @@
 # limitations under the License.
 
 import argparse
-import logging
 import os
 import sys
 
@@ -29,6 +28,7 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 
 from dwarf import config
 from dwarf import db
+from dwarf import log
 
 CONF = config.Config()
 
@@ -95,11 +95,8 @@ def add_subcommand_parsers(parser, module):
 
 
 if __name__ == '__main__':
-    # Set up the logger
-    _filename = CONF.dwarf_log
-    _format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
-    logging.basicConfig(filename=_filename, format=_format,
-                        level=logging.DEBUG)
+    # Initialize the logger
+    log.init_logger(redirect_stdio=False)
 
     # Create the parser, add the top-level arguments and add the subparsers for
     # the subcommands
