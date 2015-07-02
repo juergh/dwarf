@@ -34,6 +34,23 @@ class Controller(object):
     def __init__(self):
         self.db = db.Controller()
 
+    def create(self, flavor):
+        """
+        Create a flavor
+        """
+        LOG.info('create(flavor=%s)', flavor)
+
+        new_flavor = self.db.flavors.create(**flavor)
+        return utils.sanitize(new_flavor, FLAVORS_DETAIL)
+
+    def delete(self, flavor_id):
+        """
+        Delete a flavor
+        """
+        LOG.info('delete(flavor_id=%s)', flavor_id)
+
+        self.db.flavors.delete(id=flavor_id)
+
     def list(self, detail=True):
         """
         List all flavors
@@ -54,27 +71,3 @@ class Controller(object):
 
         flavor = self.db.flavors.show(id=flavor_id)
         return utils.sanitize(flavor, FLAVORS_DETAIL)
-
-    def create(self, flavor):
-        """
-        Create a flavor
-        """
-        LOG.info('create(flavor=%s)', flavor)
-
-        new_flavor = self.db.flavors.create(**flavor)
-        return utils.sanitize(new_flavor, FLAVORS_DETAIL)
-
-    def delete(self, flavor_id):
-        """
-        Delete a flavor
-        """
-        LOG.info('delete(flavor_id=%s)', flavor_id)
-
-        self.db.flavors.delete(id=flavor_id)
-
-    def exists(self, flavor_id):
-        """
-        Check if a flavor exists
-        """
-        LOG.info('exists(flavor_id=%s)', flavor_id)
-        self.db.flavors.show(id=flavor_id)

@@ -30,21 +30,13 @@ from dwarf import utils
 LOG = logging.getLogger(__name__)
 
 KEYPAIRS_INFO = ('fingerprint', 'name', 'public_key')
+KEYPAIRS_DETAIL = ('created_at', 'fingerprint', 'name', 'public_key')
 
 
 class Controller(object):
 
     def __init__(self):
         self.db = db.Controller()
-
-    def list(self):
-        """
-        List all keypairs
-        """
-        LOG.info('list()')
-
-        keypairs = self.db.keypairs.list()
-        return utils.sanitize(keypairs, KEYPAIRS_INFO)
 
     def add(self, keypair):
         """
@@ -84,9 +76,20 @@ class Controller(object):
 
         self.db.keypairs.delete(name=keypair_name)
 
-    def exists(self, keypair_name):
+    def list(self):
         """
-        Check if a keypair exists
+        List all keypairs
         """
-        LOG.info('exists(name=%s)', keypair_name)
-        self.db.keypairs.show(name=keypair_name)
+        LOG.info('list()')
+
+        keypairs = self.db.keypairs.list()
+        return utils.sanitize(keypairs, KEYPAIRS_INFO)
+
+    def show(self, keypair_name):
+        """
+        Show keypair details
+        """
+        LOG.info('show(name=%s)', keypair_name)
+
+        keypair = self.db.keypairs.show(name=keypair_name)
+        return utils.sanitize(keypair, KEYPAIRS_DETAIL)

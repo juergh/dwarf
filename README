@@ -60,6 +60,7 @@ nova image-show
 nova keypair-add
 nova keypair-delete
 nova keypair-list
+nova keypair-show
 
 nova boot
 nova console-log

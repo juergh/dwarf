@@ -55,10 +55,3 @@ class Controller(object):
 
         image = self.db.images.show(id=image_id)
         return utils.sanitize(image, IMAGES_DETAIL)
-
-    def exists(self, image_id):
-        """
-        Check if an image exists
-        """
-        LOG.info('exists(image_id=%s)', image_id)
-        self.db.images.show(id=image_id)

@@ -87,11 +87,17 @@ def _route_os_keypairs(dummy_tenant_id):
 def _route_os_keypairs_name(dummy_tenant_id, keypair_name):
     """
     Route:  /v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>
-    Method: DELETE
+    Method: DELETE, GET
     """
     utils.show_request(bottle.request)
 
-    KEYPAIRS.delete(keypair_name)
+    # nova keypair-delete
+    if bottle.request.method == 'DELETE':
+        KEYPAIRS.delete(keypair_name)
+        return
+
+    # nova keypair-show
+    return {'keypair': KEYPAIRS.show(keypair_name)}
 
 
 @exception.catchall
@@ -220,7 +226,7 @@ class _ComputeApiServer(api_server.ApiServer):
                        method=('GET', 'POST'),
                        callback=_route_os_keypairs)
         self.app.route('/v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>',
-                       method='DELETE',
+                       method=('DELETE', 'GET'),
                        callback=_route_os_keypairs_name)
         self.app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>',
                        method=('GET', 'DELETE'),

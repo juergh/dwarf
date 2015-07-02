@@ -193,30 +193,6 @@ class Controller(object):
         """
         LOG.info('teardown()')
 
-    def list(self, detail=True):
-        """
-        List all servers
-        """
-        LOG.info('list(detail=%s)', detail)
-
-        servers = []
-        for s in self.db.servers.list():
-            servers.append(self._extend(self._update_status(s)))
-        if detail:
-            return utils.sanitize(servers, SERVERS_DETAIL)
-        else:
-            return utils.sanitize(servers, SERVERS_INFO)
-
-    def show(self, server_id):
-        """
-        Show server details
-        """
-        LOG.info('show(server_id=%s)', server_id)
-
-        server = self.db.servers.show(id=server_id)
-        return utils.sanitize(self._extend(self._update_status(server)),
-                              SERVERS_DETAIL)
-
     def boot(self, server):
         """
         Boot a new server
@@ -229,10 +205,10 @@ class Controller(object):
         key_name = server.get('key_name', None)
 
         # Sanity checks, will throw exceptions if they fail
-        self.images.exists(image_id)
-        self.flavors.exists(flavor_id)
+        self.images.show(image_id)
+        self.flavors.show(flavor_id)
         if key_name is not None:
-            self.keypairs.exists(key_name)
+            self.keypairs.show(key_name)
 
         # Create a new server in the database
         server = self.db.servers.create(name=name, image_id=image_id,
@@ -263,6 +239,22 @@ class Controller(object):
         return utils.sanitize(self._extend(self._update_status(server)),
                               SERVERS_DETAIL)
 
+    def console_log(self, server_id):
+        """
+        Return the server console log
+        """
+        LOG.info('console_log(server_id=%s)', server_id)
+
+        console_log = os.path.join(CONF.instances_dir, server_id,
+                                   'console.log')
+
+        # Make the console log readable
+        utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
+
+        with open(console_log) as fh:
+            data = fh.read()
+        return unicode(data, errors='ignore')
+
     def delete(self, server_id):
         """
         Delete a server
@@ -285,21 +277,19 @@ class Controller(object):
         # Delete the database entry
         self.db.servers.delete(id=server['id'])
 
-    def console_log(self, server_id):
+    def list(self, detail=True):
         """
-        Return the server console log
+        List all servers
         """
-        LOG.info('console_log(server_id=%s)', server_id)
+        LOG.info('list(detail=%s)', detail)
 
-        console_log = os.path.join(CONF.instances_dir, server_id,
-                                   'console.log')
-
-        # Make the console log readable
-        utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
-
-        with open(console_log) as fh:
-            data = fh.read()
-        return unicode(data, errors='ignore')
+        servers = []
+        for s in self.db.servers.list():
+            servers.append(self._extend(self._update_status(s)))
+        if detail:
+            return utils.sanitize(servers, SERVERS_DETAIL)
+        else:
+            return utils.sanitize(servers, SERVERS_INFO)
 
     def reboot(self, server_id, hard=False):
         """
@@ -323,6 +313,16 @@ class Controller(object):
             time.sleep(2)
 
         self.start(server_id)
+
+    def show(self, server_id):
+        """
+        Show server details
+        """
+        LOG.info('show(server_id=%s)', server_id)
+
+        server = self.db.servers.show(id=server_id)
+        return utils.sanitize(self._extend(self._update_status(server)),
+                              SERVERS_DETAIL)
 
     def start(self, server_id):
         """
