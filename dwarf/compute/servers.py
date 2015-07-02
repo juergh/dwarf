@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import random
 import os
@@ -37,8 +38,8 @@ CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 SERVERS_INFO = ('id', 'links', 'name')
-SERVERS_DETAIL = ('created_at', 'flavor', 'id', 'image', 'key_name', 'links',
-                  'name', 'status', 'updated_at', 'addresses')
+SERVERS_DETAIL = ('addresses', 'config_drive', 'created_at', 'flavor', 'id',
+                  'image', 'key_name', 'links', 'name', 'status', 'updated_at')
 
 SERVER_BUILDING = 'building'
 SERVER_ACTIVE = 'active'
@@ -114,12 +115,60 @@ def _create_disks(server):
                    'cluster_size=2M,backing_file=%s' % base_disk, server_disk])
 
     # Create the server ephemeral disk at:
-    # instances/<server_id>/disk_local
+    # instances/<server_id>/disk.local
     server_disk_local = os.path.join(CONF.instances_dir, server_id,
                                      'disk.local')
     utils.execute(['qemu-img', 'create', '-f', 'qcow2', '-o',
                    'cluster_size=2M,backing_file=%s' % base_disk_local,
                    server_disk_local])
+
+
+def _create_config_drive(server, keypair):
+    """
+    Create the config drive for the server
+    """
+    if not CONF.force_config_drive and not server['config_drive']:
+        return
+
+    # Config drive data
+    config_data = {
+        'vendor_data': {
+        },
+        'meta_data': {
+            'availability_zone': 'dwarf',
+            'hostname': '%s.dwarflocal' % server['name'],
+            'launch_index': 0,
+            'name': server['name'],
+            'public_keys': {
+                server['key_name']: keypair['public_key'],
+            },
+            'uuid': server['id'],
+        },
+    }
+
+    # Create a temporary directory containing the config drive data
+    config_dir = os.path.join('/tmp', 'dwarf-config-drive-%s' % server['id'])
+    if os.path.exists(config_dir):
+        shutil.rmtree(config_dir)
+
+    for version in ['latest', '2013-10-17']:
+        data_dir = os.path.join(config_dir, 'openstack', version)
+        os.makedirs(data_dir)
+        for data in ['vendor_data', 'meta_data']:
+            data_file = os.path.join(data_dir, '%s.json' % data)
+            with open(data_file, 'w') as fh:
+                json.dump(config_data[data], fh)
+
+    # Create the server config drive at:
+    # instances/<server_id>/disk.config
+    server_disk_config = os.path.join(CONF.instances_dir, server['id'],
+                                      'disk.config')
+    utils.execute(['genisoimage', '-o', server_disk_config, '-ldots',
+                   '-allow-lowercase', '-allow-multidot', '-l', '-quiet', '-J',
+                   '-r', '-V', 'config-2', config_dir])
+
+    # Remove the temporary directory
+    shutil.rmtree(config_dir)
 
 
 class Controller(object):
@@ -203,16 +252,20 @@ class Controller(object):
         image_id = server['imageRef']
         flavor_id = server['flavorRef']
         key_name = server.get('key_name', None)
+        config_drive = server.get('config_drive', False)
 
         # Sanity checks, will throw exceptions if they fail
         self.images.show(image_id)
         self.flavors.show(flavor_id)
-        if key_name is not None:
-            self.keypairs.show(key_name)
+        if key_name is None:
+            keypair = None
+        else:
+            keypair = self.keypairs.show(key_name)
 
         # Create a new server in the database
         server = self.db.servers.create(name=name, image_id=image_id,
                                         flavor_id=flavor_id, key_name=key_name,
+                                        config_drive=config_drive,
                                         status=SERVER_BUILDING)
         server_id = server['id']
 
@@ -227,8 +280,9 @@ class Controller(object):
         basepath = os.path.join(CONF.instances_dir, server_id)
         os.makedirs(basepath)
 
-        # Create the server disk images
+        # Create the server disk images and config drive
         _create_disks(server)
+        _create_config_drive(server, keypair)
 
         # Finally boot the server
         self.virt.boot_server(server)

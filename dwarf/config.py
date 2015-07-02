@@ -48,6 +48,7 @@ _DEFAULT_CONFIG = {
     'ec2_metadata_port': 8080,
 
     'server_soft_reboot_timeout': 30,
+    'force_config_drive': False,
 }
 
 

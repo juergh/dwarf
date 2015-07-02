@@ -76,6 +76,7 @@ SERVER = {
     'key_name': 'My key',
     'mac_address': 'My mac',
     'ip': 'My ip',
+    'config_drive': 'My configdrive',
 }
 
 SERVER_DETAIL = deepcopy(SERVER)

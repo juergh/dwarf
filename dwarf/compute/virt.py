@@ -53,6 +53,17 @@ def _name(sid):
     return 'dwarf-%08x' % int(sid)
 
 
+def _xml_snippet(name, enable):
+    xml = {}
+    if enable:
+        xml['%s_begin' % name] = ''
+        xml['%s_end' % name] = ''
+    else:
+        xml['%s_begin' % name] = '<!--'
+        xml['%s_end' % name] = '-->'
+    return xml
+
+
 def _create_domain_xml(server, force=False):
     """
     Create a libvirt XML file for the domain
@@ -85,8 +96,13 @@ def _create_domain_xml(server, force=False):
             'mac_addr': server['mac_address'],
             'bridge': CONF.libvirt_bridge_name,
         }
-        xml = Template(xml_template).substitute(xml_info)
 
+        # Enable/disable the config drive
+        config_drive = _xml_snippet('config_drive', (CONF.force_config_drive or
+                                                     server['config_drive']))
+        xml_info.update(config_drive)
+
+        xml = Template(xml_template).substitute(xml_info)
         with open(xml_file, 'w') as fh:
             fh.write(xml)
 

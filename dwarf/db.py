@@ -34,7 +34,7 @@ _DB_COLS = ['created_at', 'updated_at', 'deleted_at', 'deleted', 'id',
             'int_id']
 
 DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'image_id', 'flavor_id',
-                              'key_name', 'mac_address', 'ip']
+                              'key_name', 'mac_address', 'ip', 'config_drive']
 DB_KEYPAIRS_COLS = _DB_COLS + ['name', 'fingerprint', 'public_key']
 DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
                              'status', 'is_public', 'location', 'checksum',

@@ -27,6 +27,13 @@
             <source file="${basepath}/disk.local"/>
             <target bus="virtio" dev="vdb"/>
         </disk>
+%{config_drive_begin}
+        <disk type="file" device="disk">
+            <driver name="qemu" type="raw"/>
+            <source file="${basepath}/disk.config"/>
+            <target bus="virtio" dev="vdc"/>
+        </disk>
+%{config_drive_end}
 	<interface type="bridge">
             <mac address="${mac_addr}"/>
 	    <source bridge="${bridge}"/>
