@@ -105,8 +105,8 @@ def _create_net_xml():
         'uuid': str(uuid.uuid4()),
         'bridge': CONF.libvirt_bridge_name,
         'ip': CONF.libvirt_bridge_ip,
-        'dhcp_start': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3]+['2']),
-        'dhcp_end': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3]+['254']),
+        'dhcp_start': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3] + ['2']),
+        'dhcp_end': '.'.join(CONF.libvirt_bridge_ip.split('.')[0:3] + ['254']),
     }
 
     return Template(xml_template).substitute(xml_info)

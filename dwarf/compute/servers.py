@@ -234,7 +234,7 @@ class Controller(object):
         self.virt.boot_server(server)
 
         # Start a task to wait for the server to get its DHCP IP address
-        task.start(server_id, 2, 60/2, self._update_ip, server)
+        task.start(server_id, 2, 60 / 2, self._update_ip, server)
 
         return utils.sanitize(self._extend(self._update_status(server)),
                               SERVERS_DETAIL)
@@ -301,7 +301,7 @@ class Controller(object):
 
         # Check the status of the server
         server = self.db.servers.show(id=server_id)
-        for dummy in range(0, CONF.server_soft_reboot_timeout/2):
+        for dummy in range(0, CONF.server_soft_reboot_timeout / 2):
             server = self._update_status(server)
             if server['status'] != SERVER_ACTIVE:
                 break
