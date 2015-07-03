@@ -76,7 +76,7 @@ SERVER = {
     'key_name': 'My key',
     'mac_address': 'My mac',
     'ip': 'My ip',
-    'config_drive': 'My configdrive',
+    'config_drive': 'False',
 }
 
 SERVER_DETAIL = deepcopy(SERVER)
@@ -115,13 +115,13 @@ IMAGE = {
     'container_format': 'My container format',
     'size': 'My size',
     'status': 'My status',
-    'is_public': 'My public',
+    'is_public': 'False',
     'location': 'My location',
     'checksum': 'My checksum',
     'min_disk': 'My disk',
     'min_ram': 'My ram',
     'owner': 'My owner',
-    'protected': 'My protected',
+    'protected': 'False',
 }
 
 IMAGE_DETAIL = deepcopy(IMAGE)

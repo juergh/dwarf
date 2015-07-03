@@ -41,6 +41,9 @@ DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
                              'min_disk', 'min_ram', 'owner', 'protected']
 DB_FLAVORS_COLS = _DB_COLS + ['name', 'disk', 'ram', 'vcpus']
 
+TRUE = 'True'
+FALSE = 'False'
+
 
 def _print_rows(objs):
     result = []
@@ -63,13 +66,26 @@ def _now():
     return strftime('%Y-%m-%d %H:%M:%S', gmtime())
 
 
+def _to_string_bool(obj):
+    if isinstance(obj, bool):
+        if obj:
+            return TRUE
+    elif obj.lower() in ['1', 'yes', 'true', 'on']:
+        return TRUE
+    return FALSE
+
+
 class Table(object):
 
-    def __init__(self, db, table, cols, unique=None):
+    def __init__(self, db, table, cols, is_unique=None, is_bool=None):
         self.db = db
         self.table = table
         self.cols = cols
-        self.unique = unique
+        self.is_unique = is_unique
+        if is_bool is None:
+            self.is_bool = []
+        else:
+            self.is_bool = is_bool
 
     def init(self):
         """
@@ -111,12 +127,12 @@ class Table(object):
             cur = con.cursor()
 
             # Check if the row already exists
-            if self.unique:
-                key = self.unique
+            if self.is_unique:
+                key = self.is_unique
                 val = kwargs.get(key, None)
                 if val:
                     cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                                (self.table, key), (val, 'False'))
+                                (self.table, key), (val, FALSE))
                     if cur.fetchone():
                         raise exception.Conflict(reason='%s %s already '
                                                  'exists' %
@@ -138,12 +154,16 @@ class Table(object):
             now = _now()
             kwargs['created_at'] = now
             kwargs['updated_at'] = now
-            kwargs['deleted'] = 'False'
+            kwargs['deleted'] = FALSE
 
             # Create the array of table row values (in the right column order)
             vals = []
             for c in self.cols:
-                vals.append(kwargs.get(c, ''))
+                if c in self.is_bool:
+                    val = _to_string_bool(kwargs.get(c, FALSE))
+                else:
+                    val = kwargs.get(c, '')
+                vals.append(val)
 
             # Create the sqlite formatting string, i.e., '?,?,?,?'
             fmt = ('?,' * len(self.cols)).rstrip(',')
@@ -173,7 +193,11 @@ class Table(object):
             for c in self.cols:
                 if c in kwargs:
                     fmt = '%s,%s=?' % (fmt, c)
-                    vals.append(kwargs[c])
+                    if c in self.is_bool:
+                        val = _to_string_bool(kwargs[c])
+                    else:
+                        val = kwargs[c]
+                    vals.append(val)
             fmt = fmt.lstrip(',')
             vals.append(kwargs['id'])
 
@@ -195,7 +219,7 @@ class Table(object):
             con.row_factory = sq3.Row
             cur = con.cursor()
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                        (self.table, key), (val, 'False'))
+                        (self.table, key), (val, FALSE))
             sq3_row = cur.fetchone()
 
             # Check if the row exists
@@ -214,7 +238,7 @@ class Table(object):
             now = _now()
             cur.execute('UPDATE %s SET deleted_at=?, updated_at=?, deleted=?'
                         'WHERE %s=?' % (self.table, key),
-                        (now, now, 'True', val))
+                        (now, now, TRUE, val))
 
     def list(self):
         """
@@ -227,7 +251,7 @@ class Table(object):
             con.row_factory = sq3.Row
             cur = con.cursor()
             cur.execute('SELECT * FROM %s WHERE deleted=?' % self.table,
-                        ('False', ))
+                        (FALSE, ))
             sq3_rows = cur.fetchall()
 
         # Convert to an array of dicts
@@ -250,7 +274,7 @@ class Table(object):
             con.row_factory = sq3.Row
             cur = con.cursor()
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                        (self.table, key), (val, 'False'))
+                        (self.table, key), (val, FALSE))
             sq3_row = cur.fetchone()
 
         if not sq3_row:
@@ -268,10 +292,18 @@ class Controller(object):
 
     def __init__(self, db=CONF.dwarf_db):
         self.db = db
-        self.servers = Table(db, 'servers', DB_SERVERS_COLS, unique='name')
-        self.keypairs = Table(db, 'keypairs', DB_KEYPAIRS_COLS, unique='name')
-        self.images = Table(db, 'images', DB_IMAGES_COLS, unique='id')
-        self.flavors = Table(db, 'flavors', DB_FLAVORS_COLS, unique='id')
+        self.servers = Table(db, 'servers', DB_SERVERS_COLS,
+                             is_unique='name',
+                             is_bool=('config_drive', 'deleted'))
+        self.keypairs = Table(db, 'keypairs', DB_KEYPAIRS_COLS,
+                              is_unique='name',
+                              is_bool=('deleted', ))
+        self.images = Table(db, 'images', DB_IMAGES_COLS,
+                            is_unique='id',
+                            is_bool=('deleted', 'is_public', 'protected'))
+        self.flavors = Table(db, 'flavors', DB_FLAVORS_COLS,
+                             is_unique='id',
+                             is_bool=('deleted', ))
 
     def init(self):
         """
