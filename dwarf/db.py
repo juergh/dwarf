@@ -116,7 +116,7 @@ class Table(object):
                 val = kwargs.get(key, None)
                 if val:
                     cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                                (self.table, key), (val, 0))
+                                (self.table, key), (val, 'False'))
                     if cur.fetchone():
                         raise exception.Conflict(reason='%s %s already '
                                                  'exists' %
@@ -138,7 +138,7 @@ class Table(object):
             now = _now()
             kwargs['created_at'] = now
             kwargs['updated_at'] = now
-            kwargs['deleted'] = 0
+            kwargs['deleted'] = 'False'
 
             # Create the array of table row values (in the right column order)
             vals = []
@@ -195,7 +195,7 @@ class Table(object):
             con.row_factory = sq3.Row
             cur = con.cursor()
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                        (self.table, key), (val, 0))
+                        (self.table, key), (val, 'False'))
             sq3_row = cur.fetchone()
 
             # Check if the row exists
@@ -213,7 +213,8 @@ class Table(object):
             # Delete the row
             now = _now()
             cur.execute('UPDATE %s SET deleted_at=?, updated_at=?, deleted=?'
-                        'WHERE %s=?' % (self.table, key), (now, now, 1, val))
+                        'WHERE %s=?' % (self.table, key),
+                        (now, now, 'True', val))
 
     def list(self):
         """
@@ -225,7 +226,8 @@ class Table(object):
         with con:
             con.row_factory = sq3.Row
             cur = con.cursor()
-            cur.execute('SELECT * FROM %s WHERE deleted=?' % self.table, (0, ))
+            cur.execute('SELECT * FROM %s WHERE deleted=?' % self.table,
+                        ('False', ))
             sq3_rows = cur.fetchall()
 
         # Convert to an array of dicts
@@ -248,7 +250,7 @@ class Table(object):
             con.row_factory = sq3.Row
             cur = con.cursor()
             cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
-                        (self.table, key), (val, 0))
+                        (self.table, key), (val, 'False'))
             sq3_row = cur.fetchone()
 
         if not sq3_row:
