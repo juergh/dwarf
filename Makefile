@@ -45,3 +45,13 @@ tgz:
 
 run:
 	sudo su -s /bin/sh -c './bin/dwarf -s' dwarf
+
+init:
+	pid=$$(ps -ef | grep './bin/dwarf' | grep sudo | grep -v grep | \
+	       awk '{ print $$2 }') ; \
+	    if [ "$${pid}" != "" ] ; then \
+	        sudo kill $${pid} && \
+	        sleep 5 ; \
+	    fi
+	sudo su -s /bin/sh -c './bin/dwarf-manage db-delete' dwarf
+	sudo su -s /bin/sh -c './bin/dwarf-manage db-init' dwarf
