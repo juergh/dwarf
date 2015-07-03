@@ -34,7 +34,7 @@ FLAVOR_LIST = [
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'id': '100',
         'int_id': '1',
         'name': 'standard.xsmall',
@@ -46,7 +46,7 @@ FLAVOR_LIST = [
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'id': '101',
         'int_id': '2',
         'name': 'standard.small',
@@ -58,7 +58,7 @@ FLAVOR_LIST = [
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'id': '102',
         'int_id': '3',
         'name': 'standard.medium',
@@ -85,7 +85,7 @@ SERVER_DETAIL.update(
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'int_id': '1',
         'id': UUID,
     }
@@ -103,7 +103,7 @@ KEYPAIR_DETAIL.update(
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'int_id': '1',
         'id': UUID,
     }
@@ -130,7 +130,7 @@ IMAGE_DETAIL.update(
         'created_at': NOW,
         'updated_at': NOW,
         'deleted_at': '',
-        'deleted': '0',
+        'deleted': 'False',
         'int_id': '1',
         'id': UUID,
     }
@@ -250,3 +250,7 @@ class DbTestCase(unittest.TestCase):
 
     def test_db_dump_cc(self):
         self.db.dump(table='no_such_table')
+
+    def test_db_show_cc(self):
+        self.assertRaises(exception.NotFound, self.db.images.show,
+                          id='no_such_id')
