@@ -39,6 +39,9 @@ KEYPAIRS = keypairs.Controller()
 SERVERS = servers.Controller()
 
 
+# -----------------------------------------------------------------------------
+# Bottle API routes
+
 @exception.catchall
 def _route_images_id(dummy_tenant_id, image_id):
     """
@@ -208,6 +211,9 @@ def _route_flavors(dummy_tenant_id):
     # nova flavor-list (no details)
     return {'flavors': FLAVORS.list(detail=False)}
 
+
+# -----------------------------------------------------------------------------
+# API server class
 
 class _ComputeApiServer(api_server.ApiServer):
 

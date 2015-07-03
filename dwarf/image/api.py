@@ -111,6 +111,9 @@ def _from_headers(headers):
     return image_md
 
 
+# -----------------------------------------------------------------------------
+# Bottle API routes
+
 @exception.catchall
 def _route_images_id(image_id):
     """
@@ -157,6 +160,9 @@ def _route_images():
     image_fh = _request_body(bottle.request)
     return {'image': IMAGES.create(image_fh, image_md)}
 
+
+# -----------------------------------------------------------------------------
+# API server class
 
 class _ImageApiServer(api_server.ApiServer):
     def __init__(self):
