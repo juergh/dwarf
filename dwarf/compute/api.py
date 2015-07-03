@@ -25,6 +25,7 @@ from dwarf import config
 from dwarf import exception
 from dwarf import utils
 
+from dwarf.compute import api_response
 from dwarf.compute import flavors
 from dwarf.compute import images
 from dwarf.compute import keypairs
@@ -40,7 +41,48 @@ SERVERS = servers.Controller()
 
 
 # -----------------------------------------------------------------------------
-# Bottle API routes
+# Bottle Flavors API routes
+
+@exception.catchall
+def _route_flavors_id(dummy_tenant_id, flavor_id):
+    """
+    Route:  /v1.1/<dummy_tenant_id>/flavors/<flavor_id>
+    Method: GET, DELETE
+    """
+    utils.show_request(bottle.request)
+
+    # nova flavor-delete <flavor_id>
+    if bottle.request.method == 'DELETE':
+        FLAVORS.delete(flavor_id)
+        return
+
+    # nova flavor-list
+    if flavor_id == 'detail':
+        return api_response.flavors_list(FLAVORS.list())
+
+    # nova flavor-show <flavor_id>
+    return api_response.flavors_show(FLAVORS.show(flavor_id))
+
+
+@exception.catchall
+def _route_flavors(dummy_tenant_id):
+    """
+    Route:  /v1.1/<dummy_tenant_id>/flavors
+    Method: GET, POST
+    """
+    utils.show_request(bottle.request)
+
+    # nova flavor-create
+    if bottle.request.method == 'POST':
+        body = json.load(bottle.request.body)
+        return api_response.flavors_create(FLAVORS.create(body['flavor']))
+
+    # nova flavor-list (no details)
+    return api_response.flavors_list(FLAVORS.list(), details=False)
+
+
+# -----------------------------------------------------------------------------
+# Bottle Image API routes
 
 @exception.catchall
 def _route_images_id(dummy_tenant_id, image_id):
@@ -52,10 +94,10 @@ def _route_images_id(dummy_tenant_id, image_id):
 
     # nova image-list
     if image_id == 'detail':
-        return {'images': IMAGES.list()}
+        return api_response.images_list(IMAGES.list())
 
     # nova image-show <image_id>
-    return {'image': IMAGES.show(image_id)}
+    return api_response.images_show(IMAGES.show(image_id))
 
 
 @exception.catchall
@@ -66,8 +108,11 @@ def _route_images(dummy_tenant_id):
     """
     utils.show_request(bottle.request)
 
-    return {'images': IMAGES.list(detail=False)}
+    return api_response.images_list(IMAGES.list(), details=False)
 
+
+# -----------------------------------------------------------------------------
+# Bottle Keypair API routes
 
 @exception.catchall
 def _route_os_keypairs(dummy_tenant_id):
@@ -80,10 +125,10 @@ def _route_os_keypairs(dummy_tenant_id):
     # nova keypair-add
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return {'keypair': KEYPAIRS.add(body['keypair'])}
+        return api_response.keypairs_add(KEYPAIRS.add(body['keypair']))
 
     # nova keypair-list
-    return {'keypairs': KEYPAIRS.list()}
+    return api_response.keypairs_list(KEYPAIRS.list())
 
 
 @exception.catchall
@@ -100,8 +145,11 @@ def _route_os_keypairs_name(dummy_tenant_id, keypair_name):
         return
 
     # nova keypair-show
-    return {'keypair': KEYPAIRS.show(keypair_name)}
+    return api_response.keypairs_show(KEYPAIRS.show(keypair_name))
 
+
+# -----------------------------------------------------------------------------
+# Bottle Servers API routes
 
 @exception.catchall
 def _route_servers_id(dummy_tenant_id, server_id):
@@ -118,10 +166,10 @@ def _route_servers_id(dummy_tenant_id, server_id):
 
     # nova list
     if server_id == 'detail':
-        return {'servers': SERVERS.list()}
+        return api_response.servers_list(SERVERS.list())
 
     # nova show <server_id>
-    return {'server': SERVERS.show(server_id)}
+    return api_response.servers_show(SERVERS.show(server_id))
 
 
 @exception.catchall
@@ -135,10 +183,10 @@ def _route_servers(dummy_tenant_id):
     # nova boot
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return {'server': SERVERS.boot(body['server'])}
+        return api_response.servers_boot(SERVERS.boot(body['server']))
 
     # nova list (no details)
-    return {'servers': SERVERS.list(detail=False)}
+    return api_response.servers_list(SERVERS.list(), details=False)
 
 
 @exception.catchall
@@ -153,7 +201,7 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
 
     # nova console-log
     if 'os-getConsoleOutput' in body:
-        return {'output': SERVERS.console_log(server_id)}
+        return api_response.servers_console_log(SERVERS.console_log(server_id))
 
     # nova start
     elif 'os-start' in body:
@@ -172,44 +220,6 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
         return
 
     raise exception.Failure(code=400, reason='There is no such action')
-
-
-@exception.catchall
-def _route_flavors_id(dummy_tenant_id, flavor_id):
-    """
-    Route:  /v1.1/<dummy_tenant_id>/flavors/<flavor_id>
-    Method: GET, DELETE
-    """
-    utils.show_request(bottle.request)
-
-    # nova flavor-delete <flavor_id>
-    if bottle.request.method == 'DELETE':
-        FLAVORS.delete(flavor_id)
-        return
-
-    # nova flavor-list
-    if flavor_id == 'detail':
-        return {'flavors': FLAVORS.list()}
-
-    # nova flavor-show <flavor_id>
-    return {'flavor': FLAVORS.show(flavor_id)}
-
-
-@exception.catchall
-def _route_flavors(dummy_tenant_id):
-    """
-    Route:  /v1.1/<dummy_tenant_id>/flavors
-    Method: GET, POST
-    """
-    utils.show_request(bottle.request)
-
-    # nova flavor-create
-    if bottle.request.method == 'POST':
-        body = json.load(bottle.request.body)
-        return {'flavor': FLAVORS.create(body['flavor'])}
-
-    # nova flavor-list (no details)
-    return {'flavors': FLAVORS.list(detail=False)}
 
 
 # -----------------------------------------------------------------------------

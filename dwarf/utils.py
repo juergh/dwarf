@@ -26,30 +26,6 @@ from dwarf import exception
 LOG = logging.getLogger(__name__)
 
 
-def sanitize(obj, keys):
-
-    def _sanitize(obj, keys):
-        fields = {}
-        for k in keys:
-            if k in obj:
-                fields[k] = obj[k]
-            elif k == 'links':
-                fields[k] = []
-            elif k == 'properties':
-                fields[k] = {}
-            else:
-                fields[k] = None
-        return fields
-
-    if isinstance(obj, dict):
-        return _sanitize(obj, keys)
-
-    objs = []
-    for o in obj:
-        objs.append(_sanitize(o, keys))
-    return objs
-
-
 def show_request(req):
     LOG.debug('---- BEGIN REQUEST HEADERS -----')
     for key in req.headers.keys():
@@ -102,3 +78,27 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     if stderr:
         LOG.info('execute(stderr=%s)', stderr)
     return (stdout, stderr)
+
+
+def template_single(templ, data, add_if_present=None, add=None):
+    resp = {}
+    for key in templ:
+        resp[key] = data[key]
+
+    if add_if_present is not None and add_if_present in data:
+        resp[add_if_present] = data[add_if_present]
+
+    if add is not None:
+        resp.update(add)
+
+    return resp
+
+
+def template(templ, data, **kwargs):
+    if isinstance(data, (list, tuple)):
+        resp = []
+        for d in data:
+            resp.append(template_single(templ, d, **kwargs))
+    else:
+        resp = template_single(templ, data, **kwargs)
+    return resp

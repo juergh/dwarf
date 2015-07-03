@@ -25,38 +25,15 @@ from hashlib import md5
 
 from dwarf import config
 from dwarf import db
-from dwarf import utils
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
-
-IMAGES_INFO = ('checksum', 'created_at', 'container_format', 'disk_format',
-               'id', 'is_public', 'location', 'min_disk', 'min_ram', 'name',
-               'owner', 'properties', 'protected', 'updated_at', 'size',
-               'status')
 
 
 class Controller(object):
 
     def __init__(self):
         self.db = db.Controller()
-
-    def list(self):
-        """
-        List all images
-        """
-        LOG.info('list()')
-
-        images = self.db.images.list()
-        return utils.sanitize(images, IMAGES_INFO)
-
-    def show(self, image_id):
-        """
-        Show image details
-        """
-        LOG.info('show(image_id=%s)', image_id)
-        image = self.db.images.show(id=image_id)
-        return utils.sanitize(image, IMAGES_INFO)
 
     def create(self, image_fh, image_md):
         """
@@ -85,8 +62,7 @@ class Controller(object):
         image = self.db.images.update(id=image_id, checksum=md5sum,
                                       location='file://%s' % image_file,
                                       status='ACTIVE')
-
-        return utils.sanitize(image, IMAGES_INFO)
+        return image
 
     def delete(self, image_id):
         """
@@ -106,11 +82,23 @@ class Controller(object):
             LOG.warn('failed to delete image %s (%s, %s)', image_file,
                      ex.errno, ex.strerror)
 
+    def list(self):
+        """
+        List all images
+        """
+        LOG.info('list()')
+        return self.db.images.list()
+
+    def show(self, image_id):
+        """
+        Show image details
+        """
+        LOG.info('show(image_id=%s)', image_id)
+        return self.db.images.show(id=image_id)
+
     def update(self, image_id, image_md):
         """
         Update image metadata
         """
         LOG.info('update(image_id=%s, image_md=%s)', image_id, image_md)
-
-        image = self.db.images.update(id=image_id, **image_md)
-        return utils.sanitize(image, IMAGES_INFO)
+        return self.db.images.update(id=image_id, **image_md)

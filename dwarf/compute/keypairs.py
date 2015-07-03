@@ -25,7 +25,6 @@ from hashlib import md5
 from M2Crypto import RSA   # pylint: disable=F0401
 
 from dwarf import db
-from dwarf import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -62,34 +61,29 @@ class Controller(object):
                                               fingerprint=fp,
                                               public_key=public_key)
 
-        if private_key is None:
-            return utils.sanitize(new_keypair, KEYPAIRS_INFO)
+        # Add the private key to the response
+        if private_key is not None:
+            new_keypair['private_key'] = private_key
 
-        new_keypair['private_key'] = private_key
-        return utils.sanitize(new_keypair, KEYPAIRS_INFO + ('private_key', ))
+        return new_keypair
 
     def delete(self, keypair_name):
         """
         Delete a keypair
         """
         LOG.info('delete(name=%s)', keypair_name)
-
-        self.db.keypairs.delete(name=keypair_name)
+        return self.db.keypairs.delete(name=keypair_name)
 
     def list(self):
         """
         List all keypairs
         """
         LOG.info('list()')
-
-        keypairs = self.db.keypairs.list()
-        return utils.sanitize(keypairs, KEYPAIRS_INFO)
+        return self.db.keypairs.list()
 
     def show(self, keypair_name):
         """
         Show keypair details
         """
         LOG.info('show(name=%s)', keypair_name)
-
-        keypair = self.db.keypairs.show(name=keypair_name)
-        return utils.sanitize(keypair, KEYPAIRS_DETAIL)
+        return self.db.keypairs.show(name=keypair_name)

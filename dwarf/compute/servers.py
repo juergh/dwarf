@@ -37,10 +37,6 @@ from dwarf.compute import virt
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
-SERVERS_INFO = ('id', 'links', 'name')
-SERVERS_DETAIL = ('addresses', 'config_drive', 'created_at', 'flavor', 'id',
-                  'image', 'key_name', 'links', 'name', 'status', 'updated_at')
-
 SERVER_BUILDING = 'building'
 SERVER_ACTIVE = 'active'
 SERVER_STOPPED = 'stopped'
@@ -290,8 +286,7 @@ class Controller(object):
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60 / 2, self._update_ip, server)
 
-        return utils.sanitize(self._extend(self._update_status(server)),
-                              SERVERS_DETAIL)
+        return self._extend(self._update_status(server))
 
     def console_log(self, server_id):
         """
@@ -331,19 +326,16 @@ class Controller(object):
         # Delete the database entry
         self.db.servers.delete(id=server['id'])
 
-    def list(self, detail=True):
+    def list(self):
         """
         List all servers
         """
-        LOG.info('list(detail=%s)', detail)
+        LOG.info('list()')
 
         servers = []
         for s in self.db.servers.list():
             servers.append(self._extend(self._update_status(s)))
-        if detail:
-            return utils.sanitize(servers, SERVERS_DETAIL)
-        else:
-            return utils.sanitize(servers, SERVERS_INFO)
+        return servers
 
     def reboot(self, server_id, hard=False):
         """
@@ -375,8 +367,7 @@ class Controller(object):
         LOG.info('show(server_id=%s)', server_id)
 
         server = self.db.servers.show(id=server_id)
-        return utils.sanitize(self._extend(self._update_status(server)),
-                              SERVERS_DETAIL)
+        return self._extend(self._update_status(server))
 
     def start(self, server_id):
         """

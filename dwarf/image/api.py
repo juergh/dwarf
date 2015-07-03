@@ -26,6 +26,7 @@ from dwarf import config
 from dwarf import exception
 from dwarf import utils
 
+from dwarf.image import api_response
 from dwarf.image import images
 
 CONF = config.Config()
@@ -112,7 +113,7 @@ def _from_headers(headers):
 
 
 # -----------------------------------------------------------------------------
-# Bottle API routes
+# Bottle Images API routes
 
 @exception.catchall
 def _route_images_id(image_id):
@@ -124,7 +125,7 @@ def _route_images_id(image_id):
 
     # glance image-list
     if image_id == 'detail' and bottle.request.method == 'GET':
-        return {'images': IMAGES.list()}
+        return api_response.images_list(IMAGES.list())
 
     # glance image-show <image_id>
     if image_id != 'detail' and bottle.request.method == 'HEAD':
@@ -140,7 +141,7 @@ def _route_images_id(image_id):
     # glance image-update <image_id>
     if image_id != 'detail' and bottle.request.method == 'PUT':
         image_md = _from_headers(bottle.request.headers)
-        return {'image': IMAGES.update(image_id, image_md)}
+        return api_response.images_update(IMAGES.update(image_id, image_md))
 
     bottle.abort(400, 'Unable to handle request')
 
@@ -149,7 +150,7 @@ def _route_images_id(image_id):
 def _route_images():
     """
     Route:  /v1/images
-    Method: GET
+    Method: POST
     """
     utils.show_request(bottle.request)
 
@@ -158,7 +159,7 @@ def _route_images():
 
     # glance image-create
     image_fh = _request_body(bottle.request)
-    return {'image': IMAGES.create(image_fh, image_md)}
+    return api_response.images_create(IMAGES.create(image_fh, image_md))
 
 
 # -----------------------------------------------------------------------------
