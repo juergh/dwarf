@@ -290,18 +290,17 @@ class Table(object):
 
 class Controller(object):
 
-    def __init__(self, db=CONF.dwarf_db):
-        self.db = db
-        self.servers = Table(db, 'servers', DB_SERVERS_COLS,
+    def __init__(self):
+        self.servers = Table(CONF.dwarf_db, 'servers', DB_SERVERS_COLS,
                              is_unique='name',
                              is_bool=('config_drive', 'deleted'))
-        self.keypairs = Table(db, 'keypairs', DB_KEYPAIRS_COLS,
+        self.keypairs = Table(CONF.dwarf_db, 'keypairs', DB_KEYPAIRS_COLS,
                               is_unique='name',
                               is_bool=('deleted', ))
-        self.images = Table(db, 'images', DB_IMAGES_COLS,
+        self.images = Table(CONF.dwarf_db, 'images', DB_IMAGES_COLS,
                             is_unique='id',
                             is_bool=('deleted', 'is_public', 'protected'))
-        self.flavors = Table(db, 'flavors', DB_FLAVORS_COLS,
+        self.flavors = Table(CONF.dwarf_db, 'flavors', DB_FLAVORS_COLS,
                              is_unique='id',
                              is_bool=('deleted', ))
 
@@ -309,11 +308,11 @@ class Controller(object):
         """
         Initialize the database
         """
-        if os.path.exists(self.db):
+        if os.path.exists(CONF.dwarf_db):
             print('Database exists already')
             return
 
-        LOG.info('Initializing database %s', self.db)
+        LOG.info('Initializing database %s', CONF.dwarf_db)
         self.servers.init()
         self.keypairs.init()
         self.images.init()
@@ -331,19 +330,19 @@ class Controller(object):
         """
         Delete the database
         """
-        if not os.path.exists(self.db):
+        if not os.path.exists(CONF.dwarf_db):
             print('Database does not exist')
             return
 
-        LOG.info('Deleting database %s', self.db)
-        os.remove(self.db)
+        LOG.info('Deleting database %s', CONF.dwarf_db)
+        os.remove(CONF.dwarf_db)
 
     def dump(self, table=None):
         """
         Dump a database table
         """
         if table is None:
-            con = sq3.connect(self.db)
+            con = sq3.connect(CONF.dwarf_db)
             with con:
                 cur = con.cursor()
                 cur.execute('SELECT * FROM sqlite_master')

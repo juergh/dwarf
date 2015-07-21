@@ -16,16 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import bottle
 import json
-import mock
-import unittest
 
-from StringIO import StringIO
 from webtest import TestApp
 
+from dwarf import config
+
 from dwarf.identity import api
-from dwarf import exception
+
+from tests import utils
+
+CONF = config.Config()
 
 REQ = {
     "auth": {
@@ -56,12 +57,12 @@ SERVICE_COMPUTE = {
     "name": "Compute",
     "type": "compute",
     "endpoints": [{
-            "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:8774/v1.1/1000",
-            "region": "dwarf-region",
-            "versionId": "1.1",
-            "versionInfo": "http://127.0.0.1:8774/v1.1",
-            "versionList": "http://127.0.0.1:8774"
+        "tenantId": "1000",
+        "publicURL": "http://127.0.0.1:8774/v1.1/1000",
+        "region": "dwarf-region",
+        "versionId": "1.1",
+        "versionInfo": "http://127.0.0.1:8774/v1.1",
+        "versionList": "http://127.0.0.1:8774"
     }]
 }
 
@@ -69,12 +70,12 @@ SERVICE_IMAGE = {
     "name": "Image Management",
     "type": "image",
     "endpoints": [{
-            "tenantId": "1000",
-            "publicURL": "http://127.0.0.1:9292/v1.0",
-            "region": "dwarf-region",
-            "versionId": "1.0",
-            "versionInfo": "http://127.0.0.1:9292/v1.0",
-            "versionList": "http://127.0.0.1:9292"
+        "tenantId": "1000",
+        "publicURL": "http://127.0.0.1:9292/v1.0",
+        "region": "dwarf-region",
+        "versionId": "1.0",
+        "versionInfo": "http://127.0.0.1:9292/v1.0",
+        "versionList": "http://127.0.0.1:9292"
     }]
 }
 
@@ -89,36 +90,61 @@ TOKENS_RESPONSE = {
     }
 }
 
+VERSION_RESPONSE = {
+    "version": {
+        "id": "v2.0",
+        "links": [
+            {
+                "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
+                                                CONF.identity_api_port),
+                "rel": "self"
+            }
+        ],
+        "media-types": [
+            {
+                "base": "application/json",
+                "type": "application/vnd.openstack.identity-v3+json"
+            }
+        ],
+        "status": "stable",
+        "updated": "2014-04-17T00:00:00Z",
+    }
+}
 
-class ApiTestCase(unittest.TestCase):
+VERSIONS_RESPONSE = {
+    "versions": {
+        "values": [
+            VERSION_RESPONSE['version']
+        ]
+    }
+}
+
+
+class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
+        self.server = api.IdentityApiServer()
+        self.app = TestApp(self.server.app)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
 
-    def mock_request(self, request, headers, body):
-        request.headers = headers
-        request.body = body
+    def test_http_error(self):
+        self.app.get('/no-such-url', status=404)
 
-#    @mock.patch('bottle.request')
-#    def test_api_routes(self, request):
-#        self.mock_request(request, headers={}, body=StringIO(json.dumps(REQ)))
-#        resp = api._route_tokens()
-#        self.assertTrue('access' in resp)
-#        self.assertTrue('token' in resp['access'])
-#        self.assertTrue('user' in resp['access'])
-#        self.assertTrue('serviceCatalog' in resp['access'])
+    def test_api_versions(self):
+        resp = self.app.get('/')
+        self.assertEqual(resp.status, '300 Multiple Choices')
+        self.assertEqual(json.loads(resp.body), VERSIONS_RESPONSE)
 
-    @mock.patch('bottle.request')
-    def test_http_error(self, request):
-        self.mock_request(request, None, None)
-        self.assertRaises(bottle.HTTPError, api._route_tokens)
+    def test_api_version(self):
+        resp = self.app.get('/v2.0')
+        print resp.status
+        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(json.loads(resp.body), VERSION_RESPONSE)
 
-    def test_api_server(self):
-        server = api.IdentityApiServer()
-        app = TestApp(server.app)
-        resp = app.post('/v2.0/tokens', json.dumps(REQ))
+    def test_api_tokens(self):
+        resp = self.app.post('/v2.0/tokens', json.dumps(REQ))
         self.assertEqual(resp.status, '200 OK')
         self.assertEqual(json.loads(resp.body), TOKENS_RESPONSE)

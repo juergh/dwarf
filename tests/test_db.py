@@ -17,14 +17,14 @@
 # limitations under the License.
 
 import mock
-import sys
-import unittest
 import uuid
 
 from copy import deepcopy
 
 from dwarf import db as dwarf_db
 from dwarf import exception
+
+from tests import utils
 
 NOW = '2013-12-17 11:04:21'
 UUID = '11111111-2222-3333-4444-555555555555'
@@ -137,18 +137,18 @@ IMAGE_DETAIL.update(
 )
 
 # For code coverage
-dwarf_db._now()
+dwarf_db._now()   # pylint: disable=W0212
 
 # Mock methods
-dwarf_db._now = mock.Mock(return_value=NOW)
+dwarf_db._now = mock.Mock(return_value=NOW)   # pylint: disable=W0212
 uuid.uuid4 = mock.Mock(return_value=UUID)
 
 
-class DbTestCase(unittest.TestCase):
+class DbTestCase(utils.TestCase):
 
     def setUp(self):
         super(DbTestCase, self).setUp()
-        self.db = dwarf_db.Controller(db='test_db')
+        self.db = dwarf_db.Controller()
         self.db.delete()
         self.db.init()
 

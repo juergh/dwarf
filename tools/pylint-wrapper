@@ -20,14 +20,20 @@
 # completely
 
 import re
+import signal
 import subprocess
 import sys
+
+
+def preexec_fn():
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 
 e1101 = re.compile(r"Instance of '_Config' has no '[0-9a-zA-Z_]+' member")
 
 sys.argv[0] = 'pylint'
-proc = subprocess.Popen(sys.argv, stdout=subprocess.PIPE)
+proc = subprocess.Popen(sys.argv, stdout=subprocess.PIPE, close_fds=True,
+                        shell=False, preexec_fn=preexec_fn)
 
 retval = 0
 header = None
