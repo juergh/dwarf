@@ -150,25 +150,12 @@ def _route_ec2(url):
     return _ec2metadata_format(data)
 
 
-class _Ec2MetadataServer(api_server.ApiServer):
+class Ec2MetadataServer(api_server.ApiServer):
     def __init__(self):
-        super(_Ec2MetadataServer, self).__init__('Ec2 metadata',
-                                                 CONF.libvirt_bridge_ip,
-                                                 CONF.ec2_metadata_port)
+        super(Ec2MetadataServer, self).__init__('Ec2 metadata',
+                                                CONF.libvirt_bridge_ip,
+                                                CONF.ec2_metadata_port)
 
         self.app.route('<url:re:[a-z0-9-/.]*>',
                        method='GET',
                        callback=_route_ec2)
-
-
-_API_SERVER = None
-
-
-def Ec2MetadataServer():
-    """
-    Factory function to return the already created object
-    """
-    global _API_SERVER   # pylint: disable=W0603
-    if _API_SERVER is None:
-        _API_SERVER = _Ec2MetadataServer()
-    return _API_SERVER

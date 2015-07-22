@@ -225,12 +225,12 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
 # -----------------------------------------------------------------------------
 # API server class
 
-class _ComputeApiServer(api_server.ApiServer):
+class ComputeApiServer(api_server.ApiServer):
 
     def __init__(self):
-        super(_ComputeApiServer, self).__init__('Compute',
-                                                CONF.bind_host,
-                                                CONF.compute_api_port)
+        super(ComputeApiServer, self).__init__('Compute',
+                                               CONF.bind_host,
+                                               CONF.compute_api_port)
 
         self.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
                        method='GET',
@@ -265,16 +265,3 @@ class _ComputeApiServer(api_server.ApiServer):
 
     def teardown(self):
         SERVERS.teardown()
-
-
-_API_SERVER = None
-
-
-def ComputeApiServer():
-    """
-    Factory function to return the already created object
-    """
-    global _API_SERVER   # pylint: disable=W0603
-    if _API_SERVER is None:
-        _API_SERVER = _ComputeApiServer()
-    return _API_SERVER

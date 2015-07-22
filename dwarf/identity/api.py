@@ -158,11 +158,11 @@ def _route_tokens():
 # -----------------------------------------------------------------------------
 # API server class
 
-class _IdentityApiServer(api_server.ApiServer):
+class IdentityApiServer(api_server.ApiServer):
     def __init__(self):
-        super(_IdentityApiServer, self).__init__('Identity',
-                                                 CONF.bind_host,
-                                                 CONF.identity_api_port)
+        super(IdentityApiServer, self).__init__('Identity',
+                                                CONF.bind_host,
+                                                CONF.identity_api_port)
 
         self.app.route('/',
                        method='GET',
@@ -173,16 +173,3 @@ class _IdentityApiServer(api_server.ApiServer):
         self.app.route('/v2.0/tokens',
                        method='POST',
                        callback=_route_tokens)
-
-
-_API_SERVER = None
-
-
-def IdentityApiServer():
-    """
-    Factory function to return the already created object
-    """
-    global _API_SERVER   # pylint: disable=W0603
-    if _API_SERVER is None:
-        _API_SERVER = _IdentityApiServer()
-    return _API_SERVER
