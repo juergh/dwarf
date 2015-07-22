@@ -19,32 +19,36 @@ import os
 import shutil
 import unittest
 
-from dwarf import config
-
-CONF = config.Config()
-
-TEST_CONFIG = {
-    'instances_dir': '/tmp/dwarf/instances',
-    'instances_base_dir': '/tmp/dwarf/instances/_base',
-    'images_dir': '/tmp/dwarf/images',
-    'dwarf_db': '/tmp/dwarf/dwarf.db',
-    'dwarf_log': '/tmp/dwarf/dwarf.log',
-}
+from dwarf import db as dwarf_db
 
 
 class TestCase(unittest.TestCase):
     def setUp(self):
         super(TestCase, self).setUp()
-
-        for (key, val) in TEST_CONFIG.iteritems():
-            CONF.set_option(key, val)
-
         if os.path.exists('/tmp/dwarf'):
             shutil.rmtree('/tmp/dwarf')
-        os.makedirs('/tmp/dwarf')
+        os.makedirs('/tmp/dwarf/images')
+        os.makedirs('/tmp/dwarf/instances/_base')
 
     def tearDown(self):
         super(TestCase, self).tearDown()
-
         if os.path.exists('/tmp/dwarf'):
             shutil.rmtree('/tmp/dwarf')
+
+
+def db_init():
+    _db = dwarf_db.Controller()
+    _db.delete()
+    _db.init()
+    return _db
+
+
+def to_headers(metadata):
+    headers = []
+    for (key, val) in metadata.iteritems():
+        if key == 'properties':
+            for (k, v) in val.iteritems():
+                headers.append(('x-image-meta-property-%s' % k, str(v)))
+        else:
+            headers.append(('x-image-meta-%s' % key, str(val)))
+    return headers

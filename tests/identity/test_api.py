@@ -18,13 +18,13 @@
 
 import json
 
+from tests import utils
 from webtest import TestApp
 
 from dwarf import config
 
 from dwarf.identity import api
 
-from tests import utils
 
 CONF = config.Config()
 

@@ -15,17 +15,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import uuid
+
+from mock import MagicMock
+from tests import utils
 from webtest import TestApp
+
+from dwarf import db as dwarf_db
 
 from dwarf.image import api
 
-from tests import utils
+NOW = '2015-07-22 09:29:47'
+UUID = '11111111-2222-3333-4444-555555555555'
+
+IMAGE_CREATE_REQ = {
+    'name': 'Test image',
+    'disk_format': 'raw',
+    'container_format': 'bare',
+    'size': 0,
+}
+
+IMAGE_CREATE_RESP = {
+    'image': {
+        'name': 'Test image',
+        'disk_format': 'raw',
+        'container_format': 'bare',
+        'size': '0',
+
+        'status': 'ACTIVE',
+        'deleted': 'False',
+        'checksum': 'd41d8cd98f00b204e9800998ecf8427e',
+        'created_at': '2015-07-22 09:29:47',
+        'updated_at': '2015-07-22 09:29:47',
+        'id': UUID,
+        'min_disk': '',
+        'protected': 'False',
+        'location': 'file:///tmp/dwarf/images/%s' % UUID,
+        'min_ram': '',
+        'owner': '',
+        'is_public': 'False',
+        'deleted_at': '',
+        'properties': {},
+    }
+}
 
 
 class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
+
+        # Mock methods
+        dwarf_db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
+        uuid.uuid4 = MagicMock(return_value=UUID)
+
+        self.db = utils.db_init()
         self.server = api.ImageApiServer()
         self.app = TestApp(self.server.app)
 
@@ -34,3 +79,9 @@ class ApiTestCase(utils.TestCase):
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)
+
+    def test_image_create(self):
+        headers = utils.to_headers(IMAGE_CREATE_REQ)
+        resp = self.app.post('/v1/images', '', headers)
+        self.assertEqual(resp.status, '200 OK')
+        self.assertEqual(json.loads(resp.body), IMAGE_CREATE_RESP)

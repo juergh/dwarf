@@ -14,3 +14,14 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from dwarf import config
+
+
+config._BASE_CONFIG = {   # pylint: disable=W0212
+    'instances_dir': '/tmp/dwarf/instances',
+    'instances_base_dir': '/tmp/dwarf/instances/_base',
+    'images_dir': '/tmp/dwarf/images',
+    'dwarf_db': '/tmp/dwarf/dwarf.db',
+    'dwarf_log': '/tmp/dwarf/dwarf.log',
+}

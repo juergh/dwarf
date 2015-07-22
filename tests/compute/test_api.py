@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tests import utils
 from webtest import TestApp
 
 from dwarf.compute import api
-
-from tests import utils
 
 
 class ApiTestCase(utils.TestCase):
