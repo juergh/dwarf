@@ -38,14 +38,21 @@ class _StreamToLogger(object):
             self.logger.log(self.level, message)
 
 
-def init_logger(redirect_stdio=True):
-    # Configure the logger
-    fmt = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
-    lvl = logging.DEBUG if CONF.debug else logging.INFO
-    if isinstance(CONF.dwarf_log, file):
-        logging.basicConfig(stream=CONF.dwarf_log, format=fmt, level=lvl)
+def init_logger(redirect_stdio=True, log_to_stdout=False, log_level=None):
+    """
+    Initialize/configure the logger
+    """
+    if log_level is None:
+        log_level = logging.DEBUG if CONF.debug else logging.INFO
+
+    log_format = '%(asctime)s - %(levelname)s - %(name)s : %(message)s'
+
+    if log_to_stdout:
+        logging.basicConfig(stream=sys.stdout, format=log_format,
+                            level=log_level)
     else:
-        logging.basicConfig(filename=CONF.dwarf_log, format=fmt, level=lvl)
+        logging.basicConfig(filename=CONF.dwarf_log, format=log_format,
+                            level=log_level)
 
     if redirect_stdio:
         # Redirect stdout and stderr to the logger

@@ -47,9 +47,7 @@ def _parse_arguments():
     aparser.add_argument('-s', '--stdout', action='store_true',
                          help='Log to stdout instead of the logfile')
     aargs = aparser.parse_args()
-
-    if aargs.stdout:
-        CONF.set_option('dwarf_log', sys.stdout)
+    return aargs
 
 
 def cleanup(dummy_signal, dummy_frame):
@@ -60,8 +58,8 @@ def cleanup(dummy_signal, dummy_frame):
 
 def main():
     # parse the commandline arguments and initialize the logger
-    _parse_arguments()
-    log.init_logger()
+    aargs = _parse_arguments()
+    log.init_logger(log_to_stdout=aargs.stdout)
 
     LOG.info('Dwarf starting')
 
