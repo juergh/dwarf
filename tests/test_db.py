@@ -22,7 +22,7 @@ from copy import deepcopy
 from mock import MagicMock
 from tests import utils
 
-from dwarf import db as dwarf_db
+from dwarf import db
 from dwarf import exception
 
 
@@ -137,7 +137,7 @@ IMAGE_DETAIL.update(
 )
 
 # For code coverage
-dwarf_db._now()   # pylint: disable=W0212
+db._now()   # pylint: disable=W0212
 
 
 class DbTestCase(utils.TestCase):
@@ -146,10 +146,10 @@ class DbTestCase(utils.TestCase):
         super(DbTestCase, self).setUp()
 
         # Mock methods
-        dwarf_db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
+        db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
         uuid.uuid4 = MagicMock(return_value=UUID)
 
-        self.db = dwarf_db.Controller()
+        self.db = db.Controller()
         self.db.delete()
         self.db.init()
 

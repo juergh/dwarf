@@ -19,7 +19,7 @@ import os
 import shutil
 import unittest
 
-from dwarf import db as dwarf_db
+from dwarf import db
 
 
 class TestCase(unittest.TestCase):
@@ -37,10 +37,10 @@ class TestCase(unittest.TestCase):
 
 
 def db_init():
-    _db = dwarf_db.Controller()
-    _db.delete()
-    _db.init()
-    return _db
+    dwarf_db = db.Controller()
+    dwarf_db.delete()
+    dwarf_db.init()
+    return dwarf_db
 
 
 def to_headers(metadata):
