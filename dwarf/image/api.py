@@ -143,7 +143,7 @@ def _route_images_id(image_id):
         image_md = _from_headers(bottle.request.headers)
         return api_response.images_update(IMAGES.update(image_id, image_md))
 
-    bottle.abort(400, 'Unable to handle request')
+    raise exception.BadRequest(reason='Unsupported request')
 
 
 @exception.catchall

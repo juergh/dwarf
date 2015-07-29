@@ -142,7 +142,7 @@ def _route_ec2(url):
     for c in components:
         # Bail out if accessing hidden or non-existing keys
         if c == '_key_name' or c not in data:
-            bottle.abort(404)
+            raise exception.NotFound(reason='Path not found')
         else:
             data = data[c]
 

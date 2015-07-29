@@ -65,6 +65,11 @@ class Failure(DwarfException):
     code = 500
 
 
+class BadRequest(DwarfException):
+    message = '%(reason)s'
+    code = 400
+
+
 class Forbidden(DwarfException):
     message = '%(reason)s'
     code = 403

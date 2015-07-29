@@ -219,7 +219,7 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
         SERVERS.reboot(server_id, hard)
         return
 
-    raise exception.Failure(code=400, reason='There is no such action')
+    raise exception.BadRequest(reason='Unsupported request')
 
 
 # -----------------------------------------------------------------------------
