@@ -38,9 +38,5 @@ def images_list(data):
     return {"images": template(IMAGE, data, add=IMAGE_PROPERTIES)}
 
 
-def images_show(data):
-    return {"image": template(IMAGE, data, add=IMAGE_PROPERTIES)}
-
-
 def images_update(data):
     return {"image": template(IMAGE, data, add=IMAGE_PROPERTIES)}
