@@ -176,6 +176,8 @@ class ApiTestCase(utils.TestCase):
                          sorted(IMAGE_DELETE_RESP))
 
         self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % UUID), False)
+        resp = self.app.get('/v1/images/detail', status=200)
+        self.assertEqual(json.loads(resp.body), {'images': []})
         # TBD: check the content of the database
 
     def test_image_update(self):
