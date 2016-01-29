@@ -1,3 +1,37 @@
+v0.2.0
+  * tests: Add testing of compute keypair API
+  * tests: Check list response after deleting an image
+  * Add more tests for the 'image' service
+  * Replace bottle.abort() with Dwarf exceptions
+  * Remove unused code
+  * More cleanups of tests (non-functional changes)
+  * Add more tests and cleanup existing tests
+  * Remove factory functions for API servers
+  * Improve logging
+  * Improve testing
+  * Add Makefile helper target 'init'
+  * Handle bool properties properly
+  * Handle the JSON API responses better
+  * Add code comments
+  * Add support for identity API /v2.0
+  * Use True/False as possible values for the 'deleted' property
+  * Add a db test to increase db.py code coverage to 100%
+  * Add config drive support
+  * Fix pep8 invocation and errors
+  * Add support for 'nova keypair-show'
+  * Cleanup the redirection of std{out,err}
+  * Add a commandline option for logging to stdout
+  * Some indentation cleanups
+  * Add Identity version discovery responses
+  * Add bind_host to allow listening on other IPs
+  * Test the libvirt connection and reconnect if necessary
+  * Handle domain info for non-running guests
+  * Remove remaining global controllers
+  * dwarf-manage: Minor cleanups
+  * Make network creation more robust
+  * Remove global VIRT controller
+  * Rename command execution exception
+
 v0.1.7
   * Redirect python's stdout and stderr to the logger
   * Provide some more instance data through the EC2 metadata service
