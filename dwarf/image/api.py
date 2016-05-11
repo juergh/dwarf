@@ -113,6 +113,37 @@ def _from_headers(headers):
 
 
 # -----------------------------------------------------------------------------
+# Bottle Versions API routes
+
+API_VERSIONS = [
+    {
+        "id": "v1",
+        "links": [
+            {
+                "href": "http://%s:%s/v1/" % (CONF.bind_host,
+                                              CONF.image_api_port),
+                "rel": "self"
+            }
+        ],
+        "status": "CURRENT",
+        "updated": "2016-05-11T00:00:00Z",
+    },
+]
+
+
+@exception.catchall
+def _route_versions():
+    """
+    Routes: /
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    bottle.response.status = 300
+    return {"versions": API_VERSIONS}
+
+
+# -----------------------------------------------------------------------------
 # Bottle Images API routes
 
 @exception.catchall
@@ -171,6 +202,9 @@ class ImageApiServer(api_server.ApiServer):
                                              CONF.bind_host,
                                              CONF.image_api_port)
 
+        self.app.route('/versions',
+                       method='GET',
+                       callback=_route_versions)
         self.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),
                        method=('GET', 'HEAD', 'DELETE', 'PUT'),
                        callback=_route_images_id)
