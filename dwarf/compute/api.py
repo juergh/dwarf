@@ -41,6 +41,48 @@ SERVERS = servers.Controller()
 
 
 # -----------------------------------------------------------------------------
+# Bottle Versions API routes
+
+API_VERSIONS = [
+    {
+        "id": "v1.1",
+        "links": [
+            {
+                "href": "http://%s:%s/v1.1/" % (CONF.bind_host,
+                                                CONF.compute_api_port),
+                "rel": "self"
+            }
+        ],
+        "status": "CURRENT",
+        "updated": "2016-05-11T00:00:00Z",
+    },
+]
+
+
+@exception.catchall
+def _route_versions():
+    """
+    Routes: /
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    bottle.response.status = 300
+    return {"versions": API_VERSIONS}
+
+
+@exception.catchall
+def _route_version():
+    """
+    Routes: /v1.1
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    return {"version": API_VERSIONS[0]}
+
+
+# -----------------------------------------------------------------------------
 # Bottle Flavors API routes
 
 @exception.catchall
@@ -232,6 +274,12 @@ class ComputeApiServer(api_server.ApiServer):
                                                CONF.bind_host,
                                                CONF.compute_api_port)
 
+        self.app.route('/',
+                       method='GET',
+                       callback=_route_versions)
+        self.app.route(('/v1.1', '/v1.1/'),
+                       method='GET',
+                       callback=_route_version)
         self.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
                        method='GET',
                        callback=_route_images_id)
