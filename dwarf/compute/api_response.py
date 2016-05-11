@@ -20,6 +20,7 @@ from dwarf.utils import template
 
 DETAILS = ('created_at', 'deleted', 'deleted_at', 'updated_at')
 
+
 # -----------------------------------------------------------------------------
 # Flavors API responses
 
