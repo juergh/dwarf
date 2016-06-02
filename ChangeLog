@@ -1,3 +1,8 @@
+v0.2.1
+  * image: Add API routes for '/versions'
+  * compute: Add API routes for '/' and '/v1.1'
+  * Add missing empty line
+
 v0.2.0
   * tests: Add testing of compute keypair API
   * tests: Check list response after deleting an image
