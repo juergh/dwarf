@@ -45,5 +45,8 @@
         <serial type="pty"/>
         <input type="tablet" bus="usb"/>
         <graphics type="vnc" autoport="yes" keymap="en-us" listen="0.0.0.0"/>
+        <video>
+            <model type="cirrus" vram="16384" heads="1" primary="yes"/>
+        </video>
     </devices>
 </domain>
