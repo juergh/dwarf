@@ -343,9 +343,7 @@ class Controller(object):
         """
         LOG.info('get_dhcp_lease(server=%s)', server)
 
-        with open('/var/lib/libvirt/dnsmasq/dwarf.leases', 'r') as fh:
-            for line in fh.readlines():
-                col = line.split()
-                if col[1] == server['mac_address']:
-                    return {'expires': col[0], 'hwaddr': col[1], 'ip': col[2],
-                            'hostname': col[3], 'clientid': col[4]}
+        net = self.libvirt.networkLookupByName('dwarf')
+        lease = net.DHCPLeases(mac=server['mac_address'])
+        if len(lease) == 1:
+            return {'ip': lease[0]['ipaddr']}
