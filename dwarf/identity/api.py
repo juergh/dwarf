@@ -47,72 +47,65 @@ SERVICE_COMPUTE = {
     "name": "Compute",
     "type": "compute",
     "endpoints": [{
-        "tenantId": "1000",
         "publicURL": "http://%s:%s/v1.1/1000" % (CONF.bind_host,
                                                  CONF.compute_api_port),
         "region": "dwarf-region",
-        "versionId": "1.1",
-        "versionInfo": "http://%s:%s/v1.1" % (CONF.bind_host,
-                                              CONF.compute_api_port),
-        "versionList": "http://%s:%s" % (CONF.bind_host,
-                                         CONF.compute_api_port)
     }]
 }
 
 SERVICE_IMAGE = {
-    "name": "Image Management",
+    "name": "Image",
     "type": "image",
     "endpoints": [{
-        "tenantId": "1000",
-        "publicURL": "http://%s:%s/v1.0" % (CONF.bind_host,
-                                            CONF.image_api_port),
+        "publicURL": "http://%s:%s" % (CONF.bind_host,
+                                       CONF.image_api_port),
         "region": "dwarf-region",
-        "versionId": "1.0",
-        "versionInfo": "http://%s:%s/v1.0" % (CONF.bind_host,
-                                              CONF.image_api_port),
-        "versionList": "http://%s:%s" % (CONF.bind_host,
-                                         CONF.image_api_port)
     }]
 }
 
-TOKENS_RESPONSE = {
-    "access": {
-        "token": TOKEN,
-        "user": USER,
-        "serviceCatalog": [
-            SERVICE_COMPUTE,
-            SERVICE_IMAGE
-        ]
-    }
+SERVICE_IDENTITY = {
+    "name": "Identity",
+    "type": "identity",
+    "endpoints": [{
+        "publicURL": "http://%s:%s/v2.0" % (CONF.bind_host,
+                                            CONF.identity_api_port),
+        "region": "dwarf-region",
+    }]
 }
 
-VERSION_RESPONSE = {
-    "version": {
-        "id": "v2.0",
-        "links": [
-            {
-                "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
-                                                CONF.identity_api_port),
-                "rel": "self"
-            }
-        ],
-        "media-types": [
-            {
-                "base": "application/json",
-                "type": "application/vnd.openstack.identity-v3+json"
-            }
-        ],
-        "status": "stable",
-        "updated": "2014-04-17T00:00:00Z",
-    }
+ACCESS = {
+    "token": TOKEN,
+    "user": USER,
+    "serviceCatalog": [
+        SERVICE_COMPUTE,
+        SERVICE_IMAGE,
+        SERVICE_IDENTITY,
+    ]
 }
 
-VERSIONS_RESPONSE = {
-    "versions": {
-        "values": [
-            VERSION_RESPONSE['version']
-        ]
-    }
+VERSION_V2_0 = {
+    "id": "v2.0",
+    "links": [
+        {
+            "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
+                                            CONF.identity_api_port),
+            "rel": "self"
+        }
+    ],
+    "media-types": [
+        {
+            "base": "application/json",
+            "type": "application/vnd.openstack.identity-v2.0+json"
+        }
+    ],
+    "status": "stable",
+    "updated": "2014-04-17T00:00:00Z",
+}
+
+VERSIONS = {
+    "values": [
+        VERSION_V2_0
+    ]
 }
 
 
@@ -128,7 +121,7 @@ def _route_versions():
     utils.show_request(bottle.request)
 
     bottle.response.status = 300
-    return VERSIONS_RESPONSE
+    return {"versions": VERSIONS}
 
 
 @exception.catchall
@@ -139,7 +132,7 @@ def _route_version():
     """
     utils.show_request(bottle.request)
 
-    return VERSION_RESPONSE
+    return {"version": VERSION_V2_0}
 
 
 @exception.catchall
@@ -152,7 +145,7 @@ def _route_tokens():
 
     body = json.load(bottle.request.body)
     if 'auth' in body:
-        return TOKENS_RESPONSE
+        return {"access": ACCESS}
 
 
 # -----------------------------------------------------------------------------
