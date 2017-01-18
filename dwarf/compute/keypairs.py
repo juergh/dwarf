@@ -20,9 +20,13 @@ from __future__ import print_function
 
 import logging
 
-from base64 import b64encode, b64decode
+from base64 import b64decode
+from cryptography.hazmat.primitives import serialization as \
+    crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import rsa as crypto_rsa
+from cryptography.hazmat.backends import default_backend as \
+    crypto_default_backend
 from hashlib import md5
-from M2Crypto import RSA
 
 from dwarf import db
 
@@ -48,9 +52,20 @@ class Controller(object):
             public_key = keypair['public_key']
             private_key = None
         else:
-            key = RSA.gen_key(1024, 65537, callback=lambda: None)
-            public_key = 'ssh-rsa %s' % b64encode(key.pub()[1])
-            private_key = key.as_pem(cipher=None)
+            key = crypto_rsa.generate_private_key(
+                backend=crypto_default_backend(),
+                public_exponent=65537,
+                key_size=2048,
+            )
+            private_key = key.private_bytes(
+                crypto_serialization.Encoding.PEM,
+                crypto_serialization.PrivateFormat.PKCS8,
+                crypto_serialization.NoEncryption(),
+            )
+            public_key = key.public_key().public_bytes(
+                crypto_serialization.Encoding.OpenSSH,
+                crypto_serialization.PublicFormat.OpenSSH,
+            )
 
         # Calculate the key fingerprint
         fp_plain = md5(b64decode(public_key.split()[1])).hexdigest()
