@@ -1,5 +1,5 @@
 <network>
-    <name>dwarf</name>
+    <name>${network_name}</name>
     <uuid>${uuid}</uuid>
     <forward mode='nat'>
         <nat>
