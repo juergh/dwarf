@@ -57,25 +57,26 @@ SERVICE_COMPUTE = {
     "name": "Compute",
     "type": "compute",
     "endpoints": [{
-        "tenantId": "1000",
         "publicURL": "http://127.0.0.1:8774/v1.1/1000",
         "region": "dwarf-region",
-        "versionId": "1.1",
-        "versionInfo": "http://127.0.0.1:8774/v1.1",
-        "versionList": "http://127.0.0.1:8774"
     }]
 }
 
 SERVICE_IMAGE = {
-    "name": "Image Management",
+    "name": "Image",
     "type": "image",
     "endpoints": [{
-        "tenantId": "1000",
-        "publicURL": "http://127.0.0.1:9292/v1.0",
+        "publicURL": "http://127.0.0.1:9292",
         "region": "dwarf-region",
-        "versionId": "1.0",
-        "versionInfo": "http://127.0.0.1:9292/v1.0",
-        "versionList": "http://127.0.0.1:9292"
+    }]
+}
+
+SERVICE_IDENTITY = {
+    "name": "Identity",
+    "type": "identity",
+    "endpoints": [{
+        "publicURL": "http://127.0.0.1:35357/v2.0",
+        "region": "dwarf-region",
     }]
 }
 
@@ -85,7 +86,8 @@ TOKENS_RESPONSE = {
         "user": USER,
         "serviceCatalog": [
             SERVICE_COMPUTE,
-            SERVICE_IMAGE
+            SERVICE_IMAGE,
+            SERVICE_IDENTITY,
         ]
     }
 }
@@ -103,7 +105,7 @@ VERSION_RESPONSE = {
         "media-types": [
             {
                 "base": "application/json",
-                "type": "application/vnd.openstack.identity-v3+json"
+                "type": "application/vnd.openstack.identity-v2.0+json"
             }
         ],
         "status": "stable",
