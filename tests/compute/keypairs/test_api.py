@@ -22,6 +22,13 @@ from mock import MagicMock
 from tests import utils
 from webtest import TestApp
 
+from cryptography.hazmat.primitives import serialization as \
+    crypto_serialization
+from cryptography.hazmat.backends import default_backend as \
+    crypto_default_backend
+from cryptography.hazmat.primitives.asymmetric import padding as crypto_padding
+from cryptography.hazmat.primitives import hashes as crypto_hashes
+
 from dwarf import db
 
 from dwarf.compute import api
@@ -108,6 +115,35 @@ class ApiTestCase(utils.TestCase):
             self.assertEqual(key in jresp['keypair'], True)
         for key in jresp['keypair']:
             self.assertEqual(key in KEYPAIR_ADD_NEW_RESP_KEYS, True)
+
+        # Verify the returned keypair
+        private_key = crypto_serialization.load_pem_private_key(
+            str(jresp['keypair']['private_key']),
+            password=None,
+            backend=crypto_default_backend()
+        )
+        public_key = crypto_serialization.load_ssh_public_key(
+            str(jresp['keypair']['public_key']),
+            backend=crypto_default_backend()
+        )
+        message = b'!!! test message'
+        ciphertext = public_key.encrypt(
+            message,
+            crypto_padding.OAEP(
+                mgf=crypto_padding.MGF1(algorithm=crypto_hashes.SHA1()),
+                algorithm=crypto_hashes.SHA1(),
+                label=None
+            )
+        )
+        plaintext = private_key.decrypt(
+            ciphertext,
+            crypto_padding.OAEP(
+                mgf=crypto_padding.MGF1(algorithm=crypto_hashes.SHA1()),
+                algorithm=crypto_hashes.SHA1(),
+                label=None
+            )
+        )
+        self.assertEqual(message, plaintext)
 
     def test_keypair_add(self):
         resp = self.app.post('/v1.1/1234/os-keypairs',
