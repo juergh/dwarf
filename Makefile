@@ -34,6 +34,7 @@ clean:
 		\( -name '*~' -o -name '*.pyc' \) -type f -print | \
 		xargs rm -f
 	@rm -r dwarf.egg-info 2>/dev/null || :
+	@rm -f .coverage
 
 deepclean: clean
 	@rm -rf .tox 2>/dev/null || :
