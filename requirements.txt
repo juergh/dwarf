@@ -1,0 +1,4 @@
+bottle
+cryptography
+libvirt-python
+pyYaml
