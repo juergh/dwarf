@@ -34,7 +34,7 @@ setuptools.setup(
     scripts=['bin/dwarf', 'bin/dwarf-manage'],
 
     author='Juerg Haefliger',
-    author_email='juerg.haefliger@hp.com',
+    author_email='juergh@gmail.com',
     description='OpenStack API on top of libvirt/kvm',
     license='Apache License 2.0',
     url='https://github.com/juergh/dwarf'
