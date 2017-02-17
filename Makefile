@@ -17,17 +17,8 @@
 tox:
 	tox
 
-pep8:
-	tox -e pep8
-
-pylint:
-	tox -e pylint
-
-test:
-	tox -e py27
-
-cover:
-	tox -e cover
+pep8 pylint test cover:
+	tox -e $@
 
 clean:
 	@find . \( -name .tox -o -name .git \) -prune -o \
