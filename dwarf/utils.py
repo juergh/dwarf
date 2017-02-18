@@ -16,10 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import os
 import signal
 import subprocess
+
+from bottle import SimpleTemplate
 
 from dwarf import exception
 
@@ -102,3 +105,30 @@ def template(templ, data, **kwargs):
     else:
         resp = template_single(templ, data, **kwargs)
     return resp
+
+
+def json_render(template, *args, **kwargs):
+    """
+    Simple JSON rendering function that renders a JSON-style template and
+    returns a (JSON) dict.
+    template: JSON-style rendering template.
+    *args:    Postitional arguments are dicts containing sets of rendering
+              variables and values.
+    **kwargs: Keyword arguments are single rendering variables and values.
+    """
+    # Create a single dict containing all the provided rendering data
+    render_data = {}
+    for arg in args:
+        render_data.update(arg)
+    render_data.update(kwargs)
+
+    # Convert the rendering data values into strings. Skip strings as
+    # json.dumps() would add additional double quotes, resulting in something
+    # like '"foo bar"' which breaks the subsequent call of json.loads().
+    for key, val in render_data.iteritems():
+        if not isinstance(val, (str, unicode)):
+            render_data[key] = json.dumps(val)
+
+    # Do the actual template rendering
+    tpl = SimpleTemplate(template, noescape=True)
+    return json.loads(tpl.render(render_data))

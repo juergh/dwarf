@@ -89,6 +89,12 @@ class _Config(object):
         setattr(self, key, val)
         self._options[key] = val
 
+    def get_options(self):
+        """
+        Get all config options
+        """
+        return self._options
+
     def dump_options(self):
         """
         Dump the options to the logfile

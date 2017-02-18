@@ -18,95 +18,15 @@
 
 import bottle
 import json
-import logging
 
 from dwarf import api_server
 from dwarf import config
 from dwarf import exception
 from dwarf import utils
 
+from dwarf.identity import api_response
+
 CONF = config.Config()
-LOG = logging.getLogger(__name__)
-
-TOKEN = {
-    "id": "0011223344556677",
-    "expires": "2100-01-01T00:00:00-00:00",
-    "tenant": {
-        "id": "1000",
-        "name": "dwarf-tenant"
-    }
-}
-
-USER = {
-    "id": "1000",
-    "name": "dwarf-user",
-    "roles": []
-}
-
-SERVICE_COMPUTE = {
-    "name": "Compute",
-    "type": "compute",
-    "endpoints": [{
-        "publicURL": "http://%s:%s/v1.1/1000" % (CONF.bind_host,
-                                                 CONF.compute_api_port),
-        "region": "dwarf-region",
-    }]
-}
-
-SERVICE_IMAGE = {
-    "name": "Image",
-    "type": "image",
-    "endpoints": [{
-        "publicURL": "http://%s:%s" % (CONF.bind_host,
-                                       CONF.image_api_port),
-        "region": "dwarf-region",
-    }]
-}
-
-SERVICE_IDENTITY = {
-    "name": "Identity",
-    "type": "identity",
-    "endpoints": [{
-        "publicURL": "http://%s:%s/v2.0" % (CONF.bind_host,
-                                            CONF.identity_api_port),
-        "region": "dwarf-region",
-    }]
-}
-
-ACCESS = {
-    "token": TOKEN,
-    "user": USER,
-    "serviceCatalog": [
-        SERVICE_COMPUTE,
-        SERVICE_IMAGE,
-        SERVICE_IDENTITY,
-    ]
-}
-
-VERSION_V2_0 = {
-    "id": "v2.0",
-    "links": [
-        {
-            "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
-                                            CONF.identity_api_port),
-            "rel": "self"
-        }
-    ],
-    "media-types": [
-        {
-            "base": "application/json",
-            "type": "application/vnd.openstack.identity-v2.0+json"
-        }
-    ],
-    "status": "stable",
-    "updated": "2014-04-17T00:00:00Z",
-}
-
-VERSIONS = {
-    "values": [
-        VERSION_V2_0
-    ]
-}
 
 
 # -----------------------------------------------------------------------------
@@ -121,7 +41,7 @@ def _route_versions():
     utils.show_request(bottle.request)
 
     bottle.response.status = 300
-    return {"versions": VERSIONS}
+    return api_response.list_versions()
 
 
 @exception.catchall
@@ -132,7 +52,7 @@ def _route_version():
     """
     utils.show_request(bottle.request)
 
-    return {"version": VERSION_V2_0}
+    return api_response.show_version_v2d0()
 
 
 @exception.catchall
@@ -145,7 +65,7 @@ def _route_tokens():
 
     body = json.load(bottle.request.body)
     if 'auth' in body:
-        return {"access": ACCESS}
+        return api_response.authenticate()
 
 
 # -----------------------------------------------------------------------------
