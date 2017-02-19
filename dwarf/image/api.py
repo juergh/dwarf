@@ -134,12 +134,11 @@ API_VERSIONS = [
 @exception.catchall
 def _route_versions():
     """
-    Routes: /
+    Route:  /versions
     Method: GET
     """
     utils.show_request(bottle.request)
 
-    bottle.response.status = 300
     return {"versions": API_VERSIONS}
 
 

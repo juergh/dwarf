@@ -102,6 +102,23 @@ IMAGE_DELETE_RESP = [
 ]
 
 
+IMAGE_VERSIONS_RESP = {
+    'versions': [
+        {
+            'id': 'v1',
+            'links': [
+                {
+                    'href': 'http://127.0.0.1:9292/v1/',
+                    'rel': 'self',
+                },
+            ],
+            'status': 'CURRENT',
+            'updated': '2016-05-11T00:00:00Z',
+        },
+    ]
+}
+
+
 class ApiTestCase(utils.TestCase):
 
     def setUp(self):
@@ -186,6 +203,10 @@ class ApiTestCase(utils.TestCase):
 
         resp = self.app.put('/v1/images/%s' % UUID, status=200)
         self.assertEqual(json.loads(resp.body), IMAGE_CREATE_RESP)
+
+    def test_image_versions(self):
+        resp = self.app.get('/versions', status=200)
+        self.assertEqual(json.loads(resp.body), IMAGE_VERSIONS_RESP)
 
     # -------------------------------------------------------------------------
     # Additional tests for code coverage
