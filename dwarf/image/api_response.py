@@ -16,27 +16,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dwarf.utils import template
+from dwarf import config
+from dwarf import utils
 
-DETAILS = ('created_at', 'deleted', 'deleted_at', 'updated_at')
+CONF = config.Config()
 
 
 # -----------------------------------------------------------------------------
-# Images API responses
+# Versions
 
-IMAGE = DETAILS + ('checksum', 'container_format', 'disk_format', 'id',
-                   'is_public', 'location', 'min_disk', 'min_ram', 'name',
-                   'owner', 'protected', 'size', 'status')
-IMAGE_PROPERTIES = {'properties': {}}
+VERSION_v1d0 = """{
+    "id": "v1",
+    "links": [
+        {
+            "href": "http://{{bind_host}}:{{image_api_port}}/v1/",
+            "rel": "self"
+        }
+    ],
+    "status": "CURRENT",
+    "updated": "2016-05-11T00:00:00Z"
+}"""
 
 
-def images_create(data):
-    return {"image": template(IMAGE, data, add=IMAGE_PROPERTIES)}
+def list_versions():
+    return {'versions': [utils.json_render(VERSION_v1d0, CONF.get_options())]}
 
 
-def images_list(data):
-    return {"images": template(IMAGE, data, add=IMAGE_PROPERTIES)}
+# -----------------------------------------------------------------------------
+# Images
+
+IMAGE = """{
+    "checksum": "{{checksum}}",
+    "container_format": "{{container_format}}",
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "disk_format": "{{disk_format}}",
+    "id": "{{id}}",
+    "is_public": "{{is_public}}",
+    "location": "{{location}}",
+    "min_disk": "{{min_disk}}",
+    "min_ram": "{{min_ram}}",
+    "name": "{{name}}",
+    "owner": "{{owner}}",
+    "properties": {},
+    "protected": "{{protected}}",
+    "size": "{{size}}",
+    "status": "{{status}}",
+    "updated_at": "{{updated_at}}"
+}"""
 
 
-def images_update(data):
-    return {"image": template(IMAGE, data, add=IMAGE_PROPERTIES)}
+def create_image(data):
+    return {'image': utils.json_render(IMAGE, data)}
+
+
+def list_images(data):
+    return {'images': [utils.json_render(IMAGE, d) for d in data]}
+
+
+def update_image(data):
+    return {'image': utils.json_render(IMAGE, data)}

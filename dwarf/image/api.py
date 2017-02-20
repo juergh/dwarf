@@ -113,23 +113,7 @@ def _from_headers(headers):
 
 
 # -----------------------------------------------------------------------------
-# Bottle Versions API routes
-
-API_VERSIONS = [
-    {
-        "id": "v1",
-        "links": [
-            {
-                "href": "http://%s:%s/v1/" % (CONF.bind_host,
-                                              CONF.image_api_port),
-                "rel": "self"
-            }
-        ],
-        "status": "CURRENT",
-        "updated": "2016-05-11T00:00:00Z",
-    },
-]
-
+# Bottle API routes
 
 @exception.catchall
 def _route_versions():
@@ -142,11 +126,8 @@ def _route_versions():
     if bottle.request.path == '/':
         bottle.response.status = 300
 
-    return {"versions": API_VERSIONS}
+    return api_response.list_versions()
 
-
-# -----------------------------------------------------------------------------
-# Bottle Images API routes
 
 @exception.catchall
 def _route_images_id(image_id):
@@ -158,7 +139,7 @@ def _route_images_id(image_id):
 
     # glance image-list
     if image_id == 'detail' and bottle.request.method == 'GET':
-        return api_response.images_list(IMAGES.list())
+        return api_response.list_images(IMAGES.list())
 
     # glance image-show <image_id>
     if image_id != 'detail' and bottle.request.method == 'HEAD':
@@ -174,7 +155,7 @@ def _route_images_id(image_id):
     # glance image-update <image_id>
     if image_id != 'detail' and bottle.request.method == 'PUT':
         image_md = _from_headers(bottle.request.headers)
-        return api_response.images_update(IMAGES.update(image_id, image_md))
+        return api_response.update_image(IMAGES.update(image_id, image_md))
 
     raise exception.BadRequest(reason='Unsupported request')
 
@@ -192,7 +173,7 @@ def _route_images():
 
     # glance image-create
     image_fh = _request_body(bottle.request)
-    return api_response.images_create(IMAGES.create(image_fh, image_md))
+    return api_response.create_image(IMAGES.create(image_fh, image_md))
 
 
 # -----------------------------------------------------------------------------
