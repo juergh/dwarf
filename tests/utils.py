@@ -23,6 +23,8 @@ from dwarf import db
 
 
 class TestCase(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self):
         super(TestCase, self).setUp()
         if os.path.exists('/tmp/dwarf'):
