@@ -134,10 +134,13 @@ API_VERSIONS = [
 @exception.catchall
 def _route_versions():
     """
-    Route:  /versions
+    Route:  /, /versions
     Method: GET
     """
     utils.show_request(bottle.request)
+
+    if bottle.request.path == '/':
+        bottle.response.status = 300
 
     return {"versions": API_VERSIONS}
 
@@ -201,7 +204,7 @@ class ImageApiServer(api_server.ApiServer):
                                              CONF.bind_host,
                                              CONF.image_api_port)
 
-        self.app.route('/versions',
+        self.app.route(('/', '/versions'),
                        method='GET',
                        callback=_route_versions)
         self.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),

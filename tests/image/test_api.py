@@ -205,6 +205,9 @@ class ApiTestCase(utils.TestCase):
         self.assertEqual(json.loads(resp.body), IMAGE_CREATE_RESP)
 
     def test_image_versions(self):
+        resp = self.app.get('/', status=300)
+        self.assertEqual(json.loads(resp.body), IMAGE_VERSIONS_RESP)
+
         resp = self.app.get('/versions', status=200)
         self.assertEqual(json.loads(resp.body), IMAGE_VERSIONS_RESP)
 
