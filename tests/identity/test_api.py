@@ -28,7 +28,7 @@ from dwarf.identity import api
 
 CONF = config.Config()
 
-REQ = {
+AUTH_REQ = {
     "auth": {
         "tenantName": "dwarf-tenant",
         "passwordCredentials": {
@@ -80,7 +80,7 @@ SERVICE_IDENTITY = {
     }]
 }
 
-TOKENS_RESPONSE = {
+AUTH_RESP = {
     "access": {
         "token": TOKEN,
         "user": USER,
@@ -92,7 +92,7 @@ TOKENS_RESPONSE = {
     }
 }
 
-VERSION_RESPONSE = {
+SHOW_VERSION_RESP = {
     "version": {
         "id": "v2.0",
         "links": [
@@ -113,10 +113,10 @@ VERSION_RESPONSE = {
     }
 }
 
-VERSIONS_RESPONSE = {
+LIST_VERSIONS_RESP = {
     "versions": {
         "values": [
-            VERSION_RESPONSE['version']
+            SHOW_VERSION_RESP['version']
         ]
     }
 }
@@ -135,18 +135,17 @@ class ApiTestCase(utils.TestCase):
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)
 
-    def test_api_versions(self):
+    def test_list_versions(self):
         resp = self.app.get('/')
         self.assertEqual(resp.status, '300 Multiple Choices')
-        self.assertEqual(json.loads(resp.body), VERSIONS_RESPONSE)
+        self.assertEqual(json.loads(resp.body), LIST_VERSIONS_RESP)
 
-    def test_api_version(self):
+    def test_show_version(self):
         resp = self.app.get('/v2.0')
-        print resp.status
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(json.loads(resp.body), VERSION_RESPONSE)
+        self.assertEqual(json.loads(resp.body), SHOW_VERSION_RESP)
 
-    def test_api_tokens(self):
-        resp = self.app.post('/v2.0/tokens', json.dumps(REQ))
+    def test_authenticate(self):
+        resp = self.app.post('/v2.0/tokens', json.dumps(AUTH_REQ))
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(json.loads(resp.body), TOKENS_RESPONSE)
+        self.assertEqual(json.loads(resp.body), AUTH_RESP)

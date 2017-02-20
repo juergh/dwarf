@@ -36,16 +36,16 @@ from dwarf.compute import api
 NOW = '2015-08-05 09:09:11'
 UUID = '11111111-2222-3333-4444-555555555555'
 
-KEYPAIR_ADD_NEW_REQ = {
+ADD_NEW_KEYPAIR_REQ = {
     'keypair': {
         'name': 'Test key',
     }
 }
 
-KEYPAIR_ADD_NEW_RESP_KEYS = ('public_key', 'private_key', 'name',
+ADD_NEW_KEYPAIR_RESP_KEYS = ('public_key', 'private_key', 'name',
                              'fingerprint')
 
-KEYPAIR_ADD_REQ = {
+ADD_KEYPAIR_REQ = {
     'keypair': {
         'name': 'Test key',
         'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
@@ -55,7 +55,7 @@ KEYPAIR_ADD_REQ = {
     }
 }
 
-KEYPAIR_ADD_RESP = {
+ADD_KEYPAIR_RESP = {
     'keypair': {
         'name': 'Test key',
         'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
@@ -66,11 +66,11 @@ KEYPAIR_ADD_RESP = {
     }
 }
 
-KEYPAIR_LIST_RESP = {
-    'keypairs': [KEYPAIR_ADD_RESP['keypair']],
+LIST_KEYPAIRS_RESP = {
+    'keypairs': [ADD_KEYPAIR_RESP['keypair']],
 }
 
-KEYPAIR_SHOW_RESP = {
+SHOW_KEYPAIR_RESP = {
     'keypair': {
         'name': 'Test key',
         'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
@@ -104,17 +104,17 @@ class ApiTestCase(utils.TestCase):
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
 
-    def test_keypair_add_new(self):
+    def test_add_new_keypair(self):
         resp = self.app.post('/v1.1/1234/os-keypairs',
-                             json.dumps(KEYPAIR_ADD_NEW_REQ), status=200)
+                             json.dumps(ADD_NEW_KEYPAIR_REQ), status=200)
         jresp = json.loads(resp.body)
 
         self.assertEqual(jresp['keypair']['name'],
-                         KEYPAIR_ADD_NEW_REQ['keypair']['name'])
-        for key in KEYPAIR_ADD_NEW_RESP_KEYS:
+                         ADD_NEW_KEYPAIR_REQ['keypair']['name'])
+        for key in ADD_NEW_KEYPAIR_RESP_KEYS:
             self.assertEqual(key in jresp['keypair'], True)
         for key in jresp['keypair']:
-            self.assertEqual(key in KEYPAIR_ADD_NEW_RESP_KEYS, True)
+            self.assertEqual(key in ADD_NEW_KEYPAIR_RESP_KEYS, True)
 
         # Verify the returned keypair
         private_key = crypto_serialization.load_pem_private_key(
@@ -145,28 +145,28 @@ class ApiTestCase(utils.TestCase):
         )
         self.assertEqual(message, plaintext)
 
-    def test_keypair_add(self):
+    def test_add_keypair(self):
         resp = self.app.post('/v1.1/1234/os-keypairs',
-                             json.dumps(KEYPAIR_ADD_REQ), status=200)
+                             json.dumps(ADD_KEYPAIR_REQ), status=200)
 
-        self.assertEqual(json.loads(resp.body), KEYPAIR_ADD_RESP)
+        self.assertEqual(json.loads(resp.body), ADD_KEYPAIR_RESP)
 
-    def test_keypair_list(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(KEYPAIR_ADD_REQ),
+    def test_list_keypairs(self):
+        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
                       status=200)
         resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
 
-        self.assertEqual(json.loads(resp.body), KEYPAIR_LIST_RESP)
+        self.assertEqual(json.loads(resp.body), LIST_KEYPAIRS_RESP)
 
-    def test_keypair_show(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(KEYPAIR_ADD_REQ),
+    def test_show_keypair(self):
+        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
                       status=200)
         resp = self.app.get('/v1.1/1234/os-keypairs/Test%20key', status=200)
 
-        self.assertEqual(json.loads(resp.body), KEYPAIR_SHOW_RESP)
+        self.assertEqual(json.loads(resp.body), SHOW_KEYPAIR_RESP)
 
-    def test_keypair_delete(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(KEYPAIR_ADD_REQ),
+    def test_delete_keypair(self):
+        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
                       status=200)
         resp = self.app.delete('/v1.1/1234/os-keypairs/Test%20key', status=200)
 

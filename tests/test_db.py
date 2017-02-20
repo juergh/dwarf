@@ -157,13 +157,13 @@ class DbTestCase(utils.TestCase):
         super(DbTestCase, self).tearDown()
         self.db.delete()
 
-    def test_db_init(self):
+    def test_init_db(self):
         self.assertEqual(self.db.servers.list(), [])
         self.assertEqual(self.db.keypairs.list(), [])
         self.assertEqual(self.db.images.list(), [])
         self.assertEqual(self.db.flavors.list(), FLAVOR_LIST)
 
-    def test_db_dump(self):
+    def test_dump_db(self):
         self.db.dump()
         self.db.dump(table='flavors')
 
@@ -171,7 +171,7 @@ class DbTestCase(utils.TestCase):
     # Flavor
     #
 
-    def test_db_show_flavor(self):
+    def test_show_flavor(self):
         self.assertEqual(self.db.flavors.show(id='100'), FLAVOR_LIST[0])
         self.assertEqual(self.db.flavors.show(name='standard.xsmall'),
                          FLAVOR_LIST[0])
@@ -179,26 +179,26 @@ class DbTestCase(utils.TestCase):
         self.assertEqual(self.db.flavors.show(name='standard.small'),
                          FLAVOR_LIST[1])
 
-    def test_db_delete_flavor_by_id(self):
+    def test_delete_flavor_by_id(self):
         self.db.flavors.delete(id='100')
         flavors = deepcopy(FLAVOR_LIST)
         del flavors[0]
         self.assertEqual(self.db.flavors.list(), flavors)
 
-    def test_db_delete_flavor_by_name(self):
+    def test_delete_flavor_by_name(self):
         self.db.flavors.delete(name='standard.xsmall')
         flavors = deepcopy(FLAVOR_LIST)
         del flavors[0]
         self.assertEqual(self.db.flavors.list(), flavors)
 
-    def test_db_delete_flavor_not_found(self):
+    def test_delete_flavor_not_found(self):
         self.assertRaises(exception.NotFound, self.db.flavors.delete,
                           id='no_such_id')
 
-    def test_db_create_flavor_conflict(self):
+    def test_create_flavor_conflict(self):
         self.assertRaises(exception.Conflict, self.db.flavors.create, id='100')
 
-    def test_db_update_flavor(self):
+    def test_update_flavor(self):
         flavor = self.db.flavors.update(id='100', name='new name',
                                         disk='new disk', foo='bar')
         result = deepcopy(FLAVOR_LIST[0])
@@ -210,7 +210,7 @@ class DbTestCase(utils.TestCase):
     # Server
     #
 
-    def test_db_create_server(self):
+    def test_create_server(self):
         server = self.db.servers.create(**SERVER)
         self.assertEqual(server, SERVER_DETAIL)
         self.assertEqual(self.db.servers.show(name='My name'), SERVER_DETAIL)
@@ -220,7 +220,7 @@ class DbTestCase(utils.TestCase):
     # Keypair
     #
 
-    def test_db_create_keypair(self):
+    def test_create_keypair(self):
         keypair = self.db.keypairs.create(**KEYPAIR)
         self.assertEqual(keypair, KEYPAIR_DETAIL)
 
@@ -228,11 +228,11 @@ class DbTestCase(utils.TestCase):
     # Image
     #
 
-    def test_db_create_image(self):
+    def test_create_image(self):
         image = self.db.images.create(**IMAGE)
         self.assertEqual(image, IMAGE_DETAIL)
 
-    def test_db_delete_protected_image(self):
+    def test_delete_protected_image(self):
         protected = deepcopy(IMAGE)
         protected['protected'] = 'True'
         image = self.db.images.create(**protected)
@@ -243,15 +243,15 @@ class DbTestCase(utils.TestCase):
     # Code coverage
     #
 
-    def test_db_init_cc(self):
+    def test_init_cc(self):
         self.db.init()
 
-    def test_db_delete_cc(self):
+    def test_delete_cc(self):
         self.db.delete()
 
-    def test_db_dump_cc(self):
+    def test_dump_cc(self):
         self.db.dump(table='no_such_table')
 
-    def test_db_show_cc(self):
+    def test_show_cc(self):
         self.assertRaises(exception.NotFound, self.db.images.show,
                           id='no_such_id')
