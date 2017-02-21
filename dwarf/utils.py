@@ -122,13 +122,16 @@ def json_render(template, *args, **kwargs):
         render_data.update(arg)
     render_data.update(kwargs)
 
-    # Convert the rendering data values into strings. Skip strings as
-    # json.dumps() would add additional double quotes, resulting in something
-    # like '"foo bar"' which breaks the subsequent call of json.loads().
+    # Encode string values to take care of multi-line strings. Otherwise the
+    # rendered result contains illegal JSON data.
     for key, val in render_data.iteritems():
-        if not isinstance(val, (str, unicode)):
-            render_data[key] = json.dumps(val)
+        if isinstance(val, str):
+            render_data[key] = val.encode('string_escape')
 
-    # Do the actual template rendering
+    # Do the actual template rendering and convert to a dict
     tpl = SimpleTemplate(template, noescape=True)
-    return json.loads(tpl.render(render_data))
+    try:
+        return json.loads(tpl.render(render_data))
+    except:
+        LOG.error('Bad JSON syntax:\n%s' % tpl.render(render_data))
+        raise
