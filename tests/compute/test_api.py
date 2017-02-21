@@ -15,10 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 from tests import utils
 from webtest import TestApp
 
 from dwarf.compute import api
+
+SHOW_VERSION_RESP = {
+    'version': {
+        'id': 'v1.1',
+        'links': [
+            {
+                'href': 'http://127.0.0.1:8774/v1.1/',
+                'rel': 'self',
+            },
+        ],
+        'status': 'CURRENT',
+        'updated': '2016-05-11T00:00:00Z',
+    },
+}
+
+LIST_VERSIONS_RESP = {
+    'versions': [SHOW_VERSION_RESP['version']]
+}
 
 
 class ApiTestCase(utils.TestCase):
@@ -33,3 +53,11 @@ class ApiTestCase(utils.TestCase):
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)
+
+    def test_list_versions(self):
+        resp = self.app.get('/', status=300)
+        self.assertEqual(json.loads(resp.body), LIST_VERSIONS_RESP)
+
+    def test_show_version(self):
+        resp = self.app.get('/v1.1', status=200)
+        self.assertEqual(json.loads(resp.body), SHOW_VERSION_RESP)
