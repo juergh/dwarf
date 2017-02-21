@@ -20,6 +20,7 @@ import shutil
 import unittest
 
 from dwarf import db
+from dwarf import utils
 
 
 class TestCase(unittest.TestCase):
@@ -54,3 +55,6 @@ def to_headers(metadata):
         else:
             headers.append(('x-image-meta-%s' % key, str(val)))
     return headers
+
+
+json_render = utils.json_render
