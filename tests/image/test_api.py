@@ -17,18 +17,11 @@
 
 import json
 import os
-import uuid
 
-from mock import MagicMock
 from tests import utils
 from webtest import TestApp
 
-from dwarf import db
-
-from dwarf.image import api
-
-NOW = '2015-07-22 09:29:47'
-UUID = '11111111-2222-3333-4444-555555555555'
+from dwarf.image.api import ImageApiServer
 
 IMAGE_DATA = 'Bogus image data'
 IMAGE_DATA_CHUNKED = '4\r\nBogu\r\n9\r\ns image d\r\n3\r\nata\r\n0\r\n'
@@ -52,12 +45,12 @@ CREATE_IMAGE_RESP = {
         'status': 'ACTIVE',
         'deleted': 'False',
         'checksum': IMAGE_XSUM,
-        'created_at': NOW,
-        'updated_at': NOW,
-        'id': UUID,
+        'created_at': utils.now,
+        'updated_at': utils.now,
+        'id': utils.uuid,
         'min_disk': '',
         'protected': 'False',
-        'location': 'file:///tmp/dwarf/images/%s' % UUID,
+        'location': 'file:///tmp/dwarf/images/%s' % utils.uuid,
         'min_ram': '',
         'owner': '',
         'is_public': 'False',
@@ -82,12 +75,12 @@ SHOW_IMAGE_RESP = [
     ('x-image-meta-status', 'ACTIVE'),
     ('x-image-meta-deleted', 'False'),
     ('x-image-meta-checksum', IMAGE_XSUM),
-    ('x-image-meta-created_at', NOW),
-    ('x-image-meta-updated_at', NOW),
-    ('x-image-meta-id', UUID),
+    ('x-image-meta-created_at', utils.now),
+    ('x-image-meta-updated_at', utils.now),
+    ('x-image-meta-id', utils.uuid),
     ('x-image-meta-min_disk', ''),
     ('x-image-meta-protected', 'False'),
-    ('x-image-meta-location', 'file:///tmp/dwarf/images/%s' % UUID),
+    ('x-image-meta-location', 'file:///tmp/dwarf/images/%s' % utils.uuid),
     ('x-image-meta-min_ram', ''),
     ('x-image-meta-owner', ''),
     ('x-image-meta-is_public', 'False'),
@@ -123,14 +116,7 @@ class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-
-        # Mock methods
-        db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
-        uuid.uuid4 = MagicMock(return_value=UUID)
-
-        self.db = utils.db_init()
-        self.server = api.ImageApiServer()
-        self.app = TestApp(self.server.app)
+        self.app = TestApp(ImageApiServer().app)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
@@ -144,7 +130,7 @@ class ApiTestCase(utils.TestCase):
         resp = self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
 
         self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
-        with open('/tmp/dwarf/images/%s' % UUID, 'r') as fh:
+        with open('/tmp/dwarf/images/%s' % utils.uuid, 'r') as fh:
             self.assertEqual(fh.read(), IMAGE_DATA)
         # TBD: check the content of the database
 
@@ -155,7 +141,7 @@ class ApiTestCase(utils.TestCase):
                              status=200)
 
         self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
-        with open('/tmp/dwarf/images/%s' % UUID, 'r') as fh:
+        with open('/tmp/dwarf/images/%s' % utils.uuid, 'r') as fh:
             self.assertEqual(fh.read(), IMAGE_DATA)
 
     def test_create_image_chunked_malformed(self):
@@ -172,7 +158,7 @@ class ApiTestCase(utils.TestCase):
     def test_show_image(self):
         headers = utils.to_headers(CREATE_IMAGE_REQ)
         self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        resp = self.app.head('/v1/images/%s' % UUID, status=200)
+        resp = self.app.head('/v1/images/%s' % utils.uuid, status=200)
 
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()), sorted(SHOW_IMAGE_RESP))
@@ -180,13 +166,14 @@ class ApiTestCase(utils.TestCase):
     def test_delete_image(self):
         headers = utils.to_headers(CREATE_IMAGE_REQ)
         self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        resp = self.app.delete('/v1/images/%s' % UUID, status=200)
+        resp = self.app.delete('/v1/images/%s' % utils.uuid, status=200)
 
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),
                          sorted(DELETE_IMAGE_RESP))
 
-        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % UUID), False)
+        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % utils.uuid),
+                         False)
         resp = self.app.get('/v1/images/detail', status=200)
         self.assertEqual(json.loads(resp.body), {'images': []})
         # TBD: check the content of the database
@@ -195,7 +182,7 @@ class ApiTestCase(utils.TestCase):
         headers = utils.to_headers(CREATE_IMAGE_REQ)
         self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
 
-        resp = self.app.put('/v1/images/%s' % UUID, status=200)
+        resp = self.app.put('/v1/images/%s' % utils.uuid, status=200)
         self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
 
     def test_list_versions(self):
@@ -211,8 +198,8 @@ class ApiTestCase(utils.TestCase):
     def test_delete_image_cc(self):
         headers = utils.to_headers(CREATE_IMAGE_REQ)
         self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        os.unlink('/tmp/dwarf/images/%s' % UUID)
-        resp = self.app.delete('/v1/images/%s' % UUID, status=200)
+        os.unlink('/tmp/dwarf/images/%s' % utils.uuid)
+        resp = self.app.delete('/v1/images/%s' % utils.uuid, status=200)
 
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),

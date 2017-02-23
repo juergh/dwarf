@@ -23,7 +23,7 @@ from webtest import TestApp
 
 from dwarf import config
 
-from dwarf.identity import api
+from dwarf.identity.api import IdentityApiServer
 
 
 CONF = config.Config()
@@ -126,8 +126,7 @@ class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-        self.server = api.IdentityApiServer()
-        self.app = TestApp(self.server.app)
+        self.app = TestApp(IdentityApiServer().app)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()

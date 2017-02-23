@@ -22,28 +22,37 @@ import unittest
 from dwarf import db
 from dwarf import utils
 
+json_render = utils.json_render
+
+now = '2017-01-01 00:00:00'
+uuid = '11111111-2222-3333-4444-555555555555'
+
 
 class TestCase(unittest.TestCase):
-    maxDiff = None
+    def __init__(self, *args, **kwargs):
+        super(TestCase, self).__init__(*args, **kwargs)
+        self.maxDiff = None
+        self.db = None
 
     def setUp(self):
         super(TestCase, self).setUp()
+
+        # Create the temp directory tree
         if os.path.exists('/tmp/dwarf'):
             shutil.rmtree('/tmp/dwarf')
         os.makedirs('/tmp/dwarf/images')
         os.makedirs('/tmp/dwarf/instances/_base')
 
+        # Initialize the database
+        self.db = db.Controller()
+        self.db.init()
+
     def tearDown(self):
         super(TestCase, self).tearDown()
+
+        # Purge the temp directory tree
         if os.path.exists('/tmp/dwarf'):
             shutil.rmtree('/tmp/dwarf')
-
-
-def db_init():
-    dwarf_db = db.Controller()
-    dwarf_db.delete()
-    dwarf_db.init()
-    return dwarf_db
 
 
 def to_headers(metadata):
@@ -55,6 +64,3 @@ def to_headers(metadata):
         else:
             headers.append(('x-image-meta-%s' % key, str(val)))
     return headers
-
-
-json_render = utils.json_render

@@ -16,9 +16,7 @@
 # limitations under the License.
 
 import json
-import uuid
 
-from mock import MagicMock
 from tests import utils
 from webtest import TestApp
 
@@ -29,12 +27,7 @@ from cryptography.hazmat.backends import default_backend as \
 from cryptography.hazmat.primitives.asymmetric import padding as crypto_padding
 from cryptography.hazmat.primitives import hashes as crypto_hashes
 
-from dwarf import db
-
-from dwarf.compute import api
-
-NOW = '2015-08-05 09:09:11'
-UUID = '11111111-2222-3333-4444-555555555555'
+from dwarf.compute.api import ComputeApiServer
 
 ADD_NEW_KEYPAIR_REQ = {
     'keypair': {
@@ -80,10 +73,10 @@ SHOW_KEYPAIR_RESP = {
         'fingerprint': '9c:6e:3c:02:6c:98:2b:5d:60:f9:a8:ef:b0:0f:cb:76',
 
         'deleted': 'False',
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
-        'id': UUID,
+        'id': utils.uuid,
     }
 }
 
@@ -92,14 +85,7 @@ class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-
-        # Mock methods
-        db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
-        uuid.uuid4 = MagicMock(return_value=UUID)
-
-        self.db = utils.db_init()
-        self.server = api.ComputeApiServer()
-        self.app = TestApp(self.server.app)
+        self.app = TestApp(ComputeApiServer().app)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()

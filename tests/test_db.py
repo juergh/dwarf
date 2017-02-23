@@ -16,23 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
-
 from copy import deepcopy
-from mock import MagicMock
 from tests import utils
 
-from dwarf import db
 from dwarf import exception
-
-
-NOW = '2013-12-17 11:04:21'
-UUID = '11111111-2222-3333-4444-555555555555'
 
 FLAVOR_LIST = [
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'id': '100',
@@ -43,8 +35,8 @@ FLAVOR_LIST = [
         'vcpus': '1',
     },
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'id': '101',
@@ -55,8 +47,8 @@ FLAVOR_LIST = [
         'vcpus': '1',
     },
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'id': '102',
@@ -82,12 +74,12 @@ SERVER = {
 SERVER_DETAIL = deepcopy(SERVER)
 SERVER_DETAIL.update(
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'int_id': '1',
-        'id': UUID,
+        'id': utils.uuid,
     }
 )
 
@@ -100,12 +92,12 @@ KEYPAIR = {
 KEYPAIR_DETAIL = deepcopy(KEYPAIR)
 KEYPAIR_DETAIL.update(
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'int_id': '1',
-        'id': UUID,
+        'id': utils.uuid,
     }
 )
 
@@ -127,17 +119,14 @@ IMAGE = {
 IMAGE_DETAIL = deepcopy(IMAGE)
 IMAGE_DETAIL.update(
     {
-        'created_at': NOW,
-        'updated_at': NOW,
+        'created_at': utils.now,
+        'updated_at': utils.now,
         'deleted_at': '',
         'deleted': 'False',
         'int_id': '1',
-        'id': UUID,
+        'id': utils.uuid,
     }
 )
-
-# For code coverage
-db._now()   # pylint: disable=W0212
 
 
 class DbTestCase(utils.TestCase):
@@ -145,17 +134,8 @@ class DbTestCase(utils.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
 
-        # Mock methods
-        db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
-        uuid.uuid4 = MagicMock(return_value=UUID)
-
-        self.db = db.Controller()
-        self.db.delete()
-        self.db.init()
-
     def tearDown(self):
         super(DbTestCase, self).tearDown()
-        self.db.delete()
 
     def test_init_db(self):
         self.assertEqual(self.db.servers.list(), [])
@@ -167,9 +147,8 @@ class DbTestCase(utils.TestCase):
         self.db.dump()
         self.db.dump(table='flavors')
 
-    #
+    # -------------------------------------------------------------------------
     # Flavor
-    #
 
     def test_show_flavor(self):
         self.assertEqual(self.db.flavors.show(id='100'), FLAVOR_LIST[0])
@@ -206,9 +185,8 @@ class DbTestCase(utils.TestCase):
         result['disk'] = 'new disk'
         self.assertEqual(flavor, result)
 
-    #
+    # -------------------------------------------------------------------------
     # Server
-    #
 
     def test_create_server(self):
         server = self.db.servers.create(**SERVER)
@@ -216,17 +194,15 @@ class DbTestCase(utils.TestCase):
         self.assertEqual(self.db.servers.show(name='My name'), SERVER_DETAIL)
         self.assertEqual(self.db.servers.show(ip='My ip'), SERVER_DETAIL)
 
-    #
+    # -------------------------------------------------------------------------
     # Keypair
-    #
 
     def test_create_keypair(self):
         keypair = self.db.keypairs.create(**KEYPAIR)
         self.assertEqual(keypair, KEYPAIR_DETAIL)
 
-    #
+    # -------------------------------------------------------------------------
     # Image
-    #
 
     def test_create_image(self):
         image = self.db.images.create(**IMAGE)
@@ -239,9 +215,8 @@ class DbTestCase(utils.TestCase):
         self.assertRaises(exception.Forbidden, self.db.images.delete,
                           id=image['id'])
 
-    #
+    # -------------------------------------------------------------------------
     # Code coverage
-    #
 
     def test_init_cc(self):
         self.db.init()

@@ -16,19 +16,12 @@
 # limitations under the License.
 
 import json
-import uuid
 
-from mock import MagicMock
 from tests import utils
 from webtest import TestApp
 
-from dwarf import db
-
 from dwarf.compute.api import ComputeApiServer
 from dwarf.image.api import ImageApiServer
-
-NOW = '2015-07-22 09:29:47'
-UUID = '11111111-2222-3333-4444-555555555555'
 
 IMAGE_DATA = 'Bogus image data'
 IMAGE_SIZE = str(len(IMAGE_DATA))
@@ -51,12 +44,12 @@ CREATE_IMAGE_RESP = {
         'status': 'ACTIVE',
         'deleted': 'False',
         'checksum': IMAGE_XSUM,
-        'created_at': NOW,
-        'updated_at': NOW,
-        'id': UUID,
+        'created_at': utils.now,
+        'updated_at': utils.now,
+        'id': utils.uuid,
         'min_disk': '',
         'protected': 'False',
-        'location': 'file:///tmp/dwarf/images/%s' % UUID,
+        'location': 'file:///tmp/dwarf/images/%s' % utils.uuid,
         'min_ram': '',
         'owner': '',
         'is_public': 'False',
@@ -68,7 +61,7 @@ CREATE_IMAGE_RESP = {
 LIST_IMAGES_RESP = {
     'images': [
         {
-            'id': UUID,
+            'id': utils.uuid,
             'links': [{'href': '', 'rel': 'self'}],
             'name': 'Test image'
         }
@@ -81,12 +74,12 @@ SHOW_IMAGE_RESP = {
         "name": "Test image",
         "links": [{"href": "", "rel": "self"}],
         "deleted": "False",
-        "created_at": NOW,
-        "updated_at": NOW,
-        "location": "file:///tmp/dwarf/images/%s" % UUID,
+        "created_at": utils.now,
+        "updated_at": utils.now,
+        "location": "file:///tmp/dwarf/images/%s" % utils.uuid,
         "is_public": "False",
         "deleted_at": "",
-        "id": UUID,
+        "id": utils.uuid,
         "size": IMAGE_SIZE
     }
 }
@@ -100,20 +93,12 @@ class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-
-        # Mock methods
-        db._now = MagicMock(return_value=NOW)   # pylint: disable=W0212
-        uuid.uuid4 = MagicMock(return_value=UUID)
-
-        self.db = utils.db_init()
-        self.server = ComputeApiServer()
-        self.app = TestApp(self.server.app)
+        self.app = TestApp(ComputeApiServer().app)
 
         # Preload Glance with an image
-        glance = ImageApiServer()
-        glance_app = TestApp(glance.app)
+        glance = TestApp(ImageApiServer().app)
         headers = utils.to_headers(CREATE_IMAGE_REQ)
-        glance_app.post('/v1/images', IMAGE_DATA, headers, status=200)
+        glance.post('/v1/images', IMAGE_DATA, headers, status=200)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
@@ -127,5 +112,5 @@ class ApiTestCase(utils.TestCase):
         self.assertEqual(json.loads(resp.body), LIST_IMAGES_DETAIL_RESP)
 
     def test_show_image(self):
-        resp = self.app.get('/v1.1/1234/images/%s' % UUID, status=200)
+        resp = self.app.get('/v1.1/1234/images/%s' % utils.uuid, status=200)
         self.assertEqual(json.loads(resp.body), SHOW_IMAGE_RESP)

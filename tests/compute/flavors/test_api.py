@@ -20,7 +20,7 @@ import json
 from tests import utils
 from webtest import TestApp
 
-from dwarf.compute import api
+from dwarf.compute.api import ComputeApiServer
 
 LIST_FLAVORS_RESP = """{
     "flavors": [
@@ -119,10 +119,7 @@ class ApiTestCase(utils.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-
-        self.db = utils.db_init()
-        self.server = api.ComputeApiServer()
-        self.app = TestApp(self.server.app)
+        self.app = TestApp(ComputeApiServer().app)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
