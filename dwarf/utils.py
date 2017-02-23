@@ -133,5 +133,5 @@ def json_render(template, *args, **kwargs):
     try:
         return json.loads(tpl.render(render_data))
     except:
-        LOG.error('Bad JSON syntax:\n%s' % tpl.render(render_data))
+        LOG.error('Bad JSON syntax:\n%s', tpl.render(render_data))
         raise
