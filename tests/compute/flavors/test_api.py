@@ -17,102 +17,56 @@
 
 import json
 
-from tests import utils
 from webtest import TestApp
+
+from tests import data
+from tests import utils
 
 from dwarf.compute.api import ComputeApiServer
 
-LIST_FLAVORS_RESP = """{
-    "flavors": [
-        {
-            "id": "100",
-% if _details:
-            "disk": "10",
-            "ram": "512",
-            "vcpus": "1",
-% end
-            "links": [
-                {
-                    "href": "",
-                    "rel": "self"
-                }
-            ],
-            "name": "standard.xsmall"
-        },
-        {
-            "id": "101",
-% if _details:
-            "disk": "30",
-            "ram": "768",
-            "vcpus": "1",
-% end
-            "links": [
-                {
-                    "href": "",
-                    "rel": "self"
-                }
-            ],
-            "name": "standard.small"
-        },
-        {
-            "id": "102",
-% if _details:
-            "disk": "30",
-            "ram": "1024",
-            "vcpus": "1",
-% end
-            "links": [
-                {
-                    "href": "",
-                    "rel": "self"
-                }
-            ],
-            "name": "standard.medium"
-        }
-    ]
+CREATE_FLAVOR_REQ = """{
+    "flavor": {
+        "disk": "{{disk}}",
+        "id": "{{id}}",
+        "name": "{{name}}",
+        "ram": "{{ram}}",
+        "vcpus": "{{vcpus}}"
+    }
 }"""
 
-SHOW_FLAVOR_RESP = {
-    "flavor": {
-        "id": "100",
-        "disk": "10",
-        "ram": "512",
-        "vcpus": "1",
-        "links": [
-            {
-                "href": "",
-                "rel": "self"
-            }
-        ],
-        "name": "standard.xsmall"
-    }
-}
 
-CREATE_FLAVOR_REQ = {
-    "flavor": {
-        "disk": "20",
-        "id": "999",
-        "ram": "2048",
-        "name": "test.flavor",
-        "vcpus": "2"
-    }
-}
+def create_flavor_req(flavor):
+    return utils.json_render(CREATE_FLAVOR_REQ, flavor)
 
-CREATE_FLAVOR_RESP = {
-    "flavor": {
-        "disk": "20",
-        "id": "999",
-        "links": [
-            {
-                "href": "",
-                "rel": "self"
-            }
-        ],
-        "name": "test.flavor",
-        "ram": "2048",
-        "vcpus": "2"
-    }
-}
+
+FLAVOR_RESP = """{
+% if _details:
+    "disk": "{{disk}}",
+    "ram": "{{ram}}",
+    "vcpus": "{{vcpus}}",
+% end
+    "id": "{{id}}",
+    "links": [
+        {
+            "href": "",
+            "rel": "self"
+        }
+    ],
+    "name": "{{name}}"
+}"""
+
+
+def list_flavors_resp(flavor, details=False):
+    return {'flavors': [utils.json_render(FLAVOR_RESP, f, _details=details)
+                        for f in flavor]}
+
+
+def show_flavor_resp(flavor):
+    return {'flavor': utils.json_render(FLAVOR_RESP, flavor, _details=True)}
+
+
+def create_flavor_resp(flavor):
+    return {'flavor': utils.json_render(FLAVOR_RESP, flavor, _details=True)}
 
 
 class ApiTestCase(utils.TestCase):
@@ -127,34 +81,50 @@ class ApiTestCase(utils.TestCase):
     def test_list_flavors(self):
         resp = self.app.get('/v1.1/1234/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
-                         utils.json_render(LIST_FLAVORS_RESP, _details=False))
+                         list_flavors_resp(data.flavor, details=False))
 
-    def test_list_flavors_details(self):
+    def test_list_flavors_detail(self):
         resp = self.app.get('/v1.1/1234/flavors/detail', status=200)
         self.assertEqual(json.loads(resp.body),
-                         utils.json_render(LIST_FLAVORS_RESP, _details=True))
+                         list_flavors_resp(data.flavor, details=True))
 
     def test_show_flavor(self):
-        resp = self.app.get('/v1.1/1234/flavors/100', status=200)
-        self.assertEqual(json.loads(resp.body), SHOW_FLAVOR_RESP)
-
-    def test_create_flavor(self):
-        resp = self.app.post('/v1.1/1234/flavors',
-                             json.dumps(CREATE_FLAVOR_REQ), status=200)
-        self.assertEqual(json.loads(resp.body), CREATE_FLAVOR_RESP)
-
-        flist = utils.json_render(LIST_FLAVORS_RESP, _details=True)
-        flist['flavors'].append(CREATE_FLAVOR_RESP['flavor'])
-
-        resp = self.app.get('/v1.1/1234/flavors/detail', status=200)
-        self.assertEqual(json.loads(resp.body), flist)
+        resp = self.app.get('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+                            status=200)
+        self.assertEqual(json.loads(resp.body),
+                         show_flavor_resp(data.flavor[0]))
 
     def test_delete_flavor(self):
-        resp = self.app.delete('/v1.1/1234/flavors/100', status=200)
+        # Delete flavor[0]
+        resp = self.app.delete('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+                               status=200)
         self.assertEqual(resp.body, '')
 
-        flist = utils.json_render(LIST_FLAVORS_RESP, _details=False)
-        flist['flavors'].pop(0)
-
+        # Check the resulting list of flavors
         resp = self.app.get('/v1.1/1234/flavors', status=200)
-        self.assertEqual(json.loads(resp.body), flist)
+        self.assertEqual(json.loads(resp.body),
+                         list_flavors_resp(data.flavor[1:], details=False))
+
+    def test_create_flavor(self):
+        # Delete flavor[0]
+        self.app.delete('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+                        status=200)
+
+        # Check the resulting list of flavors
+        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        self.assertEqual(json.loads(resp.body),
+                         list_flavors_resp(data.flavor[1:], details=False))
+
+        # (Re-)create flavor[0]
+        resp = self.app.post('/v1.1/1234/flavors',
+                             json.dumps(create_flavor_req(data.flavor[0])),
+                             status=200)
+        self.assertEqual(json.loads(resp.body),
+                         create_flavor_resp(data.flavor[0]))
+
+        # Check the resulting list of flavors
+        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        self.assertEqual(json.loads(resp.body),
+                         list_flavors_resp(
+                             [data.flavor[1], data.flavor[2], data.flavor[0]],
+                             details=False))

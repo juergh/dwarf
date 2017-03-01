@@ -18,98 +18,111 @@
 import json
 import os
 
-from tests import utils
 from webtest import TestApp
+
+from tests import data
+from tests import utils
 
 from dwarf.image.api import ImageApiServer
 
-IMAGE_DATA = 'Bogus image data'
-IMAGE_DATA_CHUNKED = '4\r\nBogu\r\n9\r\ns image d\r\n3\r\nata\r\n0\r\n'
-IMAGE_SIZE = str(len(IMAGE_DATA))
-IMAGE_XSUM = 'd6beaad96c69564baec24cb194d8e146'
 
-CREATE_IMAGE_REQ = {
-    'name': 'Test image',
-    'disk_format': 'raw',
-    'container_format': 'bare',
-    'size': IMAGE_SIZE,
-}
-
-CREATE_IMAGE_RESP = {
-    'image': {
-        'name': 'Test image',
-        'disk_format': 'raw',
-        'container_format': 'bare',
-        'size': IMAGE_SIZE,
-
-        'status': 'ACTIVE',
-        'deleted': 'False',
-        'checksum': IMAGE_XSUM,
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'id': utils.uuid,
-        'min_disk': '',
-        'protected': 'False',
-        'location': 'file:///tmp/dwarf/images/%s' % utils.uuid,
-        'min_ram': '',
-        'owner': '',
-        'is_public': 'False',
-        'deleted_at': '',
-        'properties': {},
-    }
-}
-
-LIST_IMAGES_RESP = {
-    'images': [CREATE_IMAGE_RESP['image']]
-}
-
-SHOW_IMAGE_RESP = [
-    ('Content-Length', '0'),
-    ('Content-Type', 'text/html; charset=UTF-8'),
-
-    ('x-image-meta-name', 'Test image'),
-    ('x-image-meta-disk_format', 'raw'),
-    ('x-image-meta-container_format', 'bare'),
-    ('x-image-meta-size', IMAGE_SIZE),
-
-    ('x-image-meta-status', 'ACTIVE'),
-    ('x-image-meta-deleted', 'False'),
-    ('x-image-meta-checksum', IMAGE_XSUM),
-    ('x-image-meta-created_at', utils.now),
-    ('x-image-meta-updated_at', utils.now),
-    ('x-image-meta-id', utils.uuid),
-    ('x-image-meta-min_disk', ''),
-    ('x-image-meta-protected', 'False'),
-    ('x-image-meta-location', 'file:///tmp/dwarf/images/%s' % utils.uuid),
-    ('x-image-meta-min_ram', ''),
-    ('x-image-meta-owner', ''),
-    ('x-image-meta-is_public', 'False'),
-    ('x-image-meta-deleted_at', ''),
-
-    ('x-image-meta-int_id', '1'),
-]
-
-DELETE_IMAGE_RESP = [
-    ('Content-Length', '0'),
-    ('Content-Type', 'text/html; charset=UTF-8'),
-]
+DELETE_IMAGE_RESP = """[
+    ["Content-Length", "0"],
+    ["Content-Type", "text/html; charset=UTF-8"]
+]"""
 
 
-LIST_VERSIONS_RESP = {
-    'versions': [
+def delete_image_resp(image):
+    return [(e[0], e[1]) for e in utils.json_render(DELETE_IMAGE_RESP, image)]
+
+
+CREATE_IMAGE_REQ = """{
+    "container_format": "{{container_format}}",
+    "disk_format": "{{disk_format}}",
+    "name": "{{name}}",
+    "size": "{{size}}"
+}"""
+
+
+def create_image_req(image):
+    return utils.json_render(CREATE_IMAGE_REQ, image)
+
+
+SHOW_IMAGE_RESP = """[
+    ["Content-Length", "0"],
+    ["Content-Type", "text/html; charset=UTF-8"],
+
+    ["x-image-meta-checksum", "{{checksum}}"],
+    ["x-image-meta-container_format", "{{container_format}}"],
+    ["x-image-meta-created_at", "{{created_at}}"],
+    ["x-image-meta-deleted", "{{deleted}}"],
+    ["x-image-meta-deleted_at", "{{deleted_at}}"],
+    ["x-image-meta-disk_format", "{{disk_format}}"],
+    ["x-image-meta-id", "{{id}}"],
+    ["x-image-meta-is_public", "{{is_public}}"],
+    ["x-image-meta-int_id", "{{int_id}}"],
+    ["x-image-meta-location", "{{location}}"],
+    ["x-image-meta-min_disk", "{{min_disk}}"],
+    ["x-image-meta-min_ram", "{{min_ram}}"],
+    ["x-image-meta-name", "{{name}}"],
+    ["x-image-meta-owner", "{{owner}}"],
+    ["x-image-meta-protected", "{{protected}}"],
+    ["x-image-meta-size", "{{size}}"],
+    ["x-image-meta-status", "{{status}}"],
+    ["x-image-meta-updated_at", "{{updated_at}}"]
+]"""
+
+
+def show_image_resp(image):
+    return [(e[0], e[1]) for e in utils.json_render(SHOW_IMAGE_RESP, image)]
+
+
+IMAGE_RESP = """{
+    "checksum": "{{checksum}}",
+    "container_format": "{{container_format}}",
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "disk_format": "{{disk_format}}",
+    "id": "{{id}}",
+    "is_public": "{{is_public}}",
+    "location": "{{location}}",
+    "min_disk": "{{min_disk}}",
+    "min_ram": "{{min_ram}}",
+    "name": "{{name}}",
+    "owner": "{{owner}}",
+    "properties": {{properties}},
+    "protected": "{{protected}}",
+    "size": "{{size}}",
+    "status": "{{status}}",
+    "updated_at": "{{updated_at}}"
+}"""
+
+
+def list_images_resp(images):
+    return {'images': [utils.json_render(IMAGE_RESP, image)
+                       for image in images]}
+
+
+def create_image_resp(image):
+    return {'image': utils.json_render(IMAGE_RESP, image)}
+
+
+VERSION_RESP = """{
+    "id": "v1",
+    "links": [
         {
-            'id': 'v1',
-            'links': [
-                {
-                    'href': 'http://127.0.0.1:9292/v1/',
-                    'rel': 'self',
-                },
-            ],
-            'status': 'CURRENT',
-            'updated': '2016-05-11T00:00:00Z',
-        },
-    ]
-}
+            "href": "http://127.0.0.1:9292/v1/",
+            "rel": "self"
+        }
+    ],
+    "status": "CURRENT",
+    "updated": "2016-05-11T00:00:00Z"
+}"""
+
+
+def list_versions_resp():
+    return {'versions': [utils.json_render(VERSION_RESP)]}
 
 
 class ApiTestCase(utils.TestCase):
@@ -125,85 +138,93 @@ class ApiTestCase(utils.TestCase):
         self.app.get('/no-such-url', status=404)
         self.app.get('/v1/images/no-such-id', status=400)
 
-    def test_create_image(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        resp = self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-
-        self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
-        with open('/tmp/dwarf/images/%s' % utils.uuid, 'r') as fh:
-            self.assertEqual(fh.read(), IMAGE_DATA)
-        # TBD: check the content of the database
-
-    def test_create_image_chunked(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        headers.append(('Transfer-Encoding', 'chunked'))
-        resp = self.app.post('/v1/images', IMAGE_DATA_CHUNKED, headers,
-                             status=200)
-
-        self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
-        with open('/tmp/dwarf/images/%s' % utils.uuid, 'r') as fh:
-            self.assertEqual(fh.read(), IMAGE_DATA)
-
-    def test_create_image_chunked_malformed(self):
-        self.app.post('/v1/images', '1', [('Transfer-Encoding', 'chunked')],
-                      status=500)
-
-    def test_list_images(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        resp = self.app.get('/v1/images/detail', status=200)
-
-        self.assertEqual(json.loads(resp.body), LIST_IMAGES_RESP)
-
-    def test_show_image(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        resp = self.app.head('/v1/images/%s' % utils.uuid, status=200)
-
-        self.assertEqual(resp.body, '')
-        self.assertEqual(sorted(resp.headers.items()), sorted(SHOW_IMAGE_RESP))
-
-    def test_delete_image(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        resp = self.app.delete('/v1/images/%s' % utils.uuid, status=200)
-
-        self.assertEqual(resp.body, '')
-        self.assertEqual(sorted(resp.headers.items()),
-                         sorted(DELETE_IMAGE_RESP))
-
-        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % utils.uuid),
-                         False)
-        resp = self.app.get('/v1/images/detail', status=200)
-        self.assertEqual(json.loads(resp.body), {'images': []})
-        # TBD: check the content of the database
-
-    def test_update_image(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-
-        resp = self.app.put('/v1/images/%s' % utils.uuid, status=200)
-        self.assertEqual(json.loads(resp.body), CREATE_IMAGE_RESP)
-
     def test_list_versions(self):
         resp = self.app.get('/', status=300)
-        self.assertEqual(json.loads(resp.body), LIST_VERSIONS_RESP)
+        self.assertEqual(json.loads(resp.body), list_versions_resp())
 
         resp = self.app.get('/versions', status=200)
-        self.assertEqual(json.loads(resp.body), LIST_VERSIONS_RESP)
+        self.assertEqual(json.loads(resp.body), list_versions_resp())
+
+    def test_list_images(self):
+        # Preload test images
+        test_images = data.image[0:2]
+        for test_image in test_images:
+            self.create_image(test_image)
+
+        resp = self.app.get('/v1/images/detail', status=200)
+        self.assertEqual(json.loads(resp.body), list_images_resp(test_images))
+
+    def test_create_image(self):
+        test_image = data.image[0]
+        headers = utils.to_headers(create_image_req(test_image))
+
+        resp = self.app.post('/v1/images', test_image['data'], headers,
+                             status=200)
+        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
+        with open('/tmp/dwarf/images/%s' % test_image['id'], 'r') as fh:
+            self.assertEqual(fh.read(), test_image['data'])
+
+    def test_create_image_chunked(self):
+        test_image = data.image[0]
+        headers = utils.to_headers(create_image_req(test_image))
+        headers.append(('Transfer-Encoding', 'chunked'))
+
+        resp = self.app.post('/v1/images', test_image['data_chunked'], headers,
+                             status=200)
+        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
+        with open('/tmp/dwarf/images/%s' % test_image['id'], 'r') as fh:
+            self.assertEqual(fh.read(), test_image['data'])
+
+    def test_create_image_chunked_malformed(self):
+        self.app.post('/v1/images', 'foo', [('Transfer-Encoding', 'chunked')],
+                      status=500)
+
+    def test_show_image(self):
+        # Preload a test image
+        test_image = data.image[0]
+        self.create_image(test_image)
+
+        resp = self.app.head('/v1/images/%s' % test_image['id'], status=200)
+        self.assertEqual(resp.body, '')
+        self.assertEqual(sorted(resp.headers.items()),
+                         sorted(show_image_resp(test_image)))
+
+    def test_delete_image(self):
+        # Preload a test image
+        test_image = data.image[0]
+        self.create_image(test_image)
+
+        resp = self.app.delete('/v1/images/%s' % test_image['id'], status=200)
+        self.assertEqual(resp.body, '')
+        self.assertEqual(sorted(resp.headers.items()),
+                         sorted(delete_image_resp(test_image)))
+        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' %
+                                        test_image['id']), False)
+
+        resp = self.app.get('/v1/images/detail', status=200)
+        self.assertEqual(json.loads(resp.body), {'images': []})
+
+    def test_update_image(self):
+        # Preload a test image
+        test_image = data.image[0]
+        self.create_image(test_image)
+
+        resp = self.app.put('/v1/images/%s' % test_image['id'], status=200)
+        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
 
     # -------------------------------------------------------------------------
     # Additional tests for code coverage
 
     def test_delete_image_cc(self):
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        self.app.post('/v1/images', IMAGE_DATA, headers, status=200)
-        os.unlink('/tmp/dwarf/images/%s' % utils.uuid)
-        resp = self.app.delete('/v1/images/%s' % utils.uuid, status=200)
+        # Preload a test image
+        test_image = data.image[0]
+        self.create_image(test_image)
+        os.unlink('/tmp/dwarf/images/%s' % test_image['id'])
 
+        resp = self.app.delete('/v1/images/%s' % test_image['id'], status=200)
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),
-                         sorted(DELETE_IMAGE_RESP))
+                         sorted(delete_image_resp(test_image)))
 
     def test_create_image_chunked_cc(self):
         self.app.post('/v1/images', '\r', [('Transfer-Encoding', 'chunked')],

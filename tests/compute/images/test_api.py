@@ -17,76 +17,42 @@
 
 import json
 
-from tests import utils
 from webtest import TestApp
 
+from tests import data
+from tests import utils
+
 from dwarf.compute.api import ComputeApiServer
-from dwarf.image.api import ImageApiServer
 
-IMAGE_DATA = 'Bogus image data'
-IMAGE_SIZE = str(len(IMAGE_DATA))
-IMAGE_XSUM = 'd6beaad96c69564baec24cb194d8e146'
-
-CREATE_IMAGE_REQ = {
-    'name': 'Test image',
-    'disk_format': 'raw',
-    'container_format': 'bare',
-    'size': IMAGE_SIZE,
-}
-
-CREATE_IMAGE_RESP = {
-    'image': {
-        'name': 'Test image',
-        'disk_format': 'raw',
-        'container_format': 'bare',
-        'size': IMAGE_SIZE,
-
-        'status': 'ACTIVE',
-        'deleted': 'False',
-        'checksum': IMAGE_XSUM,
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'id': utils.uuid,
-        'min_disk': '',
-        'protected': 'False',
-        'location': 'file:///tmp/dwarf/images/%s' % utils.uuid,
-        'min_ram': '',
-        'owner': '',
-        'is_public': 'False',
-        'deleted_at': '',
-        'properties': {},
-    }
-}
-
-LIST_IMAGES_RESP = {
-    'images': [
+IMAGE_RESP = """{
+% if _details:
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "is_public": "{{is_public}}",
+    "location": "{{location}}",
+    "size": "{{size}}",
+    "status": "{{status}}",
+    "updated_at": "{{updated_at}}",
+% end
+    "id": "{{id}}",
+    "links": [
         {
-            'id': utils.uuid,
-            'links': [{'href': '', 'rel': 'self'}],
-            'name': 'Test image'
+            "href": "",
+            "rel": "self"
         }
-    ]
-}
+    ],
+    "name": "{{name}}"
+}"""
 
-SHOW_IMAGE_RESP = {
-    "image": {
-        "status": "ACTIVE",
-        "name": "Test image",
-        "links": [{"href": "", "rel": "self"}],
-        "deleted": "False",
-        "created_at": utils.now,
-        "updated_at": utils.now,
-        "location": "file:///tmp/dwarf/images/%s" % utils.uuid,
-        "is_public": "False",
-        "deleted_at": "",
-        "id": utils.uuid,
-        "size": IMAGE_SIZE
-    }
-}
 
-LIST_IMAGES_DETAIL_RESP = {
-    'images': [SHOW_IMAGE_RESP['image']]
-}
+def list_images_resp(images, details=False):
+    return {'images': [utils.json_render(IMAGE_RESP, i, _details=details)
+                       for i in images]}
+
+
+def show_image_resp(image):
+    return {'image': utils.json_render(IMAGE_RESP, image, _details=True)}
 
 
 class ApiTestCase(utils.TestCase):
@@ -95,22 +61,24 @@ class ApiTestCase(utils.TestCase):
         super(ApiTestCase, self).setUp()
         self.app = TestApp(ComputeApiServer().app)
 
-        # Preload Glance with an image
-        glance = TestApp(ImageApiServer().app)
-        headers = utils.to_headers(CREATE_IMAGE_REQ)
-        glance.post('/v1/images', IMAGE_DATA, headers, status=200)
+        # Preload test images
+        self.create_image(data.image[0])
+        self.create_image(data.image[1])
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
 
     def test_list_images(self):
         resp = self.app.get('/v1.1/1234/images', status=200)
-        self.assertEqual(json.loads(resp.body), LIST_IMAGES_RESP)
+        self.assertEqual(json.loads(resp.body),
+                         list_images_resp(data.image[0:2], details=False))
 
     def test_list_images_detail(self):
         resp = self.app.get('/v1.1/1234/images/detail', status=200)
-        self.assertEqual(json.loads(resp.body), LIST_IMAGES_DETAIL_RESP)
+        self.assertEqual(json.loads(resp.body),
+                         list_images_resp(data.image[0:2], details=True))
 
     def test_show_image(self):
-        resp = self.app.get('/v1.1/1234/images/%s' % utils.uuid, status=200)
-        self.assertEqual(json.loads(resp.body), SHOW_IMAGE_RESP)
+        resp = self.app.get('/v1.1/1234/images/%s' % data.image[0]['id'],
+                            status=200)
+        self.assertEqual(json.loads(resp.body), show_image_resp(data.image[0]))

@@ -18,15 +18,11 @@
 
 import json
 
-from tests import utils
 from webtest import TestApp
 
-from dwarf import config
+from tests import utils
 
 from dwarf.identity.api import IdentityApiServer
-
-
-CONF = config.Config()
 
 AUTH_REQ = {
     "auth": {
@@ -38,88 +34,91 @@ AUTH_REQ = {
     }
 }
 
-TOKEN = {
-    "id": "0011223344556677",
-    "expires": "2100-01-01T00:00:00-00:00",
-    "tenant": {
-        "id": "1000",
-        "name": "dwarf-tenant"
-    }
-}
 
-USER = {
-    "id": "1000",
-    "name": "dwarf-user",
-    "roles": []
-}
+def auth_req():
+    return AUTH_REQ
 
-SERVICE_COMPUTE = {
-    "name": "Compute",
-    "type": "compute",
-    "endpoints": [{
-        "publicURL": "http://127.0.0.1:8774/v1.1/1000",
-        "region": "dwarf-region",
-    }]
-}
-
-SERVICE_IMAGE = {
-    "name": "Image",
-    "type": "image",
-    "endpoints": [{
-        "publicURL": "http://127.0.0.1:9292",
-        "region": "dwarf-region",
-    }]
-}
-
-SERVICE_IDENTITY = {
-    "name": "Identity",
-    "type": "identity",
-    "endpoints": [{
-        "publicURL": "http://127.0.0.1:35357/v2.0",
-        "region": "dwarf-region",
-    }]
-}
 
 AUTH_RESP = {
     "access": {
-        "token": TOKEN,
-        "user": USER,
+        "token": {
+            "id": "0011223344556677",
+            "expires": "2100-01-01T00:00:00-00:00",
+            "tenant": {
+                "id": "1000",
+                "name": "dwarf-tenant"
+            }
+        },
+        "user": {
+            "id": "1000",
+            "name": "dwarf-user",
+            "roles": []
+        },
         "serviceCatalog": [
-            SERVICE_COMPUTE,
-            SERVICE_IMAGE,
-            SERVICE_IDENTITY,
+            {
+                "name": "Compute",
+                "type": "compute",
+                "endpoints": [
+                    {
+                        "publicURL": "http://127.0.0.1:8774/v1.1/1000",
+                        "region": "dwarf-region"
+                    }
+                ]
+            },
+            {
+                "name": "Image",
+                "type": "image",
+                "endpoints": [
+                    {
+                        "publicURL": "http://127.0.0.1:9292",
+                        "region": "dwarf-region"
+                    }
+                ]
+            },
+            {
+                "name": "Identity",
+                "type": "identity",
+                "endpoints": [
+                    {
+                        "publicURL": "http://127.0.0.1:35357/v2.0",
+                        "region": "dwarf-region"
+                    }
+                ]
+            }
         ]
     }
 }
 
-SHOW_VERSION_RESP = {
-    "version": {
-        "id": "v2.0",
-        "links": [
-            {
-                "href": "http://%s:%s/v2.0/" % (CONF.bind_host,
-                                                CONF.identity_api_port),
-                "rel": "self"
-            }
-        ],
-        "media-types": [
-            {
-                "base": "application/json",
-                "type": "application/vnd.openstack.identity-v2.0+json"
-            }
-        ],
-        "status": "stable",
-        "updated": "2014-04-17T00:00:00Z",
-    }
+
+def auth_resp():
+    return AUTH_RESP
+
+
+VERSION_RESP = {
+    "id": "v2.0",
+    "links": [
+        {
+            "href": "http://127.0.0.1:35357/v2.0/",
+            "rel": "self"
+        }
+    ],
+    "media-types": [
+        {
+            "base": "application/json",
+            "type": "application/vnd.openstack.identity-v2.0+json"
+        }
+    ],
+    "status": "stable",
+    "updated": "2014-04-17T00:00:00Z"
 }
 
-LIST_VERSIONS_RESP = {
-    "versions": {
-        "values": [
-            SHOW_VERSION_RESP['version']
-        ]
-    }
-}
+
+def show_version_resp():
+    return {'version': VERSION_RESP}
+
+
+def list_versions_resp():
+    return {'versions': {'values': [VERSION_RESP]}}
 
 
 class ApiTestCase(utils.TestCase):
@@ -137,14 +136,14 @@ class ApiTestCase(utils.TestCase):
     def test_list_versions(self):
         resp = self.app.get('/')
         self.assertEqual(resp.status, '300 Multiple Choices')
-        self.assertEqual(json.loads(resp.body), LIST_VERSIONS_RESP)
+        self.assertEqual(json.loads(resp.body), list_versions_resp())
 
     def test_show_version(self):
         resp = self.app.get('/v2.0')
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(json.loads(resp.body), SHOW_VERSION_RESP)
+        self.assertEqual(json.loads(resp.body), show_version_resp())
 
     def test_authenticate(self):
-        resp = self.app.post('/v2.0/tokens', json.dumps(AUTH_REQ))
+        resp = self.app.post('/v2.0/tokens', json.dumps(auth_req()))
         self.assertEqual(resp.status, '200 OK')
-        self.assertEqual(json.loads(resp.body), AUTH_RESP)
+        self.assertEqual(json.loads(resp.body), auth_resp())

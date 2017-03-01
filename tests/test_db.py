@@ -17,116 +17,101 @@
 # limitations under the License.
 
 from copy import deepcopy
+
+from tests import data
 from tests import utils
 
 from dwarf import exception
 
-FLAVOR_LIST = [
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'id': '100',
-        'int_id': '1',
-        'name': 'standard.xsmall',
-        'disk': '10',
-        'ram': '512',
-        'vcpus': '1',
-    },
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'id': '101',
-        'int_id': '2',
-        'name': 'standard.small',
-        'disk': '30',
-        'ram': '768',
-        'vcpus': '1',
-    },
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'id': '102',
-        'int_id': '3',
-        'name': 'standard.medium',
-        'disk': '30',
-        'ram': '1024',
-        'vcpus': '1',
-    },
-]
+FLAVOR = """{
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "disk": "{{disk}}",
+    "id": "{{id}}",
+    "int_id": "{{int_id}}",
+    "name": "{{name}}",
+    "ram": "{{ram}}",
+    "updated_at": "{{updated_at}}",
+    "vcpus": "{{vcpus}}"
+}"""
 
-SERVER = {
-    'name': 'My name',
-    'status': 'My status',
-    'image_id': 'My image',
-    'flavor_id': 'My flavor',
-    'key_name': 'My key',
-    'mac_address': 'My mac',
-    'ip': 'My ip',
-    'config_drive': 'False',
-}
 
-SERVER_DETAIL = deepcopy(SERVER)
-SERVER_DETAIL.update(
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'int_id': '1',
-        'id': utils.uuid,
-    }
-)
+def show_flavor_resp(flavor, **kwargs):
+    return utils.json_render(FLAVOR, flavor, **kwargs)
 
-KEYPAIR = {
-    'name': 'My name',
-    'fingerprint': 'My fingerprint',
-    'public_key': 'My public key',
-}
 
-KEYPAIR_DETAIL = deepcopy(KEYPAIR)
-KEYPAIR_DETAIL.update(
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'int_id': '1',
-        'id': utils.uuid,
-    }
-)
+def list_flavors_resp(flavors):
+    return [utils.json_render(FLAVOR, f) for f in flavors]
 
-IMAGE = {
-    'name': 'My name',
-    'disk_format': 'My disk format',
-    'container_format': 'My container format',
-    'size': 'My size',
-    'status': 'My status',
-    'is_public': 'False',
-    'location': 'My location',
-    'checksum': 'My checksum',
-    'min_disk': 'My disk',
-    'min_ram': 'My ram',
-    'owner': 'My owner',
-    'protected': 'False',
-}
 
-IMAGE_DETAIL = deepcopy(IMAGE)
-IMAGE_DETAIL.update(
-    {
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'deleted': 'False',
-        'int_id': '1',
-        'id': utils.uuid,
-    }
-)
+SERVER = """{
+    "config_drive": "{{config_drive}}",
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "flavor_id": "{{flavor_id}}",
+    "id": "{{id}}",
+    "image_id": "{{image_id}}",
+    "int_id": "{{int_id}}",
+    "ip": "{{ip}}",
+    "key_name": "{{key_name}}",
+    "mac_address": "{{mac_address}}",
+    "name": "{{name}}",
+    "status": "{{status}}",
+    "updated_at": "{{updated_at}}"
+}"""
+
+
+def create_server_resp(server):
+    return utils.json_render(SERVER, server)
+
+
+def show_server_resp(server):
+    return utils.json_render(SERVER, server)
+
+
+KEYPAIR = """{
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "id": "{{id}}",
+    "int_id": "{{int_id}}",
+    "fingerprint": "{{fingerprint}}",
+    "name": "{{name}}",
+    "public_key": "{{public_key}}",
+    "updated_at": "{{updated_at}}"
+}"""
+
+
+def create_keypair_resp(keypair):
+    return utils.json_render(KEYPAIR, keypair)
+
+
+IMAGE = """{
+    "checksum": "{{checksum}}",
+    "container_format": "{{container_format}}",
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "disk_format": "{{disk_format}}",
+    "id": "{{id}}",
+    "int_id": "{{int_id}}",
+    "is_public": "{{is_public}}",
+    "location": "{{location}}",
+    "min_disk": "{{min_disk}}",
+    "min_ram": "{{min_ram}}",
+    "name": "{{name}}",
+    "owner": "{{owner}}",
+    "protected": "{{protected}}",
+    "size": "{{size}}",
+    "status": "{{status}}",
+    "updated_at": "{{updated_at}}"
+}"""
+
+
+def create_image_resp(image):
+    return utils.json_render(IMAGE, image)
 
 
 class DbTestCase(utils.TestCase):
@@ -141,7 +126,8 @@ class DbTestCase(utils.TestCase):
         self.assertEqual(self.db.servers.list(), [])
         self.assertEqual(self.db.keypairs.list(), [])
         self.assertEqual(self.db.images.list(), [])
-        self.assertEqual(self.db.flavors.list(), FLAVOR_LIST)
+        self.assertEqual(self.db.flavors.list(),
+                         list_flavors_resp(data.flavor))
 
     def test_dump_db(self):
         self.db.dump()
@@ -151,69 +137,72 @@ class DbTestCase(utils.TestCase):
     # Flavor
 
     def test_show_flavor(self):
-        self.assertEqual(self.db.flavors.show(id='100'), FLAVOR_LIST[0])
-        self.assertEqual(self.db.flavors.show(name='standard.xsmall'),
-                         FLAVOR_LIST[0])
-        self.assertEqual(self.db.flavors.show(id='101'), FLAVOR_LIST[1])
-        self.assertEqual(self.db.flavors.show(name='standard.small'),
-                         FLAVOR_LIST[1])
+        resp = self.db.flavors.show(id=data.flavor[0]['id'])
+        self.assertEqual(resp, show_flavor_resp(data.flavor[0]))
+
+        resp = self.db.flavors.show(name=data.flavor[0]['name'])
+        self.assertEqual(resp, show_flavor_resp(data.flavor[0]))
 
     def test_delete_flavor_by_id(self):
-        self.db.flavors.delete(id='100')
-        flavors = deepcopy(FLAVOR_LIST)
-        del flavors[0]
-        self.assertEqual(self.db.flavors.list(), flavors)
+        self.db.flavors.delete(id=data.flavor[0]['id'])
+        resp = self.db.flavors.list()
+        self.assertEqual(resp, list_flavors_resp(data.flavor[1:]))
 
     def test_delete_flavor_by_name(self):
-        self.db.flavors.delete(name='standard.xsmall')
-        flavors = deepcopy(FLAVOR_LIST)
-        del flavors[0]
-        self.assertEqual(self.db.flavors.list(), flavors)
+        self.db.flavors.delete(name=data.flavor[0]['name'])
+        resp = self.db.flavors.list()
+        self.assertEqual(resp, list_flavors_resp(data.flavor[1:]))
 
     def test_delete_flavor_not_found(self):
         self.assertRaises(exception.NotFound, self.db.flavors.delete,
                           id='no_such_id')
 
     def test_create_flavor_conflict(self):
-        self.assertRaises(exception.Conflict, self.db.flavors.create, id='100')
+        self.assertRaises(exception.Conflict, self.db.flavors.create,
+                          id=data.flavor[0]['id'])
 
     def test_update_flavor(self):
-        flavor = self.db.flavors.update(id='100', name='new name',
-                                        disk='new disk', foo='bar')
-        result = deepcopy(FLAVOR_LIST[0])
-        result['name'] = 'new name'
-        result['disk'] = 'new disk'
-        self.assertEqual(flavor, result)
+        resp = self.db.flavors.update(id=data.flavor[0]['id'],
+                                      name='new name',
+                                      disk='new disk',
+                                      foo='bar')
+        self.assertEqual(resp, show_flavor_resp(data.flavor[0],
+                                                name='new name',
+                                                disk='new disk'))
 
     # -------------------------------------------------------------------------
     # Server
 
     def test_create_server(self):
-        server = self.db.servers.create(**SERVER)
-        self.assertEqual(server, SERVER_DETAIL)
-        self.assertEqual(self.db.servers.show(name='My name'), SERVER_DETAIL)
-        self.assertEqual(self.db.servers.show(ip='My ip'), SERVER_DETAIL)
+        resp = self.db.servers.create(**data.server[0])
+        self.assertEqual(resp, create_server_resp(data.server[0]))
+
+        resp = self.db.servers.show(name=data.server[0]['name'])
+        self.assertEqual(resp, show_server_resp(data.server[0]))
+
+        resp = self.db.servers.show(ip=data.server[0]['ip'])
+        self.assertEqual(resp, show_server_resp(data.server[0]))
 
     # -------------------------------------------------------------------------
     # Keypair
 
     def test_create_keypair(self):
-        keypair = self.db.keypairs.create(**KEYPAIR)
-        self.assertEqual(keypair, KEYPAIR_DETAIL)
+        resp = self.db.keypairs.create(**data.keypair[0])
+        self.assertEqual(resp, create_keypair_resp(data.keypair[0]))
 
     # -------------------------------------------------------------------------
     # Image
 
     def test_create_image(self):
-        image = self.db.images.create(**IMAGE)
-        self.assertEqual(image, IMAGE_DETAIL)
+        resp = self.db.images.create(**data.image[0])
+        self.assertEqual(resp, create_image_resp(data.image[0]))
 
     def test_delete_protected_image(self):
-        protected = deepcopy(IMAGE)
+        protected = deepcopy(data.image[0])
         protected['protected'] = 'True'
-        image = self.db.images.create(**protected)
+        self.db.images.create(**protected)
         self.assertRaises(exception.Forbidden, self.db.images.delete,
-                          id=image['id'])
+                          id=protected['id'])
 
     # -------------------------------------------------------------------------
     # Code coverage

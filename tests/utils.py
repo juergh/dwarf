@@ -15,17 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 import shutil
+import StringIO
 import unittest
+import uuid
+
+from copy import deepcopy
+
+from tests import data
 
 from dwarf import db
 from dwarf import utils
 
-json_render = utils.json_render
+from dwarf.compute import keypairs
+from dwarf.image import images
 
-now = '2017-01-01 00:00:00'
-uuid = '11111111-2222-3333-4444-555555555555'
+json_render = utils.json_render
 
 
 class TestCase(unittest.TestCase):
@@ -33,9 +40,38 @@ class TestCase(unittest.TestCase):
         super(TestCase, self).__init__(*args, **kwargs)
         self.maxDiff = None
         self.db = None
+        self.uuid_idx = 0
+
+    def now(self):
+        return data.now
+
+    def uuid(self):
+        resp = data.uuid[self.uuid_idx]
+        self.uuid_idx += 1
+        return resp
+
+    def create_image(self, image):
+        self.uuid_idx = int(image['int_id']) - 1
+
+        cp_image = deepcopy(image)
+        images.Controller().create(StringIO.StringIO(cp_image['data']),
+                                   cp_image)
+
+    def create_keypair(self, keypair):
+        self.uuid_idx = int(keypair['int_id']) - 1
+
+        cp_keypair = deepcopy(keypair)
+        keypairs.Controller().create(cp_keypair)
 
     def setUp(self):
         super(TestCase, self).setUp()
+
+        # Reset the UUID array index
+        self.uuid_idx = 0
+
+        # Default mocks
+        db._now = self.now   # pylint: disable=W0212
+        uuid.uuid4 = self.uuid
 
         # Create the temp directory tree
         if os.path.exists('/tmp/dwarf'):

@@ -15,17 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
-import uuid
-
-from mock import MagicMock
 
 from tests import libvirt_mock
-from tests import utils
 
 from dwarf import config
-from dwarf import db
-
 
 # Set the test environment
 CONF = config.Config()
@@ -39,6 +34,8 @@ CONF.set_option('dwarf_log', '/tmp/dwarf/dwarf.log')
 # This means that all libvirt calls will be handled by our libvirt_mock module
 sys.modules['libvirt'] = libvirt_mock
 
-# Default mocks
-db._now = MagicMock(return_value=utils.now)   # pylint: disable=W0212
-uuid.uuid4 = MagicMock(return_value=utils.uuid)
+# Set the the PATH env variable
+# This is required for distros whose PATH doesn't contain <foo>/sbin for
+# regular users
+os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:' \
+                     '/sbin:/bin'

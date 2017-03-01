@@ -16,8 +16,8 @@
 # limitations under the License.
 
 import json
+import urllib
 
-from tests import utils
 from webtest import TestApp
 
 from cryptography.hazmat.primitives import serialization as \
@@ -27,58 +27,64 @@ from cryptography.hazmat.backends import default_backend as \
 from cryptography.hazmat.primitives.asymmetric import padding as crypto_padding
 from cryptography.hazmat.primitives import hashes as crypto_hashes
 
+from tests import data
+from tests import utils
+
 from dwarf.compute.api import ComputeApiServer
 
-ADD_NEW_KEYPAIR_REQ = {
-    'keypair': {
-        'name': 'Test key',
-    }
-}
+KEYPAIR_REQ = """{
+% if _public_key:
+    "public_key": "{{public_key}}",
+% end
+    "name": "{{name}}"
+}"""
 
-ADD_NEW_KEYPAIR_RESP_KEYS = ('public_key', 'private_key', 'name',
-                             'fingerprint')
 
-ADD_KEYPAIR_REQ = {
-    'keypair': {
-        'name': 'Test key',
-        'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
-                      'wR306c+ryaWUBR2cZuT1zlmPXnfHdkQgyRVvCke/y1eKhOT3MHjXv'
-                      'jPja1OjRH17CMl2MqUKxDY3R5EJysjxvOIO1Vu2kEuDnfSTigNiVL'
-                      'vii/ClShsEnayrQRbWbOEzqetbw==',
-    }
-}
+def import_keypair_req(keypair):
+    return {'keypair': utils.json_render(KEYPAIR_REQ, keypair,
+                                         _public_key=True)}
 
-ADD_KEYPAIR_RESP = {
-    'keypair': {
-        'name': 'Test key',
-        'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
-                      'wR306c+ryaWUBR2cZuT1zlmPXnfHdkQgyRVvCke/y1eKhOT3MHjXv'
-                      'jPja1OjRH17CMl2MqUKxDY3R5EJysjxvOIO1Vu2kEuDnfSTigNiVL'
-                      'vii/ClShsEnayrQRbWbOEzqetbw==',
-        'fingerprint': '9c:6e:3c:02:6c:98:2b:5d:60:f9:a8:ef:b0:0f:cb:76',
-    }
-}
 
-LIST_KEYPAIRS_RESP = {
-    'keypairs': [ADD_KEYPAIR_RESP['keypair']],
-}
+def create_keypair_req(keypair):
+    return {'keypair': utils.json_render(KEYPAIR_REQ, keypair,
+                                         _public_key=False)}
 
-SHOW_KEYPAIR_RESP = {
-    'keypair': {
-        'name': 'Test key',
-        'public_key': 'ssh-rsa AAAAgQC1pp5AoiINohGhl3aw1VqnFp9tfXFh17VZTVjXC'
-                      'wR306c+ryaWUBR2cZuT1zlmPXnfHdkQgyRVvCke/y1eKhOT3MHjXv'
-                      'jPja1OjRH17CMl2MqUKxDY3R5EJysjxvOIO1Vu2kEuDnfSTigNiVL'
-                      'vii/ClShsEnayrQRbWbOEzqetbw==',
-        'fingerprint': '9c:6e:3c:02:6c:98:2b:5d:60:f9:a8:ef:b0:0f:cb:76',
 
-        'deleted': 'False',
-        'created_at': utils.now,
-        'updated_at': utils.now,
-        'deleted_at': '',
-        'id': utils.uuid,
-    }
-}
+KEYPAIR_RESP = """{
+% if _details:
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "id": "{{id}}",
+    "name": "{{name}}",
+    "updated_at": "{{updated_at}}",
+% end
+% if defined('private_key'):
+    "private_key": "{{private_key}}",
+% end
+    "fingerprint": "{{fingerprint}}",
+    "name": "{{name}}",
+    "public_key": "{{public_key}}"
+}"""
+
+
+def list_keypairs_resp(keypairs):
+    return {'keypairs': [utils.json_render(KEYPAIR_RESP, k, _details=False)
+                         for k in keypairs]}
+
+
+def show_keypair_resp(keypair):
+    return {'keypair': utils.json_render(KEYPAIR_RESP, keypair, _details=True)}
+
+
+def import_keypair_resp(keypair):
+    return {'keypair': utils.json_render(KEYPAIR_RESP, keypair,
+                                         _details=False)}
+
+
+def create_keypair_resp(keypair, **kwargs):
+    return {'keypair': utils.json_render(KEYPAIR_RESP, keypair,
+                                         _details=False, **kwargs)}
 
 
 class ApiTestCase(utils.TestCase):
@@ -90,30 +96,66 @@ class ApiTestCase(utils.TestCase):
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
 
-    def test_add_new_keypair(self):
+    def test_list_keypairs(self):
+        # Preload test keypairs
+        self.create_keypair(data.keypair[0])
+        self.create_keypair(data.keypair[1])
+
+        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
+        self.assertEqual(json.loads(resp.body),
+                         list_keypairs_resp(data.keypair[0:2]))
+
+    def test_show_keypair(self):
+        # Preload a test keypair
+        self.create_keypair(data.keypair[0])
+
+        resp = self.app.get('/v1.1/1234/os-keypairs/%s' %
+                            urllib.quote(data.keypair[0]['name']), status=200)
+        self.assertEqual(json.loads(resp.body),
+                         show_keypair_resp(data.keypair[0]))
+
+    def test_import_keypair(self):
         resp = self.app.post('/v1.1/1234/os-keypairs',
-                             json.dumps(ADD_NEW_KEYPAIR_REQ), status=200)
+                             json.dumps(import_keypair_req(data.keypair[0])),
+                             status=200)
+        self.assertEqual(json.loads(resp.body),
+                         import_keypair_resp(data.keypair[0]))
+
+    def test_delete_keypair(self):
+        # Preload a test keypair
+        self.create_keypair(data.keypair[0])
+
+        # Delete the keypair
+        resp = self.app.delete('/v1.1/1234/os-keypairs/%s' %
+                               urllib.quote(data.keypair[0]['name']),
+                               status=200)
+        self.assertEqual(resp.body, '')
+
+        # Check the resulting keypair list
+        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
+        self.assertEqual(json.loads(resp.body), list_keypairs_resp([]))
+
+    def test_create_keypair(self):
+        resp = self.app.post('/v1.1/1234/os-keypairs',
+                             json.dumps(create_keypair_req(data.keypair[0])),
+                             status=200)
         jresp = json.loads(resp.body)
 
-        self.assertEqual(jresp['keypair']['name'],
-                         ADD_NEW_KEYPAIR_REQ['keypair']['name'])
-        for key in ADD_NEW_KEYPAIR_RESP_KEYS:
-            self.assertEqual(key in jresp['keypair'], True)
-        for key in jresp['keypair']:
-            self.assertEqual(key in ADD_NEW_KEYPAIR_RESP_KEYS, True)
+        fingerprint = jresp['keypair']['fingerprint']
+        public_key = str(jresp['keypair']['public_key'])
+        private_key = str(jresp['keypair']['private_key'])
 
-        # Verify the returned keypair
-        private_key = crypto_serialization.load_pem_private_key(
-            str(jresp['keypair']['private_key']),
-            password=None,
-            backend=crypto_default_backend()
-        )
-        public_key = crypto_serialization.load_ssh_public_key(
-            str(jresp['keypair']['public_key']),
-            backend=crypto_default_backend()
-        )
+        self.assertEqual(jresp, create_keypair_resp(data.keypair[0],
+                                                    fingerprint=fingerprint,
+                                                    public_key=public_key,
+                                                    private_key=private_key))
+
+        # Encrypt a test message using the returned public key
         message = b'!!! test message'
-        ciphertext = public_key.encrypt(
+        encrypted = crypto_serialization.load_ssh_public_key(
+            public_key,
+            backend=crypto_default_backend()
+        ).encrypt(
             message,
             crypto_padding.OAEP(
                 mgf=crypto_padding.MGF1(algorithm=crypto_hashes.SHA1()),
@@ -121,41 +163,20 @@ class ApiTestCase(utils.TestCase):
                 label=None
             )
         )
-        plaintext = private_key.decrypt(
-            ciphertext,
+
+        # Decrypt the (encrypted) test message using the returned private key
+        decrypted = crypto_serialization.load_pem_private_key(
+            private_key,
+            password=None,
+            backend=crypto_default_backend()
+        ).decrypt(
+            encrypted,
             crypto_padding.OAEP(
                 mgf=crypto_padding.MGF1(algorithm=crypto_hashes.SHA1()),
                 algorithm=crypto_hashes.SHA1(),
                 label=None
             )
         )
-        self.assertEqual(message, plaintext)
 
-    def test_add_keypair(self):
-        resp = self.app.post('/v1.1/1234/os-keypairs',
-                             json.dumps(ADD_KEYPAIR_REQ), status=200)
-
-        self.assertEqual(json.loads(resp.body), ADD_KEYPAIR_RESP)
-
-    def test_list_keypairs(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
-                      status=200)
-        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
-
-        self.assertEqual(json.loads(resp.body), LIST_KEYPAIRS_RESP)
-
-    def test_show_keypair(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
-                      status=200)
-        resp = self.app.get('/v1.1/1234/os-keypairs/Test%20key', status=200)
-
-        self.assertEqual(json.loads(resp.body), SHOW_KEYPAIR_RESP)
-
-    def test_delete_keypair(self):
-        self.app.post('/v1.1/1234/os-keypairs', json.dumps(ADD_KEYPAIR_REQ),
-                      status=200)
-        resp = self.app.delete('/v1.1/1234/os-keypairs/Test%20key', status=200)
-
-        self.assertEqual(resp.body, '')
-        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
-        self.assertEqual(json.loads(resp.body), {'keypairs': []})
+        # Verify the decrypted message
+        self.assertEqual(decrypted, message)
