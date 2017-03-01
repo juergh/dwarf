@@ -16,74 +16,142 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dwarf import config
+from dwarf import utils
+
 from dwarf.utils import template
+
+CONF = config.Config()
 
 DETAILS = ('created_at', 'deleted', 'deleted_at', 'updated_at')
 
 
 # -----------------------------------------------------------------------------
-# Flavors API responses
+# Versions
 
-FLAVOR = ('id', 'name')
-FLAVOR_INFO = FLAVOR + ('disk', 'ram', 'vcpus')
-FLAVOR_LINKS = {"links": [{"href": "", "rel": "self"}]}
-
-
-def flavors_create(data):
-    return {"flavor": template(FLAVOR_INFO, data, add=FLAVOR_LINKS)}
-
-
-def flavors_list(data, details=True):
-    if details:
-        return {"flavors": template(FLAVOR_INFO, data, add=FLAVOR_LINKS)}
-    else:
-        return {"flavors": template(FLAVOR, data, add=FLAVOR_LINKS)}
+VERSION_v1d1 = """{
+    "id": "v1.1",
+    "links": [
+        {
+            "href": "http://{{bind_host}}:{{compute_api_port}}/v1.1/",
+            "rel": "self"
+        }
+    ],
+    "status": "CURRENT",
+    "updated": "2016-05-11T00:00:00Z"
+}"""
 
 
-def flavors_show(data):
-    return {"flavor": template(FLAVOR_INFO, data, add=FLAVOR_LINKS)}
+def show_version_v1d1():
+    return {'version': utils.json_render(VERSION_v1d1, CONF.get_options())}
 
 
-# -----------------------------------------------------------------------------
-# Images API responses
-
-IMAGE = ('id', 'name')
-IMAGE_INFO = DETAILS + IMAGE + ('is_public', 'size', 'status', 'location')
-IMAGE_LINKS = {"links": [{"href": "", "rel": "self"}]}
-
-
-def images_list(data, details=True):
-    if details:
-        return {"images": template(IMAGE_INFO, data, add=IMAGE_LINKS)}
-    else:
-        return {"images": template(IMAGE, data, add=IMAGE_LINKS)}
-
-
-def images_show(data):
-    return {"image": template(IMAGE_INFO, data, add=IMAGE_LINKS)}
+def list_versions():
+    return {'versions': [show_version_v1d1()['version']]}
 
 
 # -----------------------------------------------------------------------------
-# Keypairs API responses
+# Flavors
 
-KEYPAIR = ('fingerprint', 'name', 'public_key')
-KEYPAIR_INFO = DETAILS + KEYPAIR + ('id', )
+FLAVOR = """{
+% if _details:
+    "disk": "{{disk}}",
+    "ram": "{{ram}}",
+    "vcpus": "{{vcpus}}",
+% end
+    "id": "{{id}}",
+    "links": [
+        {
+            "href": "",
+            "rel": "self"
+        }
+    ],
+    "name": "{{name}}"
+}"""
 
 
-def keypairs_add(data):
-    return {"keypair": template(KEYPAIR, data, add_if_present='private_key')}
+def create_flavor(data):
+    return {'flavor': utils.json_render(FLAVOR, data, _details=True)}
 
 
-def keypairs_list(data):
-    return {"keypairs": template(KEYPAIR, data)}
+def list_flavors(data, details=True):
+    return {'flavors': [utils.json_render(FLAVOR, d, _details=details)
+                        for d in data]}
 
 
-def keypairs_show(data):
-    return {"keypair": template(KEYPAIR_INFO, data)}
+def show_flavor(data):
+    return {'flavor': utils.json_render(FLAVOR, data, _details=True)}
 
 
 # -----------------------------------------------------------------------------
-# Servers API responses
+# Images
+
+_IMAGE = """{
+    "id": "{{id}}",
+    "links": [
+        {
+            "href": "",
+            "rel": "self"
+        }
+    ],
+% if _details:
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "updated_at": "{{updated_at}}",
+    "is_public": "{{is_public}}",
+    "location": "{{location}}",
+    "size": "{{size}}",
+    "status": "{{status}}",
+% end
+    "name": "{{name}}"
+}"""
+
+
+def list_images(data, details=True):
+    return {'images': [utils.json_render(_IMAGE, d, _details=details)
+                       for d in data]}
+
+
+def show_image(data):
+    return {'image': utils.json_render(_IMAGE, data, _details=True)}
+
+
+# -----------------------------------------------------------------------------
+# Keypairs
+
+KEYPAIR = """{
+    "fingerprint": "{{fingerprint}}",
+    "name": "{{name}}",
+% if _details:
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "updated_at": "{{updated_at}}",
+    "id": "{{id}}",
+% end
+% if defined('private_key'):
+    "private_key": "{{private_key}}",
+% end
+    "public_key": "{{public_key}}"
+}"""
+
+
+def create_keypair(data):
+    return {'keypair': utils.json_render(KEYPAIR, data, _details=False)}
+
+
+def list_keypairs(data):
+    return {'keypairs': [utils.json_render(KEYPAIR, d, _details=False)
+                         for d in data]}
+
+
+def show_keypair(data):
+    return {'keypair': utils.json_render(KEYPAIR, data, _details=True)}
+
+
+# -----------------------------------------------------------------------------
+# Servers
 
 SERVER = ('id', 'name')
 SERVER_INFO = DETAILS + ('addresses', 'config_drive', 'flavor', 'id', 'image',
@@ -91,7 +159,7 @@ SERVER_INFO = DETAILS + ('addresses', 'config_drive', 'flavor', 'id', 'image',
 SERVER_LINKS = {"links": [{"href": "", "rel": "self"}]}
 
 
-def servers_boot(data):
+def servers_create(data):
     return {"server": template(SERVER_INFO, data)}
 
 

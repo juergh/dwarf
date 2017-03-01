@@ -242,11 +242,11 @@ class Controller(object):
     # -------------------------------------------------------------------------
     # Server operations (public)
 
-    def boot_server(self, server):
+    def create_server(self, server):
         """
-        Boot a server
+        Create a server
         """
-        LOG.info('boot_server(server=%s)', server)
+        LOG.info('create_server(server=%s)', server)
 
         self._connect()
         xml = _create_domain_xml(server)

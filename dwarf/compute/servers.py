@@ -123,7 +123,7 @@ def _create_config_drive(server, keypair):
     """
     Create the config drive for the server
     """
-    if not CONF.force_config_drive and not server['config_drive']:
+    if not CONF.force_config_drive and server['config_drive'] == 'False':
         return
 
     # Config drive data
@@ -238,11 +238,27 @@ class Controller(object):
         """
         LOG.info('teardown()')
 
-    def boot(self, server):
+    def console_log(self, server_id):
         """
-        Boot a new server
+        Return the server console log
         """
-        LOG.info('boot(server=%s)', server)
+        LOG.info('console_log(server_id=%s)', server_id)
+
+        console_log = os.path.join(CONF.instances_dir, server_id,
+                                   'console.log')
+
+        # Make the console log readable
+        utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
+
+        with open(console_log) as fh:
+            data = fh.read()
+        return unicode(data, errors='ignore')
+
+    def create(self, server):
+        """
+        Create a new server
+        """
+        LOG.info('create(server=%s)', server)
 
         name = server['name']
         image_id = server['imageRef']
@@ -280,29 +296,13 @@ class Controller(object):
         _create_disks(server)
         _create_config_drive(server, keypair)
 
-        # Finally boot the server
-        self.virt.boot_server(server)
+        # Finally create the server
+        self.virt.create_server(server)
 
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60 / 2, self._update_ip, server)
 
         return self._extend(self._update_status(server))
-
-    def console_log(self, server_id):
-        """
-        Return the server console log
-        """
-        LOG.info('console_log(server_id=%s)', server_id)
-
-        console_log = os.path.join(CONF.instances_dir, server_id,
-                                   'console.log')
-
-        # Make the console log readable
-        utils.execute(['chown', os.getuid(), console_log], run_as_root=True)
-
-        with open(console_log) as fh:
-            data = fh.read()
-        return unicode(data, errors='ignore')
 
     def delete(self, server_id):
         """

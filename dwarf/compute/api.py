@@ -43,22 +43,6 @@ SERVERS = servers.Controller()
 # -----------------------------------------------------------------------------
 # Bottle Versions API routes
 
-API_VERSIONS = [
-    {
-        "id": "v1.1",
-        "links": [
-            {
-                "href": "http://%s:%s/v1.1/" % (CONF.bind_host,
-                                                CONF.compute_api_port),
-                "rel": "self"
-            }
-        ],
-        "status": "CURRENT",
-        "updated": "2016-05-11T00:00:00Z",
-    },
-]
-
-
 @exception.catchall
 def _route_versions():
     """
@@ -68,7 +52,7 @@ def _route_versions():
     utils.show_request(bottle.request)
 
     bottle.response.status = 300
-    return {"versions": API_VERSIONS}
+    return api_response.list_versions()
 
 
 @exception.catchall
@@ -79,7 +63,7 @@ def _route_version():
     """
     utils.show_request(bottle.request)
 
-    return {"version": API_VERSIONS[0]}
+    return api_response.show_version_v1d1()
 
 
 # -----------------------------------------------------------------------------
@@ -100,10 +84,10 @@ def _route_flavors_id(dummy_tenant_id, flavor_id):
 
     # nova flavor-list
     if flavor_id == 'detail':
-        return api_response.flavors_list(FLAVORS.list())
+        return api_response.list_flavors(FLAVORS.list(), details=True)
 
     # nova flavor-show <flavor_id>
-    return api_response.flavors_show(FLAVORS.show(flavor_id))
+    return api_response.show_flavor(FLAVORS.show(flavor_id))
 
 
 @exception.catchall
@@ -117,10 +101,10 @@ def _route_flavors(dummy_tenant_id):
     # nova flavor-create
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return api_response.flavors_create(FLAVORS.create(body['flavor']))
+        return api_response.create_flavor(FLAVORS.create(body['flavor']))
 
     # nova flavor-list (no details)
-    return api_response.flavors_list(FLAVORS.list(), details=False)
+    return api_response.list_flavors(FLAVORS.list(), details=False)
 
 
 # -----------------------------------------------------------------------------
@@ -136,10 +120,10 @@ def _route_images_id(dummy_tenant_id, image_id):
 
     # nova image-list
     if image_id == 'detail':
-        return api_response.images_list(IMAGES.list())
+        return api_response.list_images(IMAGES.list(), details=True)
 
     # nova image-show <image_id>
-    return api_response.images_show(IMAGES.show(image_id))
+    return api_response.show_image(IMAGES.show(image_id))
 
 
 @exception.catchall
@@ -150,7 +134,7 @@ def _route_images(dummy_tenant_id):
     """
     utils.show_request(bottle.request)
 
-    return api_response.images_list(IMAGES.list(), details=False)
+    return api_response.list_images(IMAGES.list(), details=False)
 
 
 # -----------------------------------------------------------------------------
@@ -167,10 +151,10 @@ def _route_os_keypairs(dummy_tenant_id):
     # nova keypair-add
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return api_response.keypairs_add(KEYPAIRS.add(body['keypair']))
+        return api_response.create_keypair(KEYPAIRS.create(body['keypair']))
 
     # nova keypair-list
-    return api_response.keypairs_list(KEYPAIRS.list())
+    return api_response.list_keypairs(KEYPAIRS.list())
 
 
 @exception.catchall
@@ -187,7 +171,7 @@ def _route_os_keypairs_name(dummy_tenant_id, keypair_name):
         return
 
     # nova keypair-show
-    return api_response.keypairs_show(KEYPAIRS.show(keypair_name))
+    return api_response.show_keypair(KEYPAIRS.show(keypair_name))
 
 
 # -----------------------------------------------------------------------------
@@ -225,7 +209,7 @@ def _route_servers(dummy_tenant_id):
     # nova boot
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return api_response.servers_boot(SERVERS.boot(body['server']))
+        return api_response.servers_create(SERVERS.create(body['server']))
 
     # nova list (no details)
     return api_response.servers_list(SERVERS.list(), details=False)

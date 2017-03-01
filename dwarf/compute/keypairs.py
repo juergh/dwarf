@@ -41,11 +41,11 @@ class Controller(object):
     def __init__(self):
         self.db = db.Controller()
 
-    def add(self, keypair):
+    def create(self, keypair):
         """
-        Add a keypair
+        create (or import) a keypair
         """
-        LOG.info('add(keypair=%s)', keypair)
+        LOG.info('create(keypair=%s)', keypair)
 
         # Generate a new keypair if the request doesn't contain a public key
         if 'public_key' in keypair:
