@@ -54,7 +54,7 @@ def list_versions():
 # -----------------------------------------------------------------------------
 # Authentication
 
-TOKENS = """{
+TOKEN = """{
     "token": {
         "id": "0011223344556677",
         "expires": "2100-01-01T00:00:00-00:00",
@@ -107,4 +107,4 @@ TOKENS = """{
 
 
 def authenticate():
-    return {'access': utils.json_render(TOKENS, CONF.get_options())}
+    return {'access': utils.json_render(TOKEN, CONF.get_options())}
