@@ -31,11 +31,11 @@ if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
 from dwarf import config
 from dwarf import log
 
-from dwarf.compute import ec2metadata
+from dwarf.compute.ec2metadata import Ec2MetadataServer
 
-from dwarf.compute import api as compute_api
-from dwarf.identity import api as identity_api
-from dwarf.image import api as image_api
+from dwarf.compute.api import ComputeApiServer
+from dwarf.identity.api import IdentityApiServer
+from dwarf.image.api import ImageApiServer
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -72,10 +72,10 @@ def main():
 
     # Create the API (and Ec2 metadata) server threads
     THREADS.extend([
-        identity_api.IdentityApiServer(),
-        compute_api.ComputeApiServer(),
-        image_api.ImageApiServer(),
-        ec2metadata.Ec2MetadataServer(),
+        IdentityApiServer(),
+        ComputeApiServer(),
+        ImageApiServer(),
+        Ec2MetadataServer(),
     ])
 
     # Start all threads

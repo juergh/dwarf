@@ -22,6 +22,7 @@ import socket
 import threading
 
 from time import sleep
+from urllib import urlopen
 
 from wsgiref.simple_server import make_server
 from wsgiref.simple_server import WSGIRequestHandler
@@ -86,22 +87,22 @@ class ApiServer(threading.Thread):
         """
         Start the server
         """
-        self.setup()
-
-        LOG.info('Starting %s API server', self.sname)
-
-        # Check if we can bind to the address. We need to retry for a bit until
-        # the dwarf network comes up.
-        sock = socket.socket(socket.AF_INET)
-        for dummy in range(0, 15):
-            try:
-                sock.bind((self.host, self.port))
-                sock.close()
-                break
-            except Exception:   # pylint: disable=W0703
-                sleep(1)
-
         try:
+            self.setup()
+
+            LOG.info('Starting %s API server', self.sname)
+
+            # Check if we can bind to the address. We need to retry for a bit
+            # until the dwarf network comes up.
+            sock = socket.socket(socket.AF_INET)
+            for dummy in range(0, 15):
+                try:
+                    sock.bind((self.host, self.port))
+                    sock.close()
+                    break
+                except Exception:   # pylint: disable=W0703
+                    sleep(1)
+
             self.server = _BaseHTTPServer(host=self.host, port=self.port)
 
             # Start the bottle server
@@ -117,9 +118,18 @@ class ApiServer(threading.Thread):
         """
         Stop the server
         """
-        try:
-            self.server.stop()
-        except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to stop %s API server', self.sname)
-
+        if self.server is not None:
+            try:
+                self.server.stop()
+            except Exception:   # pylint: disable=W0703
+                LOG.exception('Failed to stop %s API server', self.sname)
         self.teardown()
+
+    def is_active(self):
+        if not self.is_alive():
+            return False
+        try:
+            urlopen("http://%s:%d/" % (self.host, self.port)).getcode()
+            return True
+        except Exception:   # pylint: disable=W0703
+            return False
