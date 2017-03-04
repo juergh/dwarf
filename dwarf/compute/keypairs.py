@@ -29,6 +29,7 @@ from cryptography.hazmat.backends import default_backend as \
 from hashlib import md5
 
 from dwarf import db
+from dwarf import exception
 
 LOG = logging.getLogger(__name__)
 
@@ -47,11 +48,16 @@ class Controller(object):
         """
         LOG.info('create(keypair=%s)', keypair)
 
-        # Generate a new keypair if the request doesn't contain a public key
         if 'public_key' in keypair:
-            public_key = keypair['public_key']
             private_key = None
+            try:
+                public_key = ' '.join(keypair['public_key'].strip()
+                                      .split(' ')[0:2])
+            except Exception:   # pylint: disable=W0703
+                raise exception.Failure(reason='Invalid public key')
         else:
+            # Generate a new keypair if the request doesn't contain a public
+            # key
             key = crypto_rsa.generate_private_key(
                 backend=crypto_default_backend(),
                 public_exponent=65537,
