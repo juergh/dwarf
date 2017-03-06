@@ -60,7 +60,7 @@ AUTH_RESP = {
                 "type": "compute",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:20001/v2.0/1000",
+                        "publicURL": "http://127.0.0.1:20001/v2.0",
                         "region": "dwarf-region"
                     }
                 ]

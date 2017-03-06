@@ -69,16 +69,16 @@ class ApiTestCase(utils.TestCase):
         super(ApiTestCase, self).tearDown()
 
     def test_list_images(self):
-        resp = self.app.get('/v2.0/1234/images', status=200)
+        resp = self.app.get('/v2.0/images', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_images_resp(data.image[0:2], details=False))
 
     def test_list_images_detail(self):
-        resp = self.app.get('/v2.0/1234/images/detail', status=200)
+        resp = self.app.get('/v2.0/images/detail', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_images_resp(data.image[0:2], details=True))
 
     def test_show_image(self):
-        resp = self.app.get('/v2.0/1234/images/%s' % data.image[0]['id'],
+        resp = self.app.get('/v2.0/images/%s' % data.image[0]['id'],
                             status=200)
         self.assertEqual(json.loads(resp.body), show_image_resp(data.image[0]))
