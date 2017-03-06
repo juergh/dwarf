@@ -180,10 +180,11 @@ def _route_images():
 # API server class
 
 class ImageApiServer(api_server.ApiServer):
-    def __init__(self):
+    def __init__(self, quiet=False):
         super(ImageApiServer, self).__init__('Image',
                                              CONF.bind_host,
-                                             CONF.image_api_port)
+                                             CONF.image_api_port,
+                                             quiet=quiet)
 
         self.app.route(('/', '/versions'),
                        method='GET',

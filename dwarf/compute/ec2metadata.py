@@ -151,10 +151,11 @@ def _route_ec2(url):
 
 
 class Ec2MetadataServer(api_server.ApiServer):
-    def __init__(self):
+    def __init__(self, quiet=False):
         super(Ec2MetadataServer, self).__init__('Ec2 metadata',
                                                 CONF.libvirt_bridge_ip,
-                                                CONF.ec2_metadata_port)
+                                                CONF.ec2_metadata_port,
+                                                quiet=quiet)
 
         self.app.route('<url:re:[a-z0-9-/.]*>',
                        method='GET',

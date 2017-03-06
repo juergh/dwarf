@@ -253,10 +253,11 @@ def _route_servers_id_action(dummy_tenant_id, server_id):
 
 class ComputeApiServer(api_server.ApiServer):
 
-    def __init__(self):
+    def __init__(self, quiet=False):
         super(ComputeApiServer, self).__init__('Compute',
                                                CONF.bind_host,
-                                               CONF.compute_api_port)
+                                               CONF.compute_api_port,
+                                               quiet=quiet)
 
         self.app.route('/',
                        method='GET',

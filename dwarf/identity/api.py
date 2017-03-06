@@ -72,10 +72,11 @@ def _route_tokens():
 # API server class
 
 class IdentityApiServer(api_server.ApiServer):
-    def __init__(self):
+    def __init__(self, quiet=False):
         super(IdentityApiServer, self).__init__('Identity',
                                                 CONF.bind_host,
-                                                CONF.identity_api_port)
+                                                CONF.identity_api_port,
+                                                quiet=quiet)
 
         self.app.route('/',
                        method='GET',
