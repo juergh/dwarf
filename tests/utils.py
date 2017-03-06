@@ -49,8 +49,8 @@ class TestCase(unittest.TestCase):
         super(TestCase, self).__init__(*args, **kwargs)
         self.maxDiff = None
         self.db = None
-        self.uuid_idx = 0
         self.threads = []
+        self.uuid = data.uuid
 
     def setUp(self):
         """
@@ -58,12 +58,12 @@ class TestCase(unittest.TestCase):
         """
         super(TestCase, self).setUp()
 
-        # Reset the UUID array index
-        self.uuid_idx = 0
+        # Reset the UUID
+        self.uuid = data.uuid
 
         # Default mocks
-        db._now = self.now   # pylint: disable=W0212
-        uuid.uuid4 = self.uuid
+        db._now = self.get_now   # pylint: disable=W0212
+        uuid.uuid4 = self.get_uuid
 
         # Create the temp directory tree
         if os.path.exists('/tmp/dwarf'):
@@ -91,12 +91,18 @@ class TestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     # Mock methods
 
-    def now(self):
+    def get_now(self):
         return data.now
 
-    def uuid(self):
-        resp = data.uuid[self.uuid_idx]
-        self.uuid_idx += 1
+    def get_uuid(self):
+        resp = self.uuid
+
+        # Calcuate the next UUID
+        i = int(self.uuid[0:1])
+        self.uuid = '%d' % (i + 1) * 8 + '-' + '%d' % (i + 2) * 4 + '-' + \
+                    '%d' % (i + 3) * 4 + '-' + '%d' % (i + 4) * 4 + '-' + \
+                    '%d' % (i + 5) * 12
+
         return resp
 
     # -------------------------------------------------------------------------
@@ -106,7 +112,7 @@ class TestCase(unittest.TestCase):
         """
         Create an image in the database
         """
-        self.uuid_idx = int(image['int_id']) - 1
+        self.uuid = image['id']
         cp_image = deepcopy(image)
         images.Controller().create(StringIO.StringIO(cp_image['data']),
                                    cp_image)
@@ -115,7 +121,7 @@ class TestCase(unittest.TestCase):
         """
         Create an SSH keypair in the database
         """
-        self.uuid_idx = int(keypair['int_id']) - 1
+        self.uuid = keypair['id']
         cp_keypair = deepcopy(keypair)
         keypairs.Controller().create(cp_keypair)
 

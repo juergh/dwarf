@@ -15,16 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.    'properties': {},
 
-now = '2000-01-02 03:04:05'
+now = '2001-02-03 04:05:06'
+uuid = '11111111-2222-3333-4444-555555555555'
 
-uuid = [
-    '00000000-1111-2222-3333-444444444444',
-    '11111111-2222-3333-4444-555555555555',
-    '22222222-3333-4444-5555-666666666666',
-]
-
-image = [
-    {
+image = {
+    '11111111-2222-3333-4444-555555555555': {
         'checksum': 'd6ac46d3ba444c0a3226339a5c04111e',   # md5sum of 'data'
         'container_format': 'bare',
         'created_at': now,
@@ -33,10 +28,11 @@ image = [
         'deleted': 'False',
         'deleted_at': '',
         'disk_format': 'raw',
-        'id': uuid[0],
+        'id': '11111111-2222-3333-4444-555555555555',
         'is_public': 'False',
         'int_id': '1',
-        'location': 'file:///tmp/dwarf/images/%s' % uuid[0],
+        'location': 'file:///tmp/dwarf/images/'
+                    '11111111-2222-3333-4444-555555555555',
         'min_disk': '',
         'min_ram': '',
         'name': 'Test image 1',
@@ -47,7 +43,7 @@ image = [
         'status': 'ACTIVE',
         'updated_at': now,
     },
-    {
+    '22222222-3333-4444-5555-666666666666': {
         'checksum': 'b23afbb294b9b9b303b1af1fb5354b8e',   # md5sum of 'data'
         'container_format': 'bare',
         'created_at': now,
@@ -56,10 +52,11 @@ image = [
         'deleted': 'False',
         'deleted_at': '',
         'disk_format': 'raw',
-        'id': uuid[1],
+        'id': '22222222-3333-4444-5555-666666666666',
         'is_public': 'False',
         'int_id': '2',
-        'location': 'file:///tmp/dwarf/images/%s' % uuid[1],
+        'location': 'file:///tmp/dwarf/images/'
+                    '22222222-3333-4444-5555-666666666666',
         'min_disk': '',
         'min_ram': '',
         'name': 'Test image 2',
@@ -70,10 +67,10 @@ image = [
         'status': 'ACTIVE',
         'updated_at': now,
     },
-]
+}
 
-flavor = [
-    {
+flavor = {
+    '100': {
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
@@ -85,7 +82,7 @@ flavor = [
         'updated_at': now,
         'vcpus': '1',
     },
-    {
+    '101': {
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
@@ -97,7 +94,7 @@ flavor = [
         'updated_at': now,
         'vcpus': '1',
     },
-    {
+    '102': {
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
@@ -109,15 +106,14 @@ flavor = [
         'updated_at': now,
         'vcpus': '1',
     },
-]
+}
 
-
-keypair = [
-    {
+keypair = {
+    '11111111-2222-3333-4444-555555555555': {
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
-        'id': uuid[0],
+        'id': '11111111-2222-3333-4444-555555555555',
         'int_id': '1',
         'fingerprint': 'ea:3a:a1:40:49:63:c3:50:96:b6:a3:d9:d8:57:78:1c',
         'name': 'Test keypair 1',
@@ -130,11 +126,11 @@ keypair = [
                       '9lIrzQ95TTUDOk2XcQ292Bm1M7YRWY8OAum5bhj+JkSLxFNnDf',
         'updated_at': now,
     },
-    {
+    '22222222-3333-4444-5555-666666666666': {
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
-        'id': uuid[1],
+        'id': '22222222-3333-4444-5555-666666666666',
         'int_id': '2',
         'fingerprint': 'f1:82:dc:af:6a:85:06:71:74:c4:25:4f:aa:88:2c:e3',
         'name': 'Test keypair 2',
@@ -147,18 +143,18 @@ keypair = [
                       'CjkNTepm8ny6+H+i/YKp4h1jAEc/bi+xPksN5tJAVuXI1b6iy7',
         'updated_at': now,
     },
-]
+}
 
 
-server = [
-    {
+server = {
+    '11111111-2222-3333-4444-555555555555': {
         'config_drive': 'False',
         'created_at': now,
         'deleted': 'False',
         'deleted_at': '',
         'flavor_id': '100',
         'id': '{{id}}',
-        'image_id': uuid[0],
+        'image_id': '11111111-2222-3333-4444-555555555555',
         'int_id': '1',
         'ip': '10.10.10.1',
         'key_name': 'Test keypair 1',
@@ -167,4 +163,4 @@ server = [
         'status': 'active',
         'updated_at': now,
     },
-]
+}

@@ -125,6 +125,10 @@ def list_versions_resp():
     return {'versions': [utils.json_render(VERSION_RESP)]}
 
 
+image1 = data.image['11111111-2222-3333-4444-555555555555']
+image2 = data.image['22222222-3333-4444-5555-666666666666']
+
+
 class ApiTestCase(utils.TestCase):
 
     def setUp(self):
@@ -147,33 +151,31 @@ class ApiTestCase(utils.TestCase):
 
     def test_list_images(self):
         # Preload test images
-        test_images = data.image[0:2]
-        for test_image in test_images:
-            self.create_image(test_image)
+        self.create_image(image1)
+        self.create_image(image2)
 
         resp = self.app.get('/v1/images/detail', status=200)
-        self.assertEqual(json.loads(resp.body), list_images_resp(test_images))
+        self.assertEqual(json.loads(resp.body),
+                         list_images_resp([image1, image2]))
 
     def test_create_image(self):
-        test_image = data.image[0]
-        headers = self.to_headers(create_image_req(test_image))
+        headers = self.to_headers(create_image_req(image1))
 
-        resp = self.app.post('/v1/images', test_image['data'], headers,
+        resp = self.app.post('/v1/images', image1['data'], headers,
                              status=200)
-        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
-        with open('/tmp/dwarf/images/%s' % test_image['id'], 'r') as fh:
-            self.assertEqual(fh.read(), test_image['data'])
+        self.assertEqual(json.loads(resp.body), create_image_resp(image1))
+        with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
+            self.assertEqual(fh.read(), image1['data'])
 
     def test_create_image_chunked(self):
-        test_image = data.image[0]
-        headers = self.to_headers(create_image_req(test_image))
+        headers = self.to_headers(create_image_req(image1))
         headers.append(('Transfer-Encoding', 'chunked'))
 
-        resp = self.app.post('/v1/images', test_image['data_chunked'], headers,
+        resp = self.app.post('/v1/images', image1['data_chunked'], headers,
                              status=200)
-        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
-        with open('/tmp/dwarf/images/%s' % test_image['id'], 'r') as fh:
-            self.assertEqual(fh.read(), test_image['data'])
+        self.assertEqual(json.loads(resp.body), create_image_resp(image1))
+        with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
+            self.assertEqual(fh.read(), image1['data'])
 
     def test_create_image_chunked_malformed(self):
         self.app.post('/v1/images', 'foo', [('Transfer-Encoding', 'chunked')],
@@ -181,50 +183,46 @@ class ApiTestCase(utils.TestCase):
 
     def test_show_image(self):
         # Preload a test image
-        test_image = data.image[0]
-        self.create_image(test_image)
+        self.create_image(image1)
 
-        resp = self.app.head('/v1/images/%s' % test_image['id'], status=200)
+        resp = self.app.head('/v1/images/%s' % image1['id'], status=200)
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),
-                         sorted(show_image_resp(test_image)))
+                         sorted(show_image_resp(image1)))
 
     def test_delete_image(self):
         # Preload a test image
-        test_image = data.image[0]
-        self.create_image(test_image)
+        self.create_image(image1)
 
-        resp = self.app.delete('/v1/images/%s' % test_image['id'], status=200)
+        resp = self.app.delete('/v1/images/%s' % image1['id'], status=200)
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),
-                         sorted(delete_image_resp(test_image)))
-        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' %
-                                        test_image['id']), False)
+                         sorted(delete_image_resp(image1)))
+        self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % image1['id']),
+                         False)
 
         resp = self.app.get('/v1/images/detail', status=200)
         self.assertEqual(json.loads(resp.body), {'images': []})
 
     def test_update_image(self):
         # Preload a test image
-        test_image = data.image[0]
-        self.create_image(test_image)
+        self.create_image(image1)
 
-        resp = self.app.put('/v1/images/%s' % test_image['id'], status=200)
-        self.assertEqual(json.loads(resp.body), create_image_resp(test_image))
+        resp = self.app.put('/v1/images/%s' % image1['id'], status=200)
+        self.assertEqual(json.loads(resp.body), create_image_resp(image1))
 
     # -------------------------------------------------------------------------
     # Additional tests for code coverage
 
     def test_delete_image_cc(self):
         # Preload a test image
-        test_image = data.image[0]
-        self.create_image(test_image)
-        os.unlink('/tmp/dwarf/images/%s' % test_image['id'])
+        self.create_image(image1)
+        os.unlink('/tmp/dwarf/images/%s' % image1['id'])
 
-        resp = self.app.delete('/v1/images/%s' % test_image['id'], status=200)
+        resp = self.app.delete('/v1/images/%s' % image1['id'], status=200)
         self.assertEqual(resp.body, '')
         self.assertEqual(sorted(resp.headers.items()),
-                         sorted(delete_image_resp(test_image)))
+                         sorted(delete_image_resp(image1)))
 
     def test_create_image_chunked_cc(self):
         self.app.post('/v1/images', '\r', [('Transfer-Encoding', 'chunked')],

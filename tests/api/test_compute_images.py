@@ -55,6 +55,10 @@ def show_image_resp(image):
     return {'image': utils.json_render(IMAGE_RESP, image, _details=True)}
 
 
+image1 = data.image['11111111-2222-3333-4444-555555555555']
+image2 = data.image['22222222-3333-4444-5555-666666666666']
+
+
 class ApiTestCase(utils.TestCase):
 
     def setUp(self):
@@ -62,8 +66,8 @@ class ApiTestCase(utils.TestCase):
         self.app = TestApp(ComputeApiServer().app)
 
         # Preload test images
-        self.create_image(data.image[0])
-        self.create_image(data.image[1])
+        self.create_image(image1)
+        self.create_image(image2)
 
     def tearDown(self):
         super(ApiTestCase, self).tearDown()
@@ -71,14 +75,14 @@ class ApiTestCase(utils.TestCase):
     def test_list_images(self):
         resp = self.app.get('/v2.0/images', status=200)
         self.assertEqual(json.loads(resp.body),
-                         list_images_resp(data.image[0:2], details=False))
+                         list_images_resp([image1, image2], details=False))
 
     def test_list_images_detail(self):
         resp = self.app.get('/v2.0/images/detail', status=200)
         self.assertEqual(json.loads(resp.body),
-                         list_images_resp(data.image[0:2], details=True))
+                         list_images_resp([image1, image2], details=True))
 
     def test_show_image(self):
-        resp = self.app.get('/v2.0/images/%s' % data.image[0]['id'],
+        resp = self.app.get('/v2.0/images/%s' % image1['id'],
                             status=200)
-        self.assertEqual(json.loads(resp.body), show_image_resp(data.image[0]))
+        self.assertEqual(json.loads(resp.body), show_image_resp(image1))

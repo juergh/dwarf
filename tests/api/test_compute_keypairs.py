@@ -87,6 +87,10 @@ def create_keypair_resp(keypair, **kwargs):
                                          _details=False, **kwargs)}
 
 
+keypair1 = data.keypair['11111111-2222-3333-4444-555555555555']
+keypair2 = data.keypair['22222222-3333-4444-5555-666666666666']
+
+
 class ApiTestCase(utils.TestCase):
 
     def setUp(self):
@@ -98,37 +102,34 @@ class ApiTestCase(utils.TestCase):
 
     def test_list_keypairs(self):
         # Preload test keypairs
-        self.create_keypair(data.keypair[0])
-        self.create_keypair(data.keypair[1])
+        self.create_keypair(keypair1)
+        self.create_keypair(keypair2)
 
         resp = self.app.get('/v2.0/os-keypairs', status=200)
-        self.assertEqual(json.loads(resp.body),
-                         list_keypairs_resp(data.keypair[0:2]))
+        self.assertEqual(json.loads(resp.body), list_keypairs_resp([keypair1,
+                                                                    keypair2]))
 
     def test_show_keypair(self):
         # Preload a test keypair
-        self.create_keypair(data.keypair[0])
+        self.create_keypair(keypair1)
 
         resp = self.app.get('/v2.0/os-keypairs/%s' %
-                            urllib.quote(data.keypair[0]['name']), status=200)
-        self.assertEqual(json.loads(resp.body),
-                         show_keypair_resp(data.keypair[0]))
+                            urllib.quote(keypair1['name']), status=200)
+        self.assertEqual(json.loads(resp.body), show_keypair_resp(keypair1))
 
     def test_import_keypair(self):
         resp = self.app.post('/v2.0/os-keypairs',
-                             json.dumps(import_keypair_req(data.keypair[0])),
+                             json.dumps(import_keypair_req(keypair1)),
                              status=200)
-        self.assertEqual(json.loads(resp.body),
-                         import_keypair_resp(data.keypair[0]))
+        self.assertEqual(json.loads(resp.body), import_keypair_resp(keypair1))
 
     def test_delete_keypair(self):
         # Preload a test keypair
-        self.create_keypair(data.keypair[0])
+        self.create_keypair(keypair1)
 
         # Delete the keypair
         resp = self.app.delete('/v2.0/os-keypairs/%s' %
-                               urllib.quote(data.keypair[0]['name']),
-                               status=200)
+                               urllib.quote(keypair1['name']), status=200)
         self.assertEqual(resp.body, '')
 
         # Check the resulting keypair list
@@ -137,7 +138,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_create_keypair(self):
         resp = self.app.post('/v2.0/os-keypairs',
-                             json.dumps(create_keypair_req(data.keypair[0])),
+                             json.dumps(create_keypair_req(keypair1)),
                              status=200)
         jresp = json.loads(resp.body)
 
@@ -145,7 +146,7 @@ class ApiTestCase(utils.TestCase):
         public_key = str(jresp['keypair']['public_key'])
         private_key = str(jresp['keypair']['private_key'])
 
-        self.assertEqual(jresp, create_keypair_resp(data.keypair[0],
+        self.assertEqual(jresp, create_keypair_resp(keypair1,
                                                     fingerprint=fingerprint,
                                                     public_key=public_key,
                                                     private_key=private_key))

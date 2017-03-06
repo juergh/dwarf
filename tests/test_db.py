@@ -114,6 +114,17 @@ def create_image_resp(image):
     return utils.json_render(IMAGE, image)
 
 
+flavor1 = data.flavor['100']
+flavor2 = data.flavor['101']
+flavor3 = data.flavor['102']
+
+server1 = data.server['11111111-2222-3333-4444-555555555555']
+
+keypair1 = data.keypair['11111111-2222-3333-4444-555555555555']
+
+image1 = data.image['11111111-2222-3333-4444-555555555555']
+
+
 class DbTestCase(utils.TestCase):
 
     def setUp(self):
@@ -127,7 +138,7 @@ class DbTestCase(utils.TestCase):
         self.assertEqual(self.db.keypairs.list(), [])
         self.assertEqual(self.db.images.list(), [])
         self.assertEqual(self.db.flavors.list(),
-                         list_flavors_resp(data.flavor))
+                         list_flavors_resp([flavor1, flavor2, flavor3]))
 
     def test_dump_db(self):
         self.db.dump()
@@ -137,21 +148,21 @@ class DbTestCase(utils.TestCase):
     # Flavor
 
     def test_show_flavor(self):
-        resp = self.db.flavors.show(id=data.flavor[0]['id'])
-        self.assertEqual(resp, show_flavor_resp(data.flavor[0]))
+        resp = self.db.flavors.show(id=flavor1['id'])
+        self.assertEqual(resp, show_flavor_resp(flavor1))
 
-        resp = self.db.flavors.show(name=data.flavor[0]['name'])
-        self.assertEqual(resp, show_flavor_resp(data.flavor[0]))
+        resp = self.db.flavors.show(name=flavor1['name'])
+        self.assertEqual(resp, show_flavor_resp(flavor1))
 
     def test_delete_flavor_by_id(self):
-        self.db.flavors.delete(id=data.flavor[0]['id'])
+        self.db.flavors.delete(id=flavor1['id'])
         resp = self.db.flavors.list()
-        self.assertEqual(resp, list_flavors_resp(data.flavor[1:]))
+        self.assertEqual(resp, list_flavors_resp([flavor2, flavor3]))
 
     def test_delete_flavor_by_name(self):
-        self.db.flavors.delete(name=data.flavor[0]['name'])
+        self.db.flavors.delete(name=flavor1['name'])
         resp = self.db.flavors.list()
-        self.assertEqual(resp, list_flavors_resp(data.flavor[1:]))
+        self.assertEqual(resp, list_flavors_resp([flavor2, flavor3]))
 
     def test_delete_flavor_not_found(self):
         self.assertRaises(exception.NotFound, self.db.flavors.delete,
@@ -159,46 +170,43 @@ class DbTestCase(utils.TestCase):
 
     def test_create_flavor_conflict(self):
         self.assertRaises(exception.Conflict, self.db.flavors.create,
-                          id=data.flavor[0]['id'])
+                          id=flavor1['id'])
 
     def test_update_flavor(self):
-        resp = self.db.flavors.update(id=data.flavor[0]['id'],
-                                      name='new name',
-                                      disk='new disk',
-                                      foo='bar')
-        self.assertEqual(resp, show_flavor_resp(data.flavor[0],
-                                                name='new name',
+        resp = self.db.flavors.update(id=flavor1['id'], name='new name',
+                                      disk='new disk', foo='bar')
+        self.assertEqual(resp, show_flavor_resp(flavor1, name='new name',
                                                 disk='new disk'))
 
     # -------------------------------------------------------------------------
     # Server
 
     def test_create_server(self):
-        resp = self.db.servers.create(**data.server[0])
-        self.assertEqual(resp, create_server_resp(data.server[0]))
+        resp = self.db.servers.create(**server1)
+        self.assertEqual(resp, create_server_resp(server1))
 
-        resp = self.db.servers.show(name=data.server[0]['name'])
-        self.assertEqual(resp, show_server_resp(data.server[0]))
+        resp = self.db.servers.show(name=server1['name'])
+        self.assertEqual(resp, show_server_resp(server1))
 
-        resp = self.db.servers.show(ip=data.server[0]['ip'])
-        self.assertEqual(resp, show_server_resp(data.server[0]))
+        resp = self.db.servers.show(ip=server1['ip'])
+        self.assertEqual(resp, show_server_resp(server1))
 
     # -------------------------------------------------------------------------
     # Keypair
 
     def test_create_keypair(self):
-        resp = self.db.keypairs.create(**data.keypair[0])
-        self.assertEqual(resp, create_keypair_resp(data.keypair[0]))
+        resp = self.db.keypairs.create(**keypair1)
+        self.assertEqual(resp, create_keypair_resp(keypair1))
 
     # -------------------------------------------------------------------------
     # Image
 
     def test_create_image(self):
-        resp = self.db.images.create(**data.image[0])
-        self.assertEqual(resp, create_image_resp(data.image[0]))
+        resp = self.db.images.create(**image1)
+        self.assertEqual(resp, create_image_resp(image1))
 
     def test_delete_protected_image(self):
-        protected = deepcopy(data.image[0])
+        protected = deepcopy(image1)
         protected['protected'] = 'True'
         self.db.images.create(**protected)
         self.assertRaises(exception.Forbidden, self.db.images.delete,
