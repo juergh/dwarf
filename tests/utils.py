@@ -29,6 +29,7 @@ from copy import deepcopy
 from tests import data
 
 from dwarf import db
+from dwarf import task
 from dwarf import utils
 
 from dwarf.compute import keypairs
@@ -79,6 +80,9 @@ class TestCase(unittest.TestCase):
         Post-test tear down
         """
         super(TestCase, self).tearDown()
+
+        # Kill all running tasks (just in case)
+        task.stop_all(wait=True)
 
         # Purge the temp directory tree
         if os.path.exists('/tmp/dwarf'):

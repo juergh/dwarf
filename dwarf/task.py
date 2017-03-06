@@ -77,3 +77,17 @@ def stop(tid):
     t = _TASKS.get(tid, None)
     if t is not None:
         t.stop()
+
+
+def stop_all(wait=False):
+    """
+    Stop all running tasks
+    """
+    LOG.info('stop_all()')
+
+    for tid in _TASKS:
+        stop(tid)
+
+    if wait:
+        while len(_TASKS) > 0:
+            time.sleep(0.5)
