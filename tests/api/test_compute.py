@@ -27,7 +27,7 @@ VERSION_RESP = {
     'id': 'v1.1',
     'links': [
         {
-            'href': 'http://127.0.0.1:8774/v1.1/',
+            'href': 'http://127.0.0.1:20001/v1.1/',
             'rel': 'self',
         },
     ],

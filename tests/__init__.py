@@ -29,6 +29,9 @@ CONF.set_option('instances_base_dir', '/tmp/dwarf/instances/_base')
 CONF.set_option('images_dir', '/tmp/dwarf/images')
 CONF.set_option('dwarf_db', '/tmp/dwarf/dwarf.db')
 CONF.set_option('dwarf_log', '/tmp/dwarf/dwarf.log')
+CONF.set_option('identity_api_port', 20000)
+CONF.set_option('compute_api_port', 20001)
+CONF.set_option('image_api_port', 20002)
 
 # Mock libvirt imports
 # This means that all libvirt calls will be handled by our libvirt_mock module
@@ -36,6 +39,12 @@ sys.modules['libvirt'] = libvirt_mock
 
 # Set the the PATH env variable
 # This is required for distros whose PATH doesn't contain <foo>/sbin for
-# regular users
-os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:' \
-                     '/sbin:/bin'
+# regular users and to also allow overrides from ./tests/bin
+os.environ['PATH'] = './tests/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:' \
+                     '/usr/bin:/sbin:/bin'
+
+# Set OS env variables
+os.environ['OS_AUTH_URL'] = 'http://localhost:20000/v2.0'
+os.environ['OS_USERNAME'] = 'dwarf-user'
+os.environ['OS_PASSWORD'] = 'dwarf-password'
+os.environ['OS_TENANT_NAME'] = 'dwarf-tenant'

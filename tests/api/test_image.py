@@ -112,7 +112,7 @@ VERSION_RESP = """{
     "id": "v1",
     "links": [
         {
-            "href": "http://127.0.0.1:9292/v1/",
+            "href": "http://127.0.0.1:20002/v1/",
             "rel": "self"
         }
     ],
@@ -156,7 +156,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_create_image(self):
         test_image = data.image[0]
-        headers = utils.to_headers(create_image_req(test_image))
+        headers = self.to_headers(create_image_req(test_image))
 
         resp = self.app.post('/v1/images', test_image['data'], headers,
                              status=200)
@@ -166,7 +166,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_create_image_chunked(self):
         test_image = data.image[0]
-        headers = utils.to_headers(create_image_req(test_image))
+        headers = self.to_headers(create_image_req(test_image))
         headers.append(('Transfer-Encoding', 'chunked'))
 
         resp = self.app.post('/v1/images', test_image['data_chunked'], headers,

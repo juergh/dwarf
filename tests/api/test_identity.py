@@ -60,7 +60,7 @@ AUTH_RESP = {
                 "type": "compute",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:8774/v1.1/1000",
+                        "publicURL": "http://127.0.0.1:20001/v1.1/1000",
                         "region": "dwarf-region"
                     }
                 ]
@@ -70,7 +70,7 @@ AUTH_RESP = {
                 "type": "image",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:9292",
+                        "publicURL": "http://127.0.0.1:20002",
                         "region": "dwarf-region"
                     }
                 ]
@@ -80,7 +80,7 @@ AUTH_RESP = {
                 "type": "identity",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:35357/v2.0",
+                        "publicURL": "http://127.0.0.1:20000/v2.0",
                         "region": "dwarf-region"
                     }
                 ]
@@ -98,7 +98,7 @@ VERSION_RESP = {
     "id": "v2.0",
     "links": [
         {
-            "href": "http://127.0.0.1:35357/v2.0/",
+            "href": "http://127.0.0.1:20000/v2.0/",
             "rel": "self"
         }
     ],
