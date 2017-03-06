@@ -79,51 +79,51 @@ class ApiTestCase(utils.TestCase):
         super(ApiTestCase, self).tearDown()
 
     def test_list_flavors(self):
-        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        resp = self.app.get('/v2.0/1234/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp(data.flavor, details=False))
 
     def test_list_flavors_detail(self):
-        resp = self.app.get('/v1.1/1234/flavors/detail', status=200)
+        resp = self.app.get('/v2.0/1234/flavors/detail', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp(data.flavor, details=True))
 
     def test_show_flavor(self):
-        resp = self.app.get('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+        resp = self.app.get('/v2.0/1234/flavors/%s' % data.flavor[0]['id'],
                             status=200)
         self.assertEqual(json.loads(resp.body),
                          show_flavor_resp(data.flavor[0]))
 
     def test_delete_flavor(self):
         # Delete flavor[0]
-        resp = self.app.delete('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+        resp = self.app.delete('/v2.0/1234/flavors/%s' % data.flavor[0]['id'],
                                status=200)
         self.assertEqual(resp.body, '')
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        resp = self.app.get('/v2.0/1234/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp(data.flavor[1:], details=False))
 
     def test_create_flavor(self):
         # Delete flavor[0]
-        self.app.delete('/v1.1/1234/flavors/%s' % data.flavor[0]['id'],
+        self.app.delete('/v2.0/1234/flavors/%s' % data.flavor[0]['id'],
                         status=200)
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        resp = self.app.get('/v2.0/1234/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp(data.flavor[1:], details=False))
 
         # (Re-)create flavor[0]
-        resp = self.app.post('/v1.1/1234/flavors',
+        resp = self.app.post('/v2.0/1234/flavors',
                              json.dumps(create_flavor_req(data.flavor[0])),
                              status=200)
         self.assertEqual(json.loads(resp.body),
                          create_flavor_resp(data.flavor[0]))
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v1.1/1234/flavors', status=200)
+        resp = self.app.get('/v2.0/1234/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp(
                              [data.flavor[1], data.flavor[2], data.flavor[0]],

@@ -75,7 +75,7 @@ TOKEN = """{
             "endpoints": [
                 {
                     "publicURL":
-                    "http://{{bind_host}}:{{compute_api_port}}/v1.1/1000",
+                    "http://{{bind_host}}:{{compute_api_port}}/v2.0/1000",
                     "region": "dwarf-region"
                 }
             ]

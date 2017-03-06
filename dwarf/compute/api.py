@@ -58,12 +58,12 @@ def _route_versions():
 @exception.catchall
 def _route_version():
     """
-    Routes: /v1.1
+    Routes: /v2.0
     Method: GET
     """
     utils.show_request(bottle.request)
 
-    return api_response.show_version_v1d1()
+    return api_response.show_version_v2d0()
 
 
 # -----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ def _route_version():
 @exception.catchall
 def _route_flavors_id(dummy_tenant_id, flavor_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/flavors/<flavor_id>
+    Route:  /v2.0/<dummy_tenant_id>/flavors/<flavor_id>
     Method: GET, DELETE
     """
     utils.show_request(bottle.request)
@@ -93,7 +93,7 @@ def _route_flavors_id(dummy_tenant_id, flavor_id):
 @exception.catchall
 def _route_flavors(dummy_tenant_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/flavors
+    Route:  /v2.0/<dummy_tenant_id>/flavors
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -113,7 +113,7 @@ def _route_flavors(dummy_tenant_id):
 @exception.catchall
 def _route_images_id(dummy_tenant_id, image_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/images/<image_id>
+    Route:  /v2.0/<dummy_tenant_id>/images/<image_id>
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -129,7 +129,7 @@ def _route_images_id(dummy_tenant_id, image_id):
 @exception.catchall
 def _route_images(dummy_tenant_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/images
+    Route:  /v2.0/<dummy_tenant_id>/images
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -143,7 +143,7 @@ def _route_images(dummy_tenant_id):
 @exception.catchall
 def _route_os_keypairs(dummy_tenant_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/os-keypairs
+    Route:  /v2.0/<dummy_tenant_id>/os-keypairs
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -160,7 +160,7 @@ def _route_os_keypairs(dummy_tenant_id):
 @exception.catchall
 def _route_os_keypairs_name(dummy_tenant_id, keypair_name):
     """
-    Route:  /v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>
+    Route:  /v2.0/<dummy_tenant_id>/os-keypairs/<keypair_name>
     Method: DELETE, GET
     """
     utils.show_request(bottle.request)
@@ -180,7 +180,7 @@ def _route_os_keypairs_name(dummy_tenant_id, keypair_name):
 @exception.catchall
 def _route_servers_id(dummy_tenant_id, server_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/servers/<server_id>
+    Route:  /v2.0/<dummy_tenant_id>/servers/<server_id>
     Method: GET, DELETE
     """
     utils.show_request(bottle.request)
@@ -201,7 +201,7 @@ def _route_servers_id(dummy_tenant_id, server_id):
 @exception.catchall
 def _route_servers(dummy_tenant_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/servers
+    Route:  /v2.0/<dummy_tenant_id>/servers
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -218,7 +218,7 @@ def _route_servers(dummy_tenant_id):
 @exception.catchall
 def _route_servers_id_action(dummy_tenant_id, server_id):
     """
-    Route:  /v1.1/<dummy_tenant_id>/servers/<server_id>/action
+    Route:  /v2.0/<dummy_tenant_id>/servers/<server_id>/action
     Method: POST
     """
     utils.show_request(bottle.request)
@@ -262,34 +262,34 @@ class ComputeApiServer(api_server.ApiServer):
         self.app.route('/',
                        method='GET',
                        callback=_route_versions)
-        self.app.route(('/v1.1', '/v1.1/'),
+        self.app.route(('/v2.0', '/v2.0/'),
                        method='GET',
                        callback=_route_version)
-        self.app.route('/v1.1/<dummy_tenant_id>/images/<image_id>',
+        self.app.route('/v2.0/<dummy_tenant_id>/images/<image_id>',
                        method='GET',
                        callback=_route_images_id)
-        self.app.route('/v1.1/<dummy_tenant_id>/images',
+        self.app.route('/v2.0/<dummy_tenant_id>/images',
                        method='GET',
                        callback=_route_images)
-        self.app.route('/v1.1/<dummy_tenant_id>/os-keypairs',
+        self.app.route('/v2.0/<dummy_tenant_id>/os-keypairs',
                        method=('GET', 'POST'),
                        callback=_route_os_keypairs)
-        self.app.route('/v1.1/<dummy_tenant_id>/os-keypairs/<keypair_name>',
+        self.app.route('/v2.0/<dummy_tenant_id>/os-keypairs/<keypair_name>',
                        method=('DELETE', 'GET'),
                        callback=_route_os_keypairs_name)
-        self.app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>',
+        self.app.route('/v2.0/<dummy_tenant_id>/servers/<server_id>',
                        method=('GET', 'DELETE'),
                        callback=_route_servers_id)
-        self.app.route('/v1.1/<dummy_tenant_id>/servers',
+        self.app.route('/v2.0/<dummy_tenant_id>/servers',
                        method=('GET', 'POST'),
                        callback=_route_servers)
-        self.app.route('/v1.1/<dummy_tenant_id>/servers/<server_id>/action',
+        self.app.route('/v2.0/<dummy_tenant_id>/servers/<server_id>/action',
                        method='POST',
                        callback=_route_servers_id_action)
-        self.app.route('/v1.1/<dummy_tenant_id>/flavors/<flavor_id>',
+        self.app.route('/v2.0/<dummy_tenant_id>/flavors/<flavor_id>',
                        method=('GET', 'DELETE'),
                        callback=_route_flavors_id)
-        self.app.route('/v1.1/<dummy_tenant_id>/flavors',
+        self.app.route('/v2.0/<dummy_tenant_id>/flavors',
                        method=('GET', 'POST'),
                        callback=_route_flavors)
 

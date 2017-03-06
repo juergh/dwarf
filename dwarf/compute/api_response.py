@@ -29,11 +29,11 @@ DETAILS = ('created_at', 'deleted', 'deleted_at', 'updated_at')
 # -----------------------------------------------------------------------------
 # Versions
 
-VERSION_v1d1 = """{
-    "id": "v1.1",
+VERSION_v2d0 = """{
+    "id": "v2.0",
     "links": [
         {
-            "href": "http://{{bind_host}}:{{compute_api_port}}/v1.1/",
+            "href": "http://{{bind_host}}:{{compute_api_port}}/v2.0/",
             "rel": "self"
         }
     ],
@@ -42,12 +42,12 @@ VERSION_v1d1 = """{
 }"""
 
 
-def show_version_v1d1():
-    return {'version': utils.json_render(VERSION_v1d1, CONF.get_options())}
+def show_version_v2d0():
+    return {'version': utils.json_render(VERSION_v2d0, CONF.get_options())}
 
 
 def list_versions():
-    return {'versions': [show_version_v1d1()['version']]}
+    return {'versions': [show_version_v2d0()['version']]}
 
 
 # -----------------------------------------------------------------------------

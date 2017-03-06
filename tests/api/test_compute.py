@@ -24,10 +24,10 @@ from tests import utils
 from dwarf.compute.api import ComputeApiServer
 
 VERSION_RESP = {
-    'id': 'v1.1',
+    'id': 'v2.0',
     'links': [
         {
-            'href': 'http://127.0.0.1:20001/v1.1/',
+            'href': 'http://127.0.0.1:20001/v2.0/',
             'rel': 'self',
         },
     ],
@@ -61,5 +61,5 @@ class ApiTestCase(utils.TestCase):
         self.assertEqual(json.loads(resp.body), list_versions_resp())
 
     def test_show_version(self):
-        resp = self.app.get('/v1.1', status=200)
+        resp = self.app.get('/v2.0', status=200)
         self.assertEqual(json.loads(resp.body), show_version_resp())

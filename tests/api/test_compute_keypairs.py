@@ -101,7 +101,7 @@ class ApiTestCase(utils.TestCase):
         self.create_keypair(data.keypair[0])
         self.create_keypair(data.keypair[1])
 
-        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
+        resp = self.app.get('/v2.0/1234/os-keypairs', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_keypairs_resp(data.keypair[0:2]))
 
@@ -109,13 +109,13 @@ class ApiTestCase(utils.TestCase):
         # Preload a test keypair
         self.create_keypair(data.keypair[0])
 
-        resp = self.app.get('/v1.1/1234/os-keypairs/%s' %
+        resp = self.app.get('/v2.0/1234/os-keypairs/%s' %
                             urllib.quote(data.keypair[0]['name']), status=200)
         self.assertEqual(json.loads(resp.body),
                          show_keypair_resp(data.keypair[0]))
 
     def test_import_keypair(self):
-        resp = self.app.post('/v1.1/1234/os-keypairs',
+        resp = self.app.post('/v2.0/1234/os-keypairs',
                              json.dumps(import_keypair_req(data.keypair[0])),
                              status=200)
         self.assertEqual(json.loads(resp.body),
@@ -126,17 +126,17 @@ class ApiTestCase(utils.TestCase):
         self.create_keypair(data.keypair[0])
 
         # Delete the keypair
-        resp = self.app.delete('/v1.1/1234/os-keypairs/%s' %
+        resp = self.app.delete('/v2.0/1234/os-keypairs/%s' %
                                urllib.quote(data.keypair[0]['name']),
                                status=200)
         self.assertEqual(resp.body, '')
 
         # Check the resulting keypair list
-        resp = self.app.get('/v1.1/1234/os-keypairs', status=200)
+        resp = self.app.get('/v2.0/1234/os-keypairs', status=200)
         self.assertEqual(json.loads(resp.body), list_keypairs_resp([]))
 
     def test_create_keypair(self):
-        resp = self.app.post('/v1.1/1234/os-keypairs',
+        resp = self.app.post('/v2.0/1234/os-keypairs',
                              json.dumps(create_keypair_req(data.keypair[0])),
                              status=200)
         jresp = json.loads(resp.body)
