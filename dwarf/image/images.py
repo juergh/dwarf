@@ -42,7 +42,7 @@ class Controller(object):
         LOG.info('create(image_md=%s)', image_md)
 
         # Create a new image in the database
-        image_md['status'] = 'SAVING'
+        image_md['status'] = 'saving'
         image = self.db.images.create(**image_md)
         image_id = image['id']
 
@@ -60,7 +60,7 @@ class Controller(object):
 
         # Update the image database entry
         image = self.db.images.update(id=image_id, checksum=md5sum,
-                                      file=image_file, status='ACTIVE')
+                                      file=image_file, status='active')
         return image
 
     def delete(self, image_id):

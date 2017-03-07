@@ -39,7 +39,7 @@ image = {
         'properties': {},
         'protected': 'False',
         'size': '17',
-        'status': 'ACTIVE',
+        'status': 'active',
         'updated_at': now,
     },
     '22222222-3333-4444-5555-666666666666': {
@@ -62,7 +62,7 @@ image = {
         'properties': {},
         'protected': 'False',
         'size': '17',
-        'status': 'ACTIVE',
+        'status': 'active',
         'updated_at': now,
     },
 }
