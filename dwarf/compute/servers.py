@@ -30,9 +30,10 @@ from dwarf import task
 from dwarf import utils
 
 from dwarf.compute import flavors
-from dwarf.compute import images
 from dwarf.compute import keypairs
 from dwarf.compute import virt
+
+from dwarf.image import images
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)

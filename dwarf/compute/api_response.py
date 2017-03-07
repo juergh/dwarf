@@ -84,40 +84,6 @@ def show_flavor(data):
 
 
 # -----------------------------------------------------------------------------
-# Images
-
-_IMAGE = """{
-    "id": "{{id}}",
-    "links": [
-        {
-            "href": "",
-            "rel": "self"
-        }
-    ],
-% if _details:
-    "created_at": "{{created_at}}",
-    "deleted": "{{deleted}}",
-    "deleted_at": "{{deleted_at}}",
-    "updated_at": "{{updated_at}}",
-    "is_public": "{{is_public}}",
-    "location": "{{location}}",
-    "size": "{{size}}",
-    "status": "{{status}}",
-% end
-    "name": "{{name}}"
-}"""
-
-
-def list_images(data, details=True):
-    return {'images': [utils.json_render(_IMAGE, d, _details=details)
-                       for d in data]}
-
-
-def show_image(data):
-    return {'image': utils.json_render(_IMAGE, data, _details=True)}
-
-
-# -----------------------------------------------------------------------------
 # Keypairs
 
 KEYPAIR = """{

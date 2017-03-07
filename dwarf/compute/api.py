@@ -27,7 +27,6 @@ from dwarf import utils
 
 from dwarf.compute import api_response
 from dwarf.compute import flavors
-from dwarf.compute import images
 from dwarf.compute import keypairs
 from dwarf.compute import servers
 
@@ -35,7 +34,6 @@ CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 FLAVORS = flavors.Controller()
-IMAGES = images.Controller()
 KEYPAIRS = keypairs.Controller()
 SERVERS = servers.Controller()
 
@@ -105,36 +103,6 @@ def _route_flavors():
 
     # nova flavor-list (no details)
     return api_response.list_flavors(FLAVORS.list(), details=False)
-
-
-# -----------------------------------------------------------------------------
-# Bottle Image API routes
-
-@exception.catchall
-def _route_images_id(image_id):
-    """
-    Route:  /v2.0/images/<image_id>
-    Method: GET
-    """
-    utils.show_request(bottle.request)
-
-    # nova image-list
-    if image_id == 'detail':
-        return api_response.list_images(IMAGES.list(), details=True)
-
-    # nova image-show <image_id>
-    return api_response.show_image(IMAGES.show(image_id))
-
-
-@exception.catchall
-def _route_images():
-    """
-    Route:  /v2.0/images
-    Method: GET
-    """
-    utils.show_request(bottle.request)
-
-    return api_response.list_images(IMAGES.list(), details=False)
 
 
 # -----------------------------------------------------------------------------
@@ -265,12 +233,6 @@ class ComputeApiServer(api_server.ApiServer):
         self.app.route(('/v2.0', '/v2.0/'),
                        method='GET',
                        callback=_route_version)
-        self.app.route('/v2.0/images/<image_id>',
-                       method='GET',
-                       callback=_route_images_id)
-        self.app.route('/v2.0/images',
-                       method='GET',
-                       callback=_route_images)
         self.app.route('/v2.0/os-keypairs',
                        method=('GET', 'POST'),
                        callback=_route_os_keypairs)
