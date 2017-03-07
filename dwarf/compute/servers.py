@@ -72,7 +72,7 @@ def _create_disks(server):
     """
     server_id = server['id']
     image_id = server['image']['id']
-    image_file = server['image']['location'][7:]   # remove 'file://'
+    image_file = server['image']['file']
     disk_size = server['flavor']['disk']
     disk_local_size = server['flavor'].get('ephemeral', 10)
 

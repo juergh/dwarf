@@ -60,8 +60,7 @@ class Controller(object):
 
         # Update the image database entry
         image = self.db.images.update(id=image_id, checksum=md5sum,
-                                      location='file://%s' % image_file,
-                                      status='ACTIVE')
+                                      file=image_file, status='ACTIVE')
         return image
 
     def delete(self, image_id):
