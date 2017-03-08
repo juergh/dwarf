@@ -1,0 +1,12 @@
++-------------+-------------------------------------------------+
+| Property    | Value                                           |
++-------------+-------------------------------------------------+
+| created_at  | 2001-02-03 04:05:06                             |
+| deleted     | False                                           |
+| deleted_at  |                                                 |
+| fingerprint | 8b:1d:1c:71:5c:46:39:1e:0c:7c:f0:d0:93:d1:3e:29 |
+| id          | 11111111-2222-3333-4444-555555555555            |
+| name        | test key                                        |
+| updated_at  | 2001-02-03 04:05:06                             |
++-------------+-------------------------------------------------+
+Public key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBh2sJydHJExZxAW7GDkNTAZ72uNi9ImaIy7nmT+vSnH+BpUn/4B+1/WLYp5HJ7yfEUJS3iuX4IRAI3MHTsg341kQUaA2iX5ZjSStLfwbaBmM+WQ7F4Ep/PdK9Z1QzaOQWxyrJ88YfOtvJy0XZx+2h8kw3YPJr0owMD/0Y93CHotHgfQR0WLg0QGu5Uq7y9LwuHAya+16nt+IknAZA68/9naa7MhVLc1apr6RuwD9/tP6ov2X7J1GIdGF1TqbYVAR9ZLzTqnwOPVZyLrc+YxXx29PuN/rlsJ3EKFIKlbIjvsWPN1qz002hHYPcDWppthmyDC61T7xizHdaeGZCyM+t

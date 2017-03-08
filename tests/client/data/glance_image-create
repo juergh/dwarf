@@ -1,0 +1,18 @@
++------------------+--------------------------------------+
+| Property         | Value                                |
++------------------+--------------------------------------+
+| checksum         | d6ac46d3ba444c0a3226339a5c04111e     |
+| container_format | bare                                 |
+| created_at       | 2001-02-03 04:05:06                  |
+| disk_format      | raw                                  |
+| id               | 11111111-2222-3333-4444-555555555555 |
+| min_disk         |                                      |
+| min_ram          |                                      |
+| name             | Test image 1                         |
+| owner            |                                      |
+| protected        | False                                |
+| size             | 17                                   |
+| status           | active                               |
+| updated_at       | 2001-02-03 04:05:06                  |
+| visibility       |                                      |
++------------------+--------------------------------------+
