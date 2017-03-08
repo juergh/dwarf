@@ -144,6 +144,6 @@ class ApiTestCase(utils.TestCase):
         self.assertEqual(json.loads(resp.body), show_version_resp())
 
     def test_authenticate(self):
-        resp = self.app.post('/v2.0/tokens', json.dumps(auth_req()))
+        resp = self.app.post('/v2.0/tokens', params=json.dumps(auth_req()))
         self.assertEqual(resp.status, '200 OK')
         self.assertEqual(json.loads(resp.body), auth_resp())

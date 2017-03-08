@@ -98,7 +98,6 @@ IMAGE = """{
     "file": "{{file}}",
     "id": "{{id}}",
     "int_id": "{{int_id}}",
-    "is_public": "{{is_public}}",
     "min_disk": "{{min_disk}}",
     "min_ram": "{{min_ram}}",
     "name": "{{name}}",
@@ -106,7 +105,8 @@ IMAGE = """{
     "protected": "{{protected}}",
     "size": "{{size}}",
     "status": "{{status}}",
-    "updated_at": "{{updated_at}}"
+    "updated_at": "{{updated_at}}",
+    "visibility": "{{visibility}}"
 }"""
 
 

@@ -113,17 +113,18 @@ class TestCase(unittest.TestCase):
         Create an image in the database
         """
         self.uuid = image['id']
-        cp_image = deepcopy(image)
-        images.Controller().create(StringIO.StringIO(cp_image['data']),
-                                   cp_image)
+        image_dc = deepcopy(image)
+        images.Controller().create(image_dc)
+        image_fh = StringIO.StringIO(image_dc['data'])
+        images.Controller().upload(image_dc['id'], image_fh)
 
     def create_keypair(self, keypair):
         """
         Create an SSH keypair in the database
         """
         self.uuid = keypair['id']
-        cp_keypair = deepcopy(keypair)
-        keypairs.Controller().create(cp_keypair)
+        keypair_dc = deepcopy(keypair)
+        keypairs.Controller().create(keypair_dc)
 
     # -------------------------------------------------------------------------
     # Dwarf start/stop methods
@@ -220,6 +221,7 @@ class TestCase(unittest.TestCase):
 
         if error is not None:
             LOG.warn(error)
+            LOG.warn('Command: %s', ' '.join(cmd))
             LOG.warn('Exit code: %d', p_exitcode)
             LOG.warn('Begin of stdout\n%s\nEnd of stdout', p_stdout)
             LOG.warn('Begin of stderr\n%s\nEnd of stderr', p_stderr)

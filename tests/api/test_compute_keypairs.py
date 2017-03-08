@@ -119,7 +119,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_import_keypair(self):
         resp = self.app.post('/v2.0/os-keypairs',
-                             json.dumps(import_keypair_req(keypair1)),
+                             params=json.dumps(import_keypair_req(keypair1)),
                              status=200)
         self.assertEqual(json.loads(resp.body), import_keypair_resp(keypair1))
 
@@ -138,7 +138,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_create_keypair(self):
         resp = self.app.post('/v2.0/os-keypairs',
-                             json.dumps(create_keypair_req(keypair1)),
+                             params=json.dumps(create_keypair_req(keypair1)),
                              status=200)
         jresp = json.loads(resp.body)
 

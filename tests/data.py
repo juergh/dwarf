@@ -30,7 +30,6 @@ image = {
         'disk_format': 'raw',
         'file': '/tmp/dwarf/images/11111111-2222-3333-4444-555555555555',
         'id': '11111111-2222-3333-4444-555555555555',
-        'is_public': 'False',
         'int_id': '1',
         'min_disk': '',
         'min_ram': '',
@@ -41,6 +40,7 @@ image = {
         'size': '17',
         'status': 'active',
         'updated_at': now,
+        'visibility': 'private'
     },
     '22222222-3333-4444-5555-666666666666': {
         'checksum': 'b23afbb294b9b9b303b1af1fb5354b8e',   # md5sum of 'data'
@@ -53,7 +53,6 @@ image = {
         'disk_format': 'raw',
         'file': '/tmp/dwarf/images/22222222-3333-4444-5555-666666666666',
         'id': '22222222-3333-4444-5555-666666666666',
-        'is_public': 'False',
         'int_id': '2',
         'min_disk': '',
         'min_ram': '',
@@ -64,6 +63,7 @@ image = {
         'size': '17',
         'status': 'active',
         'updated_at': now,
+        'visibility': 'private'
     },
 }
 

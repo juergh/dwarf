@@ -17,9 +17,8 @@
 # limitations under the License.
 
 import bottle
+import json
 import logging
-
-from tempfile import TemporaryFile
 
 from dwarf import api_server
 from dwarf import config
@@ -33,83 +32,6 @@ CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 IMAGES = images.Controller()
-
-
-def _body_chunked(request):
-    """
-    Handle a chunked request body
-    """
-    def read_chunk(stream, length=None):
-        if length:
-            data = stream.read(length)
-            if stream.read(2) != b'\r\n':
-                raise ValueError("Malformed chunk in request")
-            return data
-        else:
-            data = b''
-            while True:
-                b1 = stream.read(1)
-                if not b1:
-                    break
-                if b1 == b'\r':
-                    b2 = stream.read(1)
-                    if not b2:
-                        data += b1
-                        break
-                    if b2 == b'\n':
-                        break
-                    data += b1 + b2
-                else:
-                    data += b1
-        return data
-
-    stream = request.environ['wsgi.input']
-    body = TemporaryFile(mode='w+b')
-    while True:
-        length = int(read_chunk(stream), 16)
-        part = read_chunk(stream, length)
-        if not part:
-            break
-        body.write(part)
-    request.environ['wsgi.input'] = body
-    body.seek(0)
-    return body
-
-
-def _request_body(request):
-    """
-    Wrapper for handling chunked request bodies
-    """
-    if (('Transfer-Encoding' in request.headers.keys() and
-         request.headers['Transfer-Encoding'].lower() == 'chunked')):
-        body = _body_chunked(request)
-        body.seek(0)
-        return body
-    else:
-        return request.body
-
-
-def _add_header(metadata):
-    # Hack: We can't use bottle's default add_header() method because it
-    # replaces '_' with '-' in the header name
-    func = bottle.response._headers.setdefault   # pylint: disable=W0212
-
-    for (key, val) in metadata.iteritems():
-        if key == 'properties':
-            for (k, v) in val.iteritems():
-                func('x-image-meta-property-%s' % k, []).append(str(v))
-        else:
-            func('x-image-meta-%s' % key, []).append(str(val))
-
-
-def _from_headers(headers):
-    # Extract the image metadata from the HTTP headers
-    image_md = {}
-    for key in headers.keys():
-        if key.lower().startswith('x-image-meta-'):
-            k = key.lower()[13:].replace('-', '_')
-            image_md[k] = headers[key]
-    return image_md
 
 
 # -----------------------------------------------------------------------------
@@ -130,50 +52,81 @@ def _route_versions():
 
 
 @exception.catchall
-def _route_images_id(image_id):
+def _route_images():
     """
-    Route:  /v1/images/<image_id>
-    Method: GET, HEAD, DELETE, PUT
+    Route:  /v2/images
+    Method: GET, POST
     """
     utils.show_request(bottle.request)
 
+    # glance image-create
+    if bottle.request.method == 'POST':
+        bottle.response.status = 201
+        image_md = json.load(bottle.request.body)
+        return api_response.create_image(IMAGES.create(image_md))
+
     # glance image-list
-    if image_id == 'detail' and bottle.request.method == 'GET':
-        return api_response.list_images(IMAGES.list())
-
-    # glance image-show <image_id>
-    if image_id != 'detail' and bottle.request.method == 'HEAD':
-        image = IMAGES.show(image_id)
-        _add_header(image)
-        return
-
-    # glance image-delete <image_id>
-    if image_id != 'detail' and bottle.request.method == 'DELETE':
-        IMAGES.delete(image_id)
-        return
-
-    # glance image-update <image_id>
-    if image_id != 'detail' and bottle.request.method == 'PUT':
-        image_md = _from_headers(bottle.request.headers)
-        return api_response.update_image(IMAGES.update(image_id, image_md))
-
-    raise exception.BadRequest(reason='Unsupported request')
+    return api_response.list_images(IMAGES.list())
 
 
 @exception.catchall
-def _route_images():
+def _route_images_id(image_id):
     """
-    Route:  /v1/images
-    Method: POST
+    Route:  /v2/images/<image_id>
+    Method: GET, DELETE, PATCH
     """
     utils.show_request(bottle.request)
 
-    # Parse the HTTP header
-    image_md = _from_headers(bottle.request.headers)
+    # glance image-delete
+    if bottle.request.method == 'DELETE':
+        bottle.response.status = 204
+        IMAGES.delete(image_id)
+        return
 
-    # glance image-create
-    image_fh = _request_body(bottle.request)
-    return api_response.create_image(IMAGES.create(image_fh, image_md))
+    # glance image-update
+    if bottle.request.method == 'PATCH':
+        image_ops = json.load(bottle.request.body)
+        return api_response.update_image(IMAGES.update(image_id, image_ops))
+
+    # glance image-show
+    return api_response.show_image(IMAGES.show(image_id))
+
+
+@exception.catchall
+def _route_images_id_file(image_id):
+    """
+    Route:  /v2/images/<image_id>/file
+    Method: PUT
+    """
+    utils.show_request(bottle.request)
+
+    # glance image-upload
+    bottle.response.status = 204
+    image_fh = bottle.request.body
+    IMAGES.upload(image_id, image_fh)
+    return
+
+
+@exception.catchall
+def _route_schemas_image():
+    """
+    Route:  /v2/schemas/image
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    return api_response.show_image_schema()
+
+
+@exception.catchall
+def _route_schemas_metadefs(dummy_metadef):
+    """
+    Route:  /v2/schemas/metadefs/<dummy_metadef>
+    Method: GET
+    """
+    utils.show_request(bottle.request)
+
+    return api_response.list_metadefs()
 
 
 # -----------------------------------------------------------------------------
@@ -189,9 +142,18 @@ class ImageApiServer(api_server.ApiServer):
         self.app.route(('/', '/versions'),
                        method='GET',
                        callback=_route_versions)
-        self.app.route(('/v1/images/<image_id>', '//v1/images/<image_id>'),
-                       method=('GET', 'HEAD', 'DELETE', 'PUT'),
-                       callback=_route_images_id)
-        self.app.route(('/v1/images', '//v1/images'),
-                       method='POST',
+        self.app.route('/v2/images',
+                       method=('GET', 'POST', ),
                        callback=_route_images)
+        self.app.route('/v2/images/<image_id>',
+                       method=('GET', 'DELETE', 'PATCH'),
+                       callback=_route_images_id)
+        self.app.route('/v2/images/<image_id>/file',
+                       method=('PUT'),
+                       callback=_route_images_id_file)
+        self.app.route('/v2/schemas/image',
+                       method='GET',
+                       callback=_route_schemas_image)
+        self.app.route('/v2/schemas/metadefs/<dummy_metadef>',
+                       method='GET',
+                       callback=_route_schemas_metadefs)

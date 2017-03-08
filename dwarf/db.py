@@ -37,8 +37,8 @@ DB_SERVERS_COLS = _DB_COLS + ['name', 'status', 'image_id', 'flavor_id',
                               'key_name', 'mac_address', 'ip', 'config_drive']
 DB_KEYPAIRS_COLS = _DB_COLS + ['name', 'fingerprint', 'public_key']
 DB_IMAGES_COLS = _DB_COLS + ['name', 'disk_format', 'container_format', 'size',
-                             'status', 'is_public', 'file', 'checksum',
-                             'min_disk', 'min_ram', 'owner', 'protected']
+                             'status', 'file', 'checksum', 'min_disk',
+                             'min_ram', 'owner', 'protected', 'visibility']
 DB_FLAVORS_COLS = _DB_COLS + ['name', 'disk', 'ram', 'vcpus']
 
 TRUE = 'True'
@@ -299,7 +299,7 @@ class Controller(object):
                               is_bool=('deleted', ))
         self.images = Table(CONF.dwarf_db, 'images', DB_IMAGES_COLS,
                             is_unique='id',
-                            is_bool=('deleted', 'is_public', 'protected'))
+                            is_bool=('deleted', 'protected'))
         self.flavors = Table(CONF.dwarf_db, 'flavors', DB_FLAVORS_COLS,
                              is_unique='id',
                              is_bool=('deleted', ))

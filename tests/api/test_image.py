@@ -18,6 +18,7 @@
 import json
 import os
 
+from copy import deepcopy
 from webtest import TestApp
 
 from tests import data
@@ -25,22 +26,10 @@ from tests import utils
 
 from dwarf.image.api import ImageApiServer
 
-
-DELETE_IMAGE_RESP = """[
-    ["Content-Length", "0"],
-    ["Content-Type", "text/html; charset=UTF-8"]
-]"""
-
-
-def delete_image_resp(image):
-    return [(e[0], e[1]) for e in utils.json_render(DELETE_IMAGE_RESP, image)]
-
-
 CREATE_IMAGE_REQ = """{
     "container_format": "{{container_format}}",
     "disk_format": "{{disk_format}}",
-    "name": "{{name}}",
-    "size": "{{size}}"
+    "name": "{{name}}"
 }"""
 
 
@@ -48,54 +37,22 @@ def create_image_req(image):
     return utils.json_render(CREATE_IMAGE_REQ, image)
 
 
-SHOW_IMAGE_RESP = """[
-    ["Content-Length", "0"],
-    ["Content-Type", "text/html; charset=UTF-8"],
-
-    ["x-image-meta-checksum", "{{checksum}}"],
-    ["x-image-meta-container_format", "{{container_format}}"],
-    ["x-image-meta-created_at", "{{created_at}}"],
-    ["x-image-meta-deleted", "{{deleted}}"],
-    ["x-image-meta-deleted_at", "{{deleted_at}}"],
-    ["x-image-meta-disk_format", "{{disk_format}}"],
-    ["x-image-meta-file", "{{file}}"],
-    ["x-image-meta-id", "{{id}}"],
-    ["x-image-meta-is_public", "{{is_public}}"],
-    ["x-image-meta-int_id", "{{int_id}}"],
-    ["x-image-meta-min_disk", "{{min_disk}}"],
-    ["x-image-meta-min_ram", "{{min_ram}}"],
-    ["x-image-meta-name", "{{name}}"],
-    ["x-image-meta-owner", "{{owner}}"],
-    ["x-image-meta-protected", "{{protected}}"],
-    ["x-image-meta-size", "{{size}}"],
-    ["x-image-meta-status", "{{status}}"],
-    ["x-image-meta-updated_at", "{{updated_at}}"]
-]"""
-
-
-def show_image_resp(image):
-    return [(e[0], e[1]) for e in utils.json_render(SHOW_IMAGE_RESP, image)]
-
-
 IMAGE_RESP = """{
     "checksum": "{{checksum}}",
     "container_format": "{{container_format}}",
     "created_at": "{{created_at}}",
-    "deleted": "{{deleted}}",
-    "deleted_at": "{{deleted_at}}",
     "disk_format": "{{disk_format}}",
     "file": "{{file}}",
     "id": "{{id}}",
-    "is_public": "{{is_public}}",
     "min_disk": "{{min_disk}}",
     "min_ram": "{{min_ram}}",
     "name": "{{name}}",
     "owner": "{{owner}}",
-    "properties": {{properties}},
     "protected": "{{protected}}",
     "size": "{{size}}",
     "status": "{{status}}",
-    "updated_at": "{{updated_at}}"
+    "updated_at": "{{updated_at}}",
+    "visibility": "{{visibility}}"
 }"""
 
 
@@ -104,15 +61,24 @@ def list_images_resp(images):
                        for image in images]}
 
 
+def show_image_resp(image):
+    return utils.json_render(IMAGE_RESP, image)
+
+
+def update_image_resp(image):
+    return utils.json_render(IMAGE_RESP, image)
+
+
 def create_image_resp(image):
-    return {'image': utils.json_render(IMAGE_RESP, image)}
+    return utils.json_render(IMAGE_RESP, image, checksum='', file='',
+                             size='', status='queued', visibility='')
 
 
 VERSION_RESP = """{
-    "id": "v1",
+    "id": "v2",
     "links": [
         {
-            "href": "http://127.0.0.1:20002/v1/",
+            "href": "http://127.0.0.1:20002/v2/",
             "rel": "self"
         }
     ],
@@ -140,7 +106,7 @@ class ApiTestCase(utils.TestCase):
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)
-        self.app.get('/v1/images/no-such-id', status=400)
+        self.app.get('/v2/images/no-such-id', status=404)
 
     def test_list_versions(self):
         resp = self.app.get('/', status=300)
@@ -154,62 +120,58 @@ class ApiTestCase(utils.TestCase):
         self.create_image(image1)
         self.create_image(image2)
 
-        resp = self.app.get('/v1/images/detail', status=200)
+        resp = self.app.get('/v2/images', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_images_resp([image1, image2]))
-
-    def test_create_image(self):
-        headers = self.to_headers(create_image_req(image1))
-
-        resp = self.app.post('/v1/images', image1['data'], headers,
-                             status=200)
-        self.assertEqual(json.loads(resp.body), create_image_resp(image1))
-        with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
-            self.assertEqual(fh.read(), image1['data'])
-
-    def test_create_image_chunked(self):
-        headers = self.to_headers(create_image_req(image1))
-        headers.append(('Transfer-Encoding', 'chunked'))
-
-        resp = self.app.post('/v1/images', image1['data_chunked'], headers,
-                             status=200)
-        self.assertEqual(json.loads(resp.body), create_image_resp(image1))
-        with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
-            self.assertEqual(fh.read(), image1['data'])
-
-    def test_create_image_chunked_malformed(self):
-        self.app.post('/v1/images', 'foo', [('Transfer-Encoding', 'chunked')],
-                      status=500)
 
     def test_show_image(self):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.head('/v1/images/%s' % image1['id'], status=200)
-        self.assertEqual(resp.body, '')
-        self.assertEqual(sorted(resp.headers.items()),
-                         sorted(show_image_resp(image1)))
+        resp = self.app.get('/v2/images/%s' % image1['id'], status=200)
+        self.assertEqual(json.loads(resp.body), show_image_resp(image1))
 
     def test_delete_image(self):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.delete('/v1/images/%s' % image1['id'], status=200)
+        resp = self.app.delete('/v2/images/%s' % image1['id'], status=204)
         self.assertEqual(resp.body, '')
-        self.assertEqual(sorted(resp.headers.items()),
-                         sorted(delete_image_resp(image1)))
         self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % image1['id']),
                          False)
 
-        resp = self.app.get('/v1/images/detail', status=200)
-        self.assertEqual(json.loads(resp.body), {'images': []})
+        resp = self.app.get('/v2/images', status=200)
+        self.assertEqual(json.loads(resp.body), list_images_resp([]))
 
     def test_update_image(self):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.put('/v1/images/%s' % image1['id'], status=200)
+        key = 'name'
+        val = 'Patched test image 1'
+
+        resp = self.app.patch('/v2/images/%s' % image1['id'],
+                              params=json.dumps([{'op': 'replace',
+                                                  'path': '/' + key,
+                                                  'value': val}]),
+                              status=200)
+
+        patched = deepcopy(image1)
+        patched[key] = val
+        self.assertEqual(json.loads(resp.body), update_image_resp(patched))
+
+    def test_create_image(self):
+        # Create the image in the database
+        resp = self.app.post('/v2/images',
+                             params=json.dumps(create_image_req(image1)),
+                             status=201)
         self.assertEqual(json.loads(resp.body), create_image_resp(image1))
+
+        # Upload the image data
+        resp = self.app.put('/v2/images/%s/file' % image1['id'],
+                            params=image1['data'], status=204)
+        with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
+            self.assertEqual(fh.read(), image1['data'])
 
     # -------------------------------------------------------------------------
     # Additional tests for code coverage
@@ -217,15 +179,7 @@ class ApiTestCase(utils.TestCase):
     def test_delete_image_cc(self):
         # Preload a test image
         self.create_image(image1)
-        os.unlink('/tmp/dwarf/images/%s' % image1['id'])
+        os.unlink(image1['file'])
 
-        resp = self.app.delete('/v1/images/%s' % image1['id'], status=200)
+        resp = self.app.delete('/v2/images/%s' % image1['id'], status=204)
         self.assertEqual(resp.body, '')
-        self.assertEqual(sorted(resp.headers.items()),
-                         sorted(delete_image_resp(image1)))
-
-    def test_create_image_chunked_cc(self):
-        self.app.post('/v1/images', '\r', [('Transfer-Encoding', 'chunked')],
-                      status=500)
-        self.app.post('/v1/images', '\r1', [('Transfer-Encoding', 'chunked')],
-                      status=500)

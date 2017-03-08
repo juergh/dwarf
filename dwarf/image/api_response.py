@@ -25,11 +25,11 @@ CONF = config.Config()
 # -----------------------------------------------------------------------------
 # Versions
 
-VERSION_v1d0 = """{
-    "id": "v1",
+VERSION_v2 = """{
+    "id": "v2",
     "links": [
         {
-            "href": "http://{{bind_host}}:{{image_api_port}}/v1/",
+            "href": "http://{{bind_host}}:{{image_api_port}}/v2/",
             "rel": "self"
         }
     ],
@@ -39,7 +39,7 @@ VERSION_v1d0 = """{
 
 
 def list_versions():
-    return {'versions': [utils.json_render(VERSION_v1d0, CONF.get_options())]}
+    return {'versions': [utils.json_render(VERSION_v2, CONF.get_options())]}
 
 
 # -----------------------------------------------------------------------------
@@ -49,31 +49,62 @@ IMAGE = """{
     "checksum": "{{checksum}}",
     "container_format": "{{container_format}}",
     "created_at": "{{created_at}}",
-    "deleted": "{{deleted}}",
-    "deleted_at": "{{deleted_at}}",
     "disk_format": "{{disk_format}}",
     "file": "{{file}}",
     "id": "{{id}}",
-    "is_public": "{{is_public}}",
     "min_disk": "{{min_disk}}",
     "min_ram": "{{min_ram}}",
     "name": "{{name}}",
     "owner": "{{owner}}",
-    "properties": {},
     "protected": "{{protected}}",
     "size": "{{size}}",
     "status": "{{status}}",
-    "updated_at": "{{updated_at}}"
+    "updated_at": "{{updated_at}}",
+    "visibility": "{{visibility}}"
+% end
 }"""
 
 
 def create_image(data):
-    return {'image': utils.json_render(IMAGE, data)}
+    return utils.json_render(IMAGE, data)
 
 
 def list_images(data):
     return {'images': [utils.json_render(IMAGE, d) for d in data]}
 
 
+def show_image(data):
+    return utils.json_render(IMAGE, data)
+
+
 def update_image(data):
-    return {'image': utils.json_render(IMAGE, data)}
+    return utils.json_render(IMAGE, data)
+
+
+# -----------------------------------------------------------------------------
+# Schemas
+
+IMAGE_SCHEMA = {
+    'name': 'image',
+    'properties': {
+        'container_format': {},
+        'disk_format': {},
+        'min_disk': {},
+        'min_ram': {},
+        'name': {},
+        'owner': {},
+        'protected': {},
+        'visibility': {},
+    }
+}
+
+
+def show_image_schema():
+    return IMAGE_SCHEMA
+
+
+# -----------------------------------------------------------------------------
+# Metadata definitions
+
+def list_metadefs():
+    return []

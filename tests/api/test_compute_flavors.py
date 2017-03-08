@@ -120,7 +120,7 @@ class ApiTestCase(utils.TestCase):
 
         # (Re-)create flavor[0]
         resp = self.app.post('/v2.0/flavors',
-                             json.dumps(create_flavor_req(flavor1)),
+                             params=json.dumps(create_flavor_req(flavor1)),
                              status=200)
         self.assertEqual(json.loads(resp.body), create_flavor_resp(flavor1))
 
