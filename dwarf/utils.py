@@ -122,11 +122,13 @@ def json_render(template, *args, **kwargs):
         render_data.update(arg)
     render_data.update(kwargs)
 
-    # Encode string values to take care of multi-line strings. Otherwise the
-    # rendered result contains illegal JSON data.
+    # Encode strings and unicodes to take care of multi-line values. Otherwise
+    # the rendered result contains illegal JSON data.
     for key, val in render_data.iteritems():
         if isinstance(val, str):
             render_data[key] = val.encode('string_escape')
+        if isinstance(val, unicode):
+            render_data[key] = val.encode('unicode_escape')
 
     # Do the actual template rendering and convert to a dict
     tpl = SimpleTemplate(template, noescape=True)
