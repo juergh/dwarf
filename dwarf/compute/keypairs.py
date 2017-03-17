@@ -33,9 +33,6 @@ from dwarf import exception
 
 LOG = logging.getLogger(__name__)
 
-KEYPAIRS_INFO = ('fingerprint', 'name', 'public_key')
-KEYPAIRS_DETAIL = ('created_at', 'fingerprint', 'name', 'public_key')
-
 
 class Controller(object):
 
