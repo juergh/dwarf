@@ -17,7 +17,7 @@
 tox:
 	tox
 
-pep8 pylint tests cover:
+pep8 pylint tests coverage:
 	tox -e $@
 
 clean:
@@ -48,4 +48,4 @@ init:
 	sudo su -s /bin/sh -c './bin/dwarf-manage db-delete' dwarf
 	sudo su -s /bin/sh -c './bin/dwarf-manage db-init' dwarf
 
-.PHONY: tox pep8 pylint tests cover deepclean tgz run init
+.PHONY: tox pep8 pylint tests coverage deepclean tgz run init
