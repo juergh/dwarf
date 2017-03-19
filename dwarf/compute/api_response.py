@@ -87,8 +87,6 @@ def show_flavor(data):
 # Keypairs
 
 KEYPAIR = """{
-    "fingerprint": "{{fingerprint}}",
-    "name": "{{name}}",
 % if _details:
     "created_at": "{{created_at}}",
     "deleted": "{{deleted}}",
@@ -99,6 +97,8 @@ KEYPAIR = """{
 % if defined('private_key'):
     "private_key": "{{private_key}}",
 % end
+    "fingerprint": "{{fingerprint}}",
+    "name": "{{name}}",
     "public_key": "{{public_key}}"
 }"""
 
@@ -119,26 +119,59 @@ def show_keypair(data):
 # -----------------------------------------------------------------------------
 # Servers
 
-SERVER = ('id', 'name')
-SERVER_INFO = DETAILS + ('addresses', 'config_drive', 'flavor', 'id', 'image',
-                         'key_name', 'name', 'status')
-SERVER_LINKS = {"links": [{"href": "", "rel": "self"}]}
+SERVER = """{
+% if _details:
+    "created_at": "{{created_at}}",
+    "deleted": "{{deleted}}",
+    "deleted_at": "{{deleted_at}}",
+    "updated_at": "{{updated_at}}",
+% end
+    "addresses": {
+        "private": [
+            {
+                "addr": "{{ip}}",
+                "version": "4"
+            }
+        ]
+    },
+    "config_drive": "{{config_drive}}",
+    "flavor": {
+        "id": "{{flavor_id}}",
+        "links": [
+            {
+                "href": "",
+                "rel": "self"
+            }
+        ]
+    },
+    "id": "{{id}}",
+    "image": {
+        "id": "{{image_id}}",
+        "links": [
+            {
+                "href": "",
+                "rel": "self"
+            }
+        ]
+    },
+    "key_name": "{{key_name}}",
+    "name": "{{name}}",
+    "status": "{{status}}"
+}"""
 
 
-def servers_create(data):
-    return {"server": template(SERVER_INFO, data)}
+def create_server(data):
+    return {'server': utils.json_render(SERVER, data, _details=True)}
 
 
-def servers_console_log(data):
+def list_servers(data, details=True):
+    return {'servers': [utils.json_render(SERVER, d, _details=details)
+                        for d in data]}
+
+
+def show_server(data):
+    return {'server': utils.json_render(SERVER, data, _details=True)}
+
+
+def show_console_log(data):
     return {'output': data}
-
-
-def servers_list(data, details=True):
-    if details:
-        return {"servers": template(SERVER_INFO, data)}
-    else:
-        return {"servers": template(SERVER, data)}
-
-
-def servers_show(data):
-    return {"server": template(SERVER_INFO, data)}

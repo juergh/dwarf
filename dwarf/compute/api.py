@@ -160,10 +160,10 @@ def _route_servers_id(server_id):
 
     # nova list
     if server_id == 'detail':
-        return api_response.servers_list(SERVERS.list())
+        return api_response.list_servers(SERVERS.list(), details=True)
 
     # nova show <server_id>
-    return api_response.servers_show(SERVERS.show(server_id))
+    return api_response.show_server(SERVERS.show(server_id))
 
 
 @exception.catchall
@@ -177,10 +177,10 @@ def _route_servers():
     # nova boot
     if bottle.request.method == 'POST':
         body = json.load(bottle.request.body)
-        return api_response.servers_create(SERVERS.create(body['server']))
+        return api_response.create_server(SERVERS.create(body['server']))
 
     # nova list (no details)
-    return api_response.servers_list(SERVERS.list(), details=False)
+    return api_response.list_servers(SERVERS.list(), details=False)
 
 
 @exception.catchall
@@ -195,7 +195,7 @@ def _route_servers_id_action(server_id):
 
     # nova console-log
     if 'os-getConsoleOutput' in body:
-        return api_response.servers_console_log(SERVERS.console_log(server_id))
+        return api_response.show_console_log(SERVERS.console_log(server_id))
 
     # nova start
     elif 'os-start' in body:
