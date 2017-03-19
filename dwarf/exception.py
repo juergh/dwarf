@@ -34,11 +34,11 @@ def catchall(func):
             return func(*args, **kwargs)
         except DwarfException as e:
             # Turn internal dwarf exceptions into bottle aborts
-            LOG.warn('Dwarf exception caught: %s (%s)', e.message, e.code)
-            abort(e.code, e.message)
+            LOG.warn('Dwarf exception caught: %s (%s)', e.message, e.status)
+            abort(e.status, e.message)
         except BottleException as e:
             # Re-raise bottle exceptions
-            LOG.warn('Bottle exception caught: %s (%s)', e.message, e.code)
+            LOG.warn('Bottle exception caught: %s', e.message)
             raise
         except Exception as e:   # pylint: disable=W0703
             LOG.exception('Unknown exception caught: %s', str(e))
@@ -51,40 +51,40 @@ class DwarfException(Exception):
     Base Dwarf exception
     """
     message = 'Unknown failure'
-    code = 500
+    status = 500
 
     def __init__(self, **kwargs):
-        if 'code' in kwargs:
-            self.code = kwargs['code']
+        if 'status' in kwargs:
+            self.status = kwargs['status']
         self.message = self.message % kwargs
         super(DwarfException, self).__init__(self.message)
 
 
 class Failure(DwarfException):
     message = '%(reason)s'
-    code = 500
+    status = 500
 
 
 class BadRequest(DwarfException):
     message = '%(reason)s'
-    code = 400
+    status = 400
 
 
 class Forbidden(DwarfException):
     message = '%(reason)s'
-    code = 403
+    status = 403
 
 
 class NotFound(DwarfException):
     message = '%(reason)s'
-    code = 404
+    status = 404
 
 
 class Conflict(DwarfException):
     message = '%(reason)s'
-    code = 409
+    status = 409
 
 
 class CommandExecutionError(DwarfException):
     message = 'Failed to run command: %(reason)s'
-    code = 500
+    status = 500

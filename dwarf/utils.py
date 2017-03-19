@@ -83,30 +83,6 @@ def execute(cmd, check_exit_code=None, shell=False, run_as_root=False):
     return (stdout, stderr)
 
 
-def template_single(templ, data, add_if_present=None, add=None):
-    resp = {}
-    for key in templ:
-        resp[key] = data[key]
-
-    if add_if_present is not None and add_if_present in data:
-        resp[add_if_present] = data[add_if_present]
-
-    if add is not None:
-        resp.update(add)
-
-    return resp
-
-
-def template(templ, data, **kwargs):
-    if isinstance(data, (list, tuple)):
-        resp = []
-        for d in data:
-            resp.append(template_single(templ, d, **kwargs))
-    else:
-        resp = template_single(templ, data, **kwargs)
-    return resp
-
-
 def json_render(template, *args, **kwargs):
     """
     Simple JSON rendering function that renders a JSON-style template and
@@ -134,6 +110,6 @@ def json_render(template, *args, **kwargs):
     tpl = SimpleTemplate(template, noescape=True)
     try:
         return json.loads(tpl.render(render_data))
-    except:
+    except Exception:   # pylint: disable=W0703
         LOG.error('Bad JSON syntax:\n%s', tpl.render(render_data))
         raise

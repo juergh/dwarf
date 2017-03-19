@@ -19,8 +19,6 @@
 from dwarf import config
 from dwarf import utils
 
-from dwarf.utils import template
-
 CONF = config.Config()
 
 DETAILS = ('created_at', 'deleted', 'deleted_at', 'updated_at')

@@ -154,7 +154,7 @@ class ApiServer(threading.Thread):
         except urllib2.HTTPError:
             # HTTPError means we did get a response, so the server is alive
             pass
-        except Exception as e:   # pylint: disable=W0703
+        except Exception:   # pylint: disable=W0703
             # Any other exception means the server is not responding
             return False
 

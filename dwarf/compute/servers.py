@@ -25,7 +25,6 @@ import time
 
 from dwarf import config
 from dwarf import db
-from dwarf import exception
 from dwarf import task
 from dwarf import utils
 
@@ -85,7 +84,7 @@ def _create_disks(server, image, flavor):
             utils.execute(['qemu-img', 'convert', '-O', 'raw', image_file,
                            base_disk])
             utils.execute(['qemu-img', 'resize', base_disk, '%sG' % disk_size])
-        except:
+        except Exception:   # pylint: disable=W0703
             if os.path.exists(base_disk):
                 os.remove(base_disk)
             raise
@@ -100,7 +99,7 @@ def _create_disks(server, image, flavor):
                            '%sG' % disk_local_size])
             utils.execute(['mkfs.ext3', '-F', '-L', 'ephemeral0',
                            base_disk_local])
-        except:
+        except Exception:   # pylint: disable=W0703
             if os.path.exists(base_disk_local):
                 os.remove(base_disk_local)
             raise
