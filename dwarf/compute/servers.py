@@ -66,15 +66,15 @@ def _generate_mac():
     return ':'.join(['%02x' % x for x in mac])
 
 
-def _create_disks(server):
+def _create_disks(server, image, flavor):
     """
     Create the base (backing) and server disk images
     """
     server_id = server['id']
-    image_id = server['image']['id']
-    image_file = server['image']['file']
-    disk_size = server['flavor']['disk']
-    disk_local_size = server['flavor'].get('ephemeral', 10)
+    image_id = image['id']
+    image_file = image['file']
+    disk_size = flavor['disk']
+    disk_local_size = flavor.get('ephemeral', 10)
 
     # Create the base boot disk at:
     # instances/_base/<image_id>_<disk_size>
@@ -190,29 +190,6 @@ class Controller(object):
         server = self.db.servers.update(id=server['id'], ip=lease['ip'])
         return lease['ip']
 
-    def _extend(self, server):
-        """
-        Extend the server details
-        """
-        if 'image_id' in server:
-            try:
-                server['image'] = self.images.show(server['image_id'])
-            except exception.NotFound:
-                LOG.warning('No such image: %s', server['image_id'])
-                server['image'] = {'id': 'unknown'}
-            del server['image_id']
-
-        if 'flavor_id' in server:
-            server['flavor'] = self.flavors.show(server['flavor_id'])
-            del server['flavor_id']
-
-        if 'ip' in server:
-            server['addresses'] = {'private': [{'addr': server['ip'],
-                                                'version': 4}]}
-            del server['ip']
-
-        return server
-
     def _update_status(self, server):
         """
         Update the (volatile) status of the server
@@ -267,9 +244,9 @@ class Controller(object):
         key_name = server.get('key_name', None)
         config_drive = server.get('config_drive', False)
 
-        # Sanity checks, will throw exceptions if they fail
-        self.images.show(image_id)
-        self.flavors.show(flavor_id)
+        # Get the associated image, flavor and keypair
+        image = self.images.show(image_id)
+        flavor = self.flavors.show(flavor_id)
         if key_name is None:
             keypair = None
         else:
@@ -286,24 +263,21 @@ class Controller(object):
         mac_address = _generate_mac()
         server = self.db.servers.update(id=server_id, mac_address=mac_address)
 
-        # Extend the server details
-        server = self._extend(server)
-
         # Create the server directory
         basepath = os.path.join(CONF.instances_dir, server_id)
         os.makedirs(basepath)
 
         # Create the server disk images and config drive
-        _create_disks(server)
+        _create_disks(server, image, flavor)
         _create_config_drive(server, keypair)
 
         # Finally create the server
-        self.virt.create_server(server)
+        self.virt.create_server(server, flavor)
 
         # Start a task to wait for the server to get its DHCP IP address
         task.start(server_id, 2, 60 / 2, self._update_ip, server)
 
-        return self._extend(self._update_status(server))
+        return self._update_status(server)
 
     def delete(self, server_id):
         """
@@ -335,7 +309,8 @@ class Controller(object):
 
         servers = []
         for s in self.db.servers.list():
-            servers.append(self._extend(self._update_status(s)))
+            servers.append(self._update_status(s))
+
         return servers
 
     def reboot(self, server_id, hard=False):
@@ -368,7 +343,7 @@ class Controller(object):
         LOG.info('show(server_id=%s)', server_id)
 
         server = self.db.servers.show(id=server_id)
-        return self._extend(self._update_status(server))
+        return self._update_status(server)
 
     def start(self, server_id):
         """

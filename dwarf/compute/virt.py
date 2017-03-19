@@ -64,7 +64,7 @@ def _xml_snippet(name, enable):
     return xml
 
 
-def _create_domain_xml(server, force=False):
+def _create_domain_xml(server, flavor, force=False):
     """
     Create a libvirt XML file for the domain
     """
@@ -90,8 +90,8 @@ def _create_domain_xml(server, force=False):
             'domain_type': CONF.libvirt_domain_type,
             'uuid': server['id'],
             'name': _name(server['int_id']),
-            'memory': int(server['flavor']['ram']) * 1024,
-            'vcpus': server['flavor']['vcpus'],
+            'memory': int(flavor['ram']) * 1024,
+            'vcpus': flavor['vcpus'],
             'basepath': basepath,
             'mac_addr': server['mac_address'],
             'bridge': CONF.libvirt_bridge_name,
@@ -242,14 +242,14 @@ class Controller(object):
     # -------------------------------------------------------------------------
     # Server operations (public)
 
-    def create_server(self, server):
+    def create_server(self, server, flavor):
         """
         Create a server
         """
-        LOG.info('create_server(server=%s)', server)
+        LOG.info('create_server(server=%s, flavor=%s)', server, flavor)
 
         self._connect()
-        xml = _create_domain_xml(server)
+        xml = _create_domain_xml(server, flavor)
         self._create_domain(xml)
 
     def delete_server(self, server):
