@@ -24,7 +24,7 @@ from tests import utils
 
 from dwarf.compute.api import ComputeApiServer
 
-CREATE_FLAVOR_REQ = """{
+FLAVOR_REQ = """{
     "flavor": {
         "disk": "{{disk}}",
         "id": "{{id}}",
@@ -36,7 +36,7 @@ CREATE_FLAVOR_REQ = """{
 
 
 def create_flavor_req(flavor):
-    return utils.json_render(CREATE_FLAVOR_REQ, flavor)
+    return utils.json_render(FLAVOR_REQ, flavor)
 
 
 FLAVOR_RESP = """{
@@ -74,14 +74,14 @@ flavor2 = data.flavor['101']
 flavor3 = data.flavor['102']
 
 
-class ApiTestCase(utils.TestCase):
+class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
-        super(ApiTestCase, self).setUp()
+        super(DwarfTestCase, self).setUp()
         self.app = TestApp(ComputeApiServer().app)
 
     def tearDown(self):
-        super(ApiTestCase, self).tearDown()
+        super(DwarfTestCase, self).tearDown()
 
     def test_list_flavors(self):
         resp = self.app.get('/v2.0/flavors', status=200)

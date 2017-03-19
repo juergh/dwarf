@@ -91,14 +91,14 @@ keypair1 = data.keypair['11111111-2222-3333-4444-555555555555']
 keypair2 = data.keypair['22222222-3333-4444-5555-666666666666']
 
 
-class ApiTestCase(utils.TestCase):
+class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
-        super(ApiTestCase, self).setUp()
+        super(DwarfTestCase, self).setUp()
         self.app = TestApp(ComputeApiServer().app)
 
     def tearDown(self):
-        super(ApiTestCase, self).tearDown()
+        super(DwarfTestCase, self).tearDown()
 
     def test_list_keypairs(self):
         # Preload test keypairs

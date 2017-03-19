@@ -26,7 +26,7 @@ from tests import utils
 
 from dwarf.image.api import ImageApiServer
 
-CREATE_IMAGE_REQ = """{
+IMAGE_REQ = """{
     "container_format": "{{container_format}}",
     "disk_format": "{{disk_format}}",
     "name": "{{name}}"
@@ -34,7 +34,7 @@ CREATE_IMAGE_REQ = """{
 
 
 def create_image_req(image):
-    return utils.json_render(CREATE_IMAGE_REQ, image)
+    return utils.json_render(IMAGE_REQ, image)
 
 
 IMAGE_RESP = """{
@@ -95,14 +95,14 @@ image1 = data.image['11111111-2222-3333-4444-555555555555']
 image2 = data.image['22222222-3333-4444-5555-666666666666']
 
 
-class ApiTestCase(utils.TestCase):
+class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
-        super(ApiTestCase, self).setUp()
+        super(DwarfTestCase, self).setUp()
         self.app = TestApp(ImageApiServer().app)
 
     def tearDown(self):
-        super(ApiTestCase, self).tearDown()
+        super(DwarfTestCase, self).tearDown()
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)

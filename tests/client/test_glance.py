@@ -29,15 +29,15 @@ def cwd(filename):
 image1 = data.image['11111111-2222-3333-4444-555555555555']
 
 
-class ClientTestCase(utils.TestCase):
+class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
-        super(ClientTestCase, self).setUp()
+        super(DwarfTestCase, self).setUp()
         self.start_dwarf()
 
     def tearDown(self):
         self.stop_dwarf()
-        super(ClientTestCase, self).tearDown()
+        super(DwarfTestCase, self).tearDown()
 
     def test_glance(self):
         # Preload a test image
@@ -49,12 +49,10 @@ class ClientTestCase(utils.TestCase):
         self.exec_verify(['glance', '--verbose', 'image-list'],
                          filename=cwd('glance_verbose-image-list'))
 
-        self.exec_verify(['glance', 'image-show',
-                          '11111111-2222-3333-4444-555555555555'],
+        self.exec_verify(['glance', 'image-show', image1['id']],
                          filename=cwd('glance_image-show'))
 
-        self.exec_verify(['glance', 'image-delete',
-                          '11111111-2222-3333-4444-555555555555'],
+        self.exec_verify(['glance', 'image-delete', image1['id']],
                          stdout='')
 
         image1_file = '/tmp/dwarf/test_image_1'

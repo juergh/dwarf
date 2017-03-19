@@ -121,14 +121,14 @@ def list_versions_resp():
     return {'versions': {'values': [VERSION_RESP]}}
 
 
-class ApiTestCase(utils.TestCase):
+class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
-        super(ApiTestCase, self).setUp()
+        super(DwarfTestCase, self).setUp()
         self.app = TestApp(IdentityApiServer().app)
 
     def tearDown(self):
-        super(ApiTestCase, self).tearDown()
+        super(DwarfTestCase, self).tearDown()
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)

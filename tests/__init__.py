@@ -44,7 +44,7 @@ os.environ['PATH'] = './tests/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:' \
                      '/usr/bin:/sbin:/bin'
 
 # Set OS env variables
-os.environ['OS_AUTH_URL'] = 'http://localhost:20000/v2.0'
+os.environ['OS_AUTH_URL'] = 'http://127.0.0.1:20000/v2.0'
 os.environ['OS_USERNAME'] = 'dwarf-user'
 os.environ['OS_PASSWORD'] = 'dwarf-password'
-os.environ['OS_TENANT_NAME'] = 'dwarf-tenant'
+os.environ['OS_PROJECT_ID'] = 'dwarf-project'
