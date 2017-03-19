@@ -58,7 +58,7 @@ def _get_from_dict(keys, **kwargs):
     """
     for key in keys:
         val = kwargs.get(key, None)
-        if val:
+        if val is not None:
             return (key, val)
 
 
@@ -130,7 +130,7 @@ class Table(object):
             if self.is_unique:
                 key = self.is_unique
                 val = kwargs.get(key, None)
-                if val:
+                if val is not None:
                     cur.execute('SELECT * FROM %s WHERE %s=? AND deleted=?' %
                                 (self.table, key), (val, FALSE))
                     if cur.fetchone():
@@ -163,7 +163,7 @@ class Table(object):
                     val = _to_string_bool(kwargs.get(c, FALSE))
                 else:
                     val = kwargs.get(c, '')
-                vals.append(val)
+                vals.append(str(val))
 
             # Create the sqlite formatting string, i.e., '?,?,?,?'
             fmt = ('?,' * len(self.cols)).rstrip(',')
@@ -197,9 +197,9 @@ class Table(object):
                         val = _to_string_bool(kwargs[c])
                     else:
                         val = kwargs[c]
-                    vals.append(val)
+                    vals.append(str(val))
             fmt = fmt.lstrip(',')
-            vals.append(kwargs['id'])
+            vals.append(str(kwargs['id']))
 
             # Update the row
             cur.execute('UPDATE %s SET %s WHERE id=?' % (self.table, fmt),
