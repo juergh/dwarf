@@ -123,7 +123,7 @@ def _create_config_drive(server, keypair):
     """
     Create the config drive for the server
     """
-    if not CONF.force_config_drive and server['config_drive'] == 'False':
+    if not (CONF.force_config_drive or server['config_drive'] == 'True'):
         return
 
     # Config drive data

@@ -98,8 +98,9 @@ def _create_domain_xml(server, flavor, force=False):
         }
 
         # Enable/disable the config drive
-        config_drive = _xml_snippet('config_drive', (CONF.force_config_drive or
-                                                     server['config_drive']))
+        config_drive = _xml_snippet('config_drive',
+                                    (CONF.force_config_drive or
+                                     server['config_drive'] == 'True'))
         xml_info.update(config_drive)
 
         xml = Template(xml_template).substitute(xml_info)
