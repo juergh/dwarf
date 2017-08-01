@@ -48,4 +48,18 @@ init:
 	sudo su -s /bin/sh -c './bin/dwarf-manage db-delete' dwarf
 	sudo su -s /bin/sh -c './bin/dwarf-manage db-init' dwarf
 
-.PHONY: tox pep8 pylint tests coverage deepclean tgz run init
+release:
+	[ -n "$${v}" ] || ( echo "Usage: make release v=<VERSION>" ; false )
+	( \
+	    echo $${v} ; \
+	    prev=$$(cat ChangeLog | head -1) ; \
+	    git --no-pager log --no-merges --format='  * %s' $${prev}..  ; \
+	    echo ; \
+	    cat ChangeLog ; \
+	) > ChangeLog.new
+	mv ChangeLog.new ChangeLog
+	git add ChangeLog
+	git commit -s -m "$${v}"
+	git tag -s -m "$${v}" $${v}
+
+.PHONY: tox pep8 pylint tests coverage deepclean tgz run init release
