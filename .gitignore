@@ -1,7 +1,7 @@
 *~
 *.pyc
+.coverage
 .tox/
 build/
+debian/changelog
 dwarf.egg-info/
-.coverage
-

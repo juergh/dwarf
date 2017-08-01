@@ -1,0 +1,32 @@
+Source: dwarf
+Maintainer: Juerg Haefliger <juergh@gmail.com>
+Section: python
+Priority: optional
+Build-Depends: debhelper,
+               dh-python,
+               lsb-release,
+               python,
+               python-setuptools
+X-Python-Version: >= 2.6
+Standards-Version: 3.9.6
+Homepage: https://github.com/juergh/dwarf
+
+Package: dwarf
+Architecture: all
+Depends: ${misc:Depends},
+         ${python:Depends},
+         adduser,
+         genisoimage,
+         iptables,
+         libvirt-daemon,
+         libvirt-daemon-system,
+	 python-bottle,
+	 python-cryptography,
+	 python-simplejson,
+	 python-libvirt,
+	 python-yaml,
+	 qemu-kvm
+Description: OpenStack API on top of libvirt/kvm
+ In a nutshell, dwarf is an OpenStack API on top of local libvirt/kvm. It
+ supports a subset of the Keystone, Glance and Nova APIs to manage images and
+ instances on the local machine.

@@ -50,6 +50,7 @@ init:
 
 release:
 	[ -n "$${v}" ] || ( echo "Usage: make release v=<VERSION>" ; false )
+	# Update ChangeLog
 	( \
 	    echo $${v} ; \
 	    prev=$$(cat ChangeLog | head -1) ; \
@@ -58,8 +59,19 @@ release:
 	    cat ChangeLog ; \
 	) > ChangeLog.new
 	mv ChangeLog.new ChangeLog
-	git add ChangeLog
+	# Update debian/changelog.in
+	debian/bin/update-changelog.in $${v#v}
+	# commit and tag
+	git add ChangeLog debian/changelog.in
 	git commit -s -m "$${v}"
 	git tag -s -m "$${v}" $${v}
 
-.PHONY: tox pep8 pylint tests coverage deepclean tgz run init release
+debian: BUILDD := $(shell mktemp -d build-XXXXXXXX)
+debian:
+	git archive --format=tar HEAD | ( cd $(BUILDD) ; tar -xf - )
+	cd $(BUILDD) && \
+	    ./debian/bin/create-changelog && \
+	    dpkg-buildpackage && \
+	    rm -rf $(BUILDD)
+
+.PHONY: tox pep8 pylint tests coverage deepclean tgz run init release debian

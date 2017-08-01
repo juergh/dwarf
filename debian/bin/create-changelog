@@ -1,0 +1,25 @@
+#!/bin/bash -eu
+
+release=$(lsb_release -s -c)
+
+cp -f debian/changelog.in debian/changelog
+sed -i -e "s/RELEASE/${release}/g" debian/changelog
+
+# Add a test-build changelog entry
+if ! git describe --exact-match HEAD 2>/dev/null ; then
+    version=$(dpkg-parsechangelog -S version)
+
+    upstream_version=${version%%~*}
+    major_version=${upstream_version%.*}
+    minor_version=${upstream_version##*.}
+    minor_version=$((minor_version + 1))
+
+    new_version="${major_version}.${minor_version}~$(date +'%Y%m%d')~${release}"
+
+    dch -v "${new_version}" -m "TEST BUILD"
+
+    while read commit ; do
+        dch -a -m "${commit}"
+    done <<< "$(git --no-pager log --no-merges --format='%s' \
+                    v${upstream_version}..)"
+fi

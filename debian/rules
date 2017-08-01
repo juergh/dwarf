@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+BUILD_SYSTEM = '--buildsystem=python_distutils'
+
+%:
+	@echo Debug: $@
+	dh $@ --with python2
+
+override_dh_auto_build:
+	dh_auto_build $(BUILD_SYSTEM)
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	dh_auto_install $(BUILD_SYSTEM)
