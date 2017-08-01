@@ -1,0 +1,21 @@
+name: dwarf
+version: '0.2.2'
+summary: OpenStack API on top of libvirt/kvm
+description: |
+  In a nutshell, dwarf is an OpenStack API on top of local libvirt/kvm. It
+  supports a subset of the Keystone, Glance and Nova APIs to manage images and
+  instances on the local machine.
+grade: devel
+confinement: devmode
+
+apps:
+  dwarf:
+    command: bin/dwarf
+  dwarf-manage:
+    command: bin/dwarf-manage
+
+parts:
+  dwarf:
+    plugin: python
+    source: .
+    source-type: git

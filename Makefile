@@ -61,8 +61,10 @@ release:
 	mv ChangeLog.new ChangeLog
 	# Update debian/changelog.in
 	debian/bin/update-changelog.in $${v#v}
+	# Update snap/snapcraft.yaml
+	sed -i -e "s/^version: .*$$/version: '$${v#v}'/" snap/snapcraft.yaml
 	# commit and tag
-	git add ChangeLog debian/changelog.in
+	git add ChangeLog debian/changelog.in snap/snapcraft.yaml
 	git commit -s -m "$${v}"
 	git tag -s -m "$${v}" $${v}
 
