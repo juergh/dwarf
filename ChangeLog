@@ -1,3 +1,60 @@
+v0.2.2
+  * Add make target 'release'
+  * compute: Fix the logic to enable the config drive
+  * Update tox.ini
+  * Fix pylint warnings/errors
+  * tests: Add more tests plus fix/enhance the existing ones
+  * db: Various fixes to make it more robust
+  * compute: Use templates for generating API responses and requests (part 2)
+  * compute: Simplify flavor and image data responses
+  * Rename Makefile target 'cover' to 'coverage'
+  * identity: Change the default API port to 5000
+  * Remove unused variables
+  * Encode unicode values before rendering templates
+  * tests: Add 'nova' and 'glance' OpenStack client tests
+  * image: Add support for API version v2
+  * image: Use lower-case status strings
+  * image: Replace 'location' metadata key with 'file'
+  * compute: Remove 'images' API
+  * tests: Refactor the test data
+  * tests: Add mock binaries
+  * compute: Remove the tenant_id from the API request path
+  * compute: Rename API version v1.1 to v2.0
+  * Add a stop_all() hook to stop all running tasks
+  * Make the API server class more robust (2)
+  * tests: Restructure the tests plus various fixes and cleanups
+  * comupte: Sanity check the provided public key
+  * Make the API server class more robust
+  * Rename Makfile target 'test' to 'tests'
+  * tests: Use templates for generating API responses and requests
+  * compute: Use templates for generating API responses
+  * identity: Cleanups
+  * tests: Various cleanups and enhancements (non-functional changes)
+  * Fix pylint warning 'logging-not-lazy'
+  * tests: Add more tests for the compute service
+  * Only encode strings when rendering JSON templates
+  * tests: Add more tests for the compute service
+  * tests: Add json_render() to tests/utils.py
+  * tests: Add more tests for the compute service
+  * tests: Non-functional cleanups
+  * image: Use JSON templates for rendering API responses
+  * identity: Use JSON templates for rendering API responses
+  * tests: Set maxDiff = None
+  * tests: Pass positional arguments to nosetests
+  * image: Add '/' API route
+  * image: Fix '/versions' API response status
+  * Update email address
+  * tox: Rename the 'py27' environment to 'test'
+  * Move dependencies to requirements.txt
+  * Remove .coverage in clean target
+  * pylint: Disable 'wrong-import-{order,position}' warnings
+  * tests: Verify generated SSH keypair
+  * Swap M2crypto out for cryptography
+  * tests: Fix identity/test_api.py
+  * compute: Use the libvirt API to get DHCP lease information
+  * compute: Specify the primary video device explicitly
+  * identity: Update the API responses to match the v2.0 spec
+
 v0.2.1
   * image: Add API routes for '/versions'
   * compute: Add API routes for '/' and '/v1.1'
