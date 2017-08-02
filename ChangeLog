@@ -1,3 +1,10 @@
+v0.2.3
+  * Fix the tools/scripts that build a debian package
+  * Fix the tools/scripts for creating releases
+  * Change the default libvirt bridge IP to 10.0.0.1
+  * Add support for building a snap package
+  * Add support for building a debian package
+
 v0.2.2
   * Add make target 'release'
   * compute: Fix the logic to enable the config drive

@@ -1,3 +1,13 @@
+dwarf (0.2.3~RELEASE) unstable; urgency=medium
+
+  * Fix the tools/scripts that build a debian package
+  * Fix the tools/scripts for creating releases
+  * Change the default libvirt bridge IP to 10.0.0.1
+  * Add support for building a snap package
+  * Add support for building a debian package
+
+ -- Juerg Haefliger <juerg.haefliger@canonical.com>  Wed, 02 Aug 2017 09:29:35 +0200
+
 dwarf (0.2.2~RELEASE) unstable; urgency=low
 
   * Add make target 'release'

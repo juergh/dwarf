@@ -1,5 +1,5 @@
 name: dwarf
-version: '0.2.2'
+version: '0.2.3'
 summary: OpenStack API on top of libvirt/kvm
 description: |
   In a nutshell, dwarf is an OpenStack API on top of local libvirt/kvm. It
