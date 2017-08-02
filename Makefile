@@ -49,7 +49,10 @@ init:
 	sudo su -s /bin/sh -c './bin/dwarf-manage db-init' dwarf
 
 release:
-	[ -n "$${v}" ] || ( echo "Usage: make release v=<VERSION>" ; false )
+	[ -n "$${v}" ] || \
+	    ( echo "+++ Usage: make release v=<VERSION>" ; false )
+	[ "$${v#v}" != "$${v}" ] || \
+	    ( echo "+++ Version string must start with 'v'" ; false )
 	# Update ChangeLog
 	( \
 	    echo $${v} ; \

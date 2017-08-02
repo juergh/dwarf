@@ -8,7 +8,7 @@ new_version=${1}
 changelog=debian/changelog.in
 
 version=$(dpkg-parsechangelog -l ${changelog} -S version)
-version=${version%%-*}
+version=${version%%~*}
 
 # Bail out if the changelog is up-to-date
 if [ ${new_version} = ${version} ] ; then
@@ -19,10 +19,11 @@ fi
 # Add commit subjects to the changelog
 first=1
 while read commit ; do
+    echo "${commit}"
     if [ ${first} -eq 1 ] ; then
         first=0
-        dch -c ${changelog} -v "${new_version}~RELEASE" -m "${commit}"
+        dch -c ${changelog} -v "${new_version}~RELEASE" "${commit}"
     else
-        dch -c ${changelog} -a -m "${commit}"
+        dch -c ${changelog} -a "${commit}"
     fi
 done <<< "$(git --no-pager log --no-merges --format='%s' v${version}..)"
