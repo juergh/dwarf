@@ -71,12 +71,13 @@ release:
 	git commit -s -m "$${v}"
 	git tag -s -m "$${v}" $${v}
 
-debian: BUILDD := $(shell mktemp -d build-XXXXXXXX)
 debian:
-	git archive --format=tar HEAD | ( cd $(BUILDD) ; tar -xf - )
-	cd $(BUILDD) && \
+	! [ -d build-debian ] || rm -rf build-debian
+	mkdir build-debian
+	git archive --format=tar HEAD | ( cd build-debian ; tar -xf - )
+	cd build-debian && \
 	    ./debian/bin/create-changelog && \
-	    dpkg-buildpackage && \
-	    rm -rf $(BUILDD)
+	    dpkg-buildpackage
+	rm -rf build-debian
 
 .PHONY: tox pep8 pylint tests coverage deepclean tgz run init release debian

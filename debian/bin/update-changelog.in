@@ -27,3 +27,6 @@ while read commit ; do
         dch -c ${changelog} -a "${commit}"
     fi
 done <<< "$(git --no-pager log --no-merges --format='%s' v${version}..)"
+
+# Set distribution to 'unstable'
+dch -c ${changelog} -r -D unstable ''
