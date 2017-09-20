@@ -1,0 +1,67 @@
+#!/bin/bash -eu
+#
+# Run dwarf in the forground (for testing)
+#
+
+if [ $(id -u) -ne 0 ] ; then
+    echo "You need to run this script as root"
+    exit 1
+fi
+
+#
+# Create the dwarf group and user
+#
+if ! getent group dwarf >/dev/null ; then
+    groupadd -r dwarf
+fi
+if ! getent passwd dwarf >/dev/null ; then
+    useradd -r -g dwarf -G dwarf,libvirt -d /var/lib/dwarf \
+            -s /sbin/nologin dwarf
+fi
+
+#
+# Create the persistent working directory
+#
+mkdir -p /var/lib/dwarf/instances/_base
+mkdir -p /var/lib/dwarf/images
+chown -R dwarf:dwarf /var/lib/dwarf
+
+#
+# Create the temporary source directory
+#
+tmpd=$(mktemp -d /tmp/dwarf-XXXXXXXXXXXX)
+trap "rm -rf ${tmpd} " EXIT
+
+#
+# Copy the source
+#
+cp -aR bin dwarf ${tmpd}
+find ${tmpd} -type d | xargs chmod 777
+find ${tmpd} -type f | xargs chmod 644
+chmod 777 ${tmpd}/bin/*
+
+#
+# Copy the sudoer file
+#
+cp etc/sudoers.d/dwarf /etc/sudoers.d/dwarf
+chown root:root /etc/sudoers.d/dwarf
+chmod 440 /etc/sudoers.d/dwarf
+
+#
+# Initialize the database
+#
+if ! [ -e /var/lib/dwarf/dwarf.db ] ; then
+    su -s /bin/sh -c "${tmpd}/bin/dwarf-manage db-init" dwarf
+fi
+
+#
+# Stop the dwarf service
+#
+if [ -e /lib/systemd/system/dwarf.service ] ; then
+    systemctl stop dwarf.service
+fi
+
+#
+# Finally run it
+#
+su -s /bin/sh -c "${tmpd}/bin/dwarf -s" dwarf

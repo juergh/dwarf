@@ -35,19 +35,6 @@ tgz:
 	git archive --format=tar --prefix=dwarf-$(VERSION)/ master | \
 		gzip -9 > ../dwarf-$(VERSION).tar.gz
 
-run:
-	sudo su -s /bin/sh -c './bin/dwarf -s' dwarf
-
-init:
-	pid=$$(ps -ef | grep './bin/dwarf' | grep sudo | grep -v grep | \
-	       awk '{ print $$2 }') ; \
-	    if [ "$${pid}" != "" ] ; then \
-	        sudo kill $${pid} && \
-	        sleep 5 ; \
-	    fi
-	sudo su -s /bin/sh -c './bin/dwarf-manage db-delete' dwarf
-	sudo su -s /bin/sh -c './bin/dwarf-manage db-init' dwarf
-
 release:
 	[ -n "$${v}" ] || \
 	    ( echo "+++ Usage: make release v=<VERSION>" ; false )
@@ -80,4 +67,4 @@ debian:
 	    dpkg-buildpackage
 	rm -rf build-debian
 
-.PHONY: tox pep8 pylint tests coverage deepclean tgz run init release debian
+.PHONY: tox pep8 pylint tests coverage clean deepclean tgz release debian
