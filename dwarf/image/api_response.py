@@ -29,7 +29,7 @@ VERSION_v2 = """{
     "id": "v2",
     "links": [
         {
-            "href": "http://{{bind_host}}:{{image_api_port}}/v2/",
+            "href": "http://{{bind_host}}:{{bind_port}}/image/v2/",
             "rel": "self"
         }
     ],

@@ -19,7 +19,6 @@
 import bottle
 import json
 
-from dwarf import api_server
 from dwarf import config
 from dwarf import exception
 from dwarf import utils
@@ -35,7 +34,7 @@ CONF = config.Config()
 @exception.catchall
 def _route_versions():
     """
-    Route:  /
+    Route:  /identity
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -47,7 +46,7 @@ def _route_versions():
 @exception.catchall
 def _route_version():
     """
-    Route:  /v2.0
+    Route:  /identity/v2.0
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -58,7 +57,7 @@ def _route_version():
 @exception.catchall
 def _route_tokens():
     """
-    Route:  /v2.0/tokens
+    Route:  /identity/v2.0/tokens
     Method: POST
     """
     utils.show_request(bottle.request)
@@ -69,21 +68,23 @@ def _route_tokens():
 
 
 # -----------------------------------------------------------------------------
-# API server class
+# Identity API exports
 
-class IdentityApiServer(api_server.ApiServer):
-    def __init__(self, quiet=False):
-        super(IdentityApiServer, self).__init__('Identity',
-                                                CONF.bind_host,
-                                                CONF.identity_api_port,
-                                                quiet=quiet)
+def set_routes(app):
+    app.route('/identity',
+              method='GET',
+              callback=_route_versions)
+    app.route('/identity/v2.0',
+              method='GET',
+              callback=_route_version)
+    app.route('/identity/v2.0/tokens',
+              method='POST',
+              callback=_route_tokens)
 
-        self.app.route('/',
-                       method='GET',
-                       callback=_route_versions)
-        self.app.route('/v2.0',
-                       method='GET',
-                       callback=_route_version)
-        self.app.route('/v2.0/tokens',
-                       method='POST',
-                       callback=_route_tokens)
+
+def setup():
+    pass
+
+
+def teardown():
+    pass

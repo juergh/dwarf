@@ -25,6 +25,13 @@ import urllib2
 
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 
+from dwarf import config
+
+from dwarf.compute import api as api_compute
+from dwarf.identity import api as api_identity
+from dwarf.image import api as api_image
+
+CONF = config.Config()
 LOG = logging.getLogger(__name__)
 
 
@@ -49,14 +56,15 @@ class _HTTPServer(bottle.ServerAdapter):
     add a stop() method for cleanly shutting down the server.
     """
     srv = None
+    app = None
 
-    def run(self, app):
+    def run(self, handler):
         # Handle the TIME_WAIT state for quick server restarts
         WSGIServer.allow_reuse_address = 1
 
         # Create the server and start it
         self.srv = WSGIServer((self.host, self.port), _HTTPRequestHandler)
-        self.srv.set_app(app)
+        self.srv.set_app(self.app)
         try:
             self.srv.serve_forever()
         finally:
@@ -69,25 +77,34 @@ class _HTTPServer(bottle.ServerAdapter):
 
 class ApiServer(threading.Thread):
     """
-    Generic API server class
+    The API server class
     """
 
-    def __init__(self, sname, host, port, quiet=False):
+    def __init__(self, quiet=False):
         threading.Thread.__init__(self)
 
-        self.server = None
-        self.app = bottle.Bottle()
-
-        self.sname = sname
-        self.host = host
-        self.port = port
         self.quiet = quiet
 
+        self.daemon = True
+        self.server = None
+        self.app = bottle.Bottle()
+        self.host = CONF.bind_host
+        self.port = CONF.bind_port
+
+        # Set the routes for the different services
+        api_compute.set_routes(self.app)
+        api_identity.set_routes(self.app)
+        api_image.set_routes(self.app)
+
     def setup(self):
-        pass
+        api_compute.setup()
+        api_identity.setup()
+        api_image.setup()
 
     def teardown(self):
-        pass
+        api_compute.teardown()
+        api_identity.teardown()
+        api_image.teardown()
 
     def run(self):
         """
@@ -96,10 +113,10 @@ class ApiServer(threading.Thread):
         try:
             self.setup()
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to setup %s API server', self.sname)
+            LOG.exception('Failed to setup API server')
             return
 
-        LOG.info('Starting %s API server', self.sname)
+        LOG.info('Starting API server')
         try:
             # Check if we can bind to the address. We need to retry for a bit
             # until the dwarf network comes up.
@@ -120,15 +137,15 @@ class ApiServer(threading.Thread):
 
             # Create the HTTP server
             self.server = _HTTPServer(host=self.host, port=self.port)
+            self.server.app = self.app
 
             # Start the bottle server
-            LOG.info('%s API server listening on %s:%s', self.sname, self.host,
-                     self.port)
-            bottle.run(self.app, server=self.server, quiet=self.quiet)
-            LOG.info('%s API server shut down', self.sname)
+            LOG.info('API server listening on %s:%s', self.host, self.port)
+            bottle.run(server=self.server, quiet=self.quiet)
+            LOG.info('API server shut down')
 
         except Exception:   # pylint: disable=W0703
-            LOG.exception('Failed to start %s API server', self.sname)
+            LOG.exception('Failed to start API server')
 
         finally:
             self.teardown()
@@ -138,7 +155,7 @@ class ApiServer(threading.Thread):
         Stop the server
         """
         if self.is_alive():
-            LOG.info('Stopping %s API server', self.sname)
+            LOG.info('Stopping API server')
             self.server.stop()
 
     def is_active(self):

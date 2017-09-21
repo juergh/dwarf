@@ -23,7 +23,7 @@ from webtest import TestApp
 from tests import data
 from tests import utils
 
-from dwarf.compute.api import ComputeApiServer
+from dwarf.api_server import ApiServer
 
 SERVER_REQ = """{
     "flavorRef": "{{flavor_id}}",
@@ -85,13 +85,14 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(ComputeApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_create_server_no_image(self):
-        self.app.post('/v2.0/servers',
+        self.app.post('/compute/v2.0/servers',
                       params=json.dumps(create_server_req(server1)),
                       status=404)
 
@@ -99,7 +100,7 @@ class DwarfTestCase(utils.TestCase):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.post('/v2.0/servers',
+        resp = self.app.post('/compute/v2.0/servers',
                              params=json.dumps(create_server_req(server1)),
                              status=200)
         self.assertEqual(json.loads(resp.body),

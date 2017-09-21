@@ -28,18 +28,13 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'dwarf', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
+from dwarf import api_server
 from dwarf import config
 from dwarf import log
 
-from dwarf.compute.ec2metadata import Ec2MetadataServer
-
-from dwarf.compute.api import ComputeApiServer
-from dwarf.identity.api import IdentityApiServer
-from dwarf.image.api import ImageApiServer
-
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
-THREADS = []
+DWARF = None
 
 
 def _parse_arguments():
@@ -50,13 +45,14 @@ def _parse_arguments():
     return aargs
 
 
-def cleanup(dummy_signal, dummy_frame):
-    # Stop all threads
-    for thread in THREADS:
-        thread.stop()
+def cleanup(_signal, _frame):
+    # Stop the API server thread
+    DWARF.stop()
 
 
 def main():
+    global DWARF   # pylint: disable=W0603
+
     # parse the commandline arguments and initialize the logger
     aargs = _parse_arguments()
     log.init_logger(log_to_stdout=aargs.stdout)
@@ -70,23 +66,13 @@ def main():
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
-    # Create the API (and Ec2 metadata) server threads
-    THREADS.extend([
-        IdentityApiServer(),
-        ComputeApiServer(),
-        ImageApiServer(),
-        Ec2MetadataServer(),
-    ])
+    # Create and start the API server thread
+    DWARF = api_server.ApiServer(quiet=False)
+    DWARF.start()
 
-    # Start all threads
-    for thread in THREADS:
-        thread.daemon = True
-        thread.start()
-
-    # Wait for all threads to terminate
-    for thread in THREADS:
-        while thread.is_alive():
-            thread.join(3600)
+    # Wait for the API server thread to terminate
+    while DWARF.is_alive():
+        DWARF.join(3600)
 
     LOG.info('Dwarf stopped')
 

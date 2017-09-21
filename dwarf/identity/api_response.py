@@ -28,7 +28,7 @@ VERSION_v2d0 = """{
     "id": "v2.0",
     "links": [
         {
-            "href": "http://{{bind_host}}:{{identity_api_port}}/v2.0/",
+            "href": "http://{{bind_host}}:{{bind_port}}/identity/v2.0/",
             "rel": "self"
         }
     ],
@@ -75,7 +75,7 @@ TOKEN = """{
             "endpoints": [
                 {
                     "publicURL":
-                    "http://{{bind_host}}:{{compute_api_port}}/v2.0",
+                    "http://{{bind_host}}:{{bind_port}}/compute/v2.0",
                     "region": "dwarf-region"
                 }
             ]
@@ -86,7 +86,7 @@ TOKEN = """{
             "endpoints": [
                 {
                     "publicURL":
-                    "http://{{bind_host}}:{{image_api_port}}",
+                    "http://{{bind_host}}:{{bind_port}}/image",
                     "region": "dwarf-region"
                 }
             ]
@@ -97,7 +97,7 @@ TOKEN = """{
             "endpoints": [
                 {
                     "publicURL":
-                    "http://{{bind_host}}:{{identity_api_port}}/v2.0",
+                    "http://{{bind_host}}:{{bind_port}}/identity",
                     "region": "dwarf-region"
                 }
             ]

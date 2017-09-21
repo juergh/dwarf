@@ -24,7 +24,7 @@ from webtest import TestApp
 from tests import data
 from tests import utils
 
-from dwarf.image.api import ImageApiServer
+from dwarf.api_server import ApiServer
 
 IMAGE_REQ = """{
     "container_format": "{{container_format}}",
@@ -78,7 +78,7 @@ VERSION_RESP = """{
     "id": "v2",
     "links": [
         {
-            "href": "http://127.0.0.1:20002/v2/",
+            "href": "http://127.0.0.1:20000/image/v2/",
             "rel": "self"
         }
     ],
@@ -99,20 +99,14 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(ImageApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
-
-    def test_http_error(self):
-        self.app.get('/no-such-url', status=404)
-        self.app.get('/v2/images/no-such-id', status=404)
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_list_versions(self):
-        resp = self.app.get('/', status=300)
-        self.assertEqual(json.loads(resp.body), list_versions_resp())
-
-        resp = self.app.get('/versions', status=200)
+        resp = self.app.get('/image', status=300)
         self.assertEqual(json.loads(resp.body), list_versions_resp())
 
     def test_list_images(self):
@@ -120,7 +114,7 @@ class DwarfTestCase(utils.TestCase):
         self.create_image(image1)
         self.create_image(image2)
 
-        resp = self.app.get('/v2/images', status=200)
+        resp = self.app.get('/image/v2/images', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_images_resp([image1, image2]))
 
@@ -128,19 +122,20 @@ class DwarfTestCase(utils.TestCase):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.get('/v2/images/%s' % image1['id'], status=200)
+        resp = self.app.get('/image/v2/images/%s' % image1['id'], status=200)
         self.assertEqual(json.loads(resp.body), show_image_resp(image1))
 
     def test_delete_image(self):
         # Preload a test image
         self.create_image(image1)
 
-        resp = self.app.delete('/v2/images/%s' % image1['id'], status=204)
+        resp = self.app.delete('/image/v2/images/%s' % image1['id'],
+                               status=204)
         self.assertEqual(resp.body, '')
         self.assertEqual(os.path.exists('/tmp/dwarf/images/%s' % image1['id']),
                          False)
 
-        resp = self.app.get('/v2/images', status=200)
+        resp = self.app.get('/image/v2/images', status=200)
         self.assertEqual(json.loads(resp.body), list_images_resp([]))
 
     def test_update_image(self):
@@ -150,7 +145,7 @@ class DwarfTestCase(utils.TestCase):
         key = 'name'
         val = 'Patched test image 1'
 
-        resp = self.app.patch('/v2/images/%s' % image1['id'],
+        resp = self.app.patch('/image/v2/images/%s' % image1['id'],
                               params=json.dumps([{'op': 'replace',
                                                   'path': '/' + key,
                                                   'value': val}]),
@@ -162,13 +157,13 @@ class DwarfTestCase(utils.TestCase):
 
     def test_create_image(self):
         # Create the image in the database
-        resp = self.app.post('/v2/images',
+        resp = self.app.post('/image/v2/images',
                              params=json.dumps(create_image_req(image1)),
                              status=201)
         self.assertEqual(json.loads(resp.body), create_image_resp(image1))
 
         # Upload the image data
-        resp = self.app.put('/v2/images/%s/file' % image1['id'],
+        resp = self.app.put('/image/v2/images/%s/file' % image1['id'],
                             params=image1['data'], status=204)
         with open('/tmp/dwarf/images/%s' % image1['id'], 'r') as fh:
             self.assertEqual(fh.read(), image1['data'])
@@ -181,5 +176,6 @@ class DwarfTestCase(utils.TestCase):
         self.create_image(image1)
         os.unlink(image1['file'])
 
-        resp = self.app.delete('/v2/images/%s' % image1['id'], status=204)
+        resp = self.app.delete('/image/v2/images/%s' % image1['id'],
+                               status=204)
         self.assertEqual(resp.body, '')

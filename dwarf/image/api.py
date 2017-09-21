@@ -20,7 +20,6 @@ import bottle
 import json
 import logging
 
-from dwarf import api_server
 from dwarf import config
 from dwarf import exception
 from dwarf import utils
@@ -40,21 +39,19 @@ IMAGES = images.Controller()
 @exception.catchall
 def _route_versions():
     """
-    Route:  /, /versions
+    Route:  /image, /image/versions
     Method: GET
     """
     utils.show_request(bottle.request)
 
-    if bottle.request.path == '/':
-        bottle.response.status = 300
-
+    bottle.response.status = 300
     return api_response.list_versions()
 
 
 @exception.catchall
 def _route_images():
     """
-    Route:  /v2/images
+    Route:  /image/v2/images
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -72,7 +69,7 @@ def _route_images():
 @exception.catchall
 def _route_images_id(image_id):
     """
-    Route:  /v2/images/<image_id>
+    Route:  /image/v2/images/<image_id>
     Method: GET, DELETE, PATCH
     """
     utils.show_request(bottle.request)
@@ -95,7 +92,7 @@ def _route_images_id(image_id):
 @exception.catchall
 def _route_images_id_file(image_id):
     """
-    Route:  /v2/images/<image_id>/file
+    Route:  /image/v2/images/<image_id>/file
     Method: PUT
     """
     utils.show_request(bottle.request)
@@ -110,7 +107,7 @@ def _route_images_id_file(image_id):
 @exception.catchall
 def _route_schemas_image():
     """
-    Route:  /v2/schemas/image
+    Route:  /image/v2/schemas/image
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -119,9 +116,9 @@ def _route_schemas_image():
 
 
 @exception.catchall
-def _route_schemas_metadefs(dummy_metadef):
+def _route_schemas_metadefs(_metadef):
     """
-    Route:  /v2/schemas/metadefs/<dummy_metadef>
+    Route:  /image/v2/schemas/metadefs/<_metadef>
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -130,30 +127,32 @@ def _route_schemas_metadefs(dummy_metadef):
 
 
 # -----------------------------------------------------------------------------
-# API server class
+# Image API exports
 
-class ImageApiServer(api_server.ApiServer):
-    def __init__(self, quiet=False):
-        super(ImageApiServer, self).__init__('Image',
-                                             CONF.bind_host,
-                                             CONF.image_api_port,
-                                             quiet=quiet)
+def set_routes(app):
+    app.route(('/image', '/image/versions'),
+              method='GET',
+              callback=_route_versions)
+    app.route('/image/v2/images',
+              method=('GET', 'POST', ),
+              callback=_route_images)
+    app.route('/image/v2/images/<image_id>',
+              method=('GET', 'DELETE', 'PATCH'),
+              callback=_route_images_id)
+    app.route('/image/v2/images/<image_id>/file',
+              method=('PUT'),
+              callback=_route_images_id_file)
+    app.route('/image/v2/schemas/image',
+              method='GET',
+              callback=_route_schemas_image)
+    app.route('/image/v2/schemas/metadefs/<_metadef>',
+              method='GET',
+              callback=_route_schemas_metadefs)
 
-        self.app.route(('/', '/versions'),
-                       method='GET',
-                       callback=_route_versions)
-        self.app.route('/v2/images',
-                       method=('GET', 'POST', ),
-                       callback=_route_images)
-        self.app.route('/v2/images/<image_id>',
-                       method=('GET', 'DELETE', 'PATCH'),
-                       callback=_route_images_id)
-        self.app.route('/v2/images/<image_id>/file',
-                       method=('PUT'),
-                       callback=_route_images_id_file)
-        self.app.route('/v2/schemas/image',
-                       method='GET',
-                       callback=_route_schemas_image)
-        self.app.route('/v2/schemas/metadefs/<dummy_metadef>',
-                       method='GET',
-                       callback=_route_schemas_metadefs)
+
+def setup():
+    pass
+
+
+def teardown():
+    pass

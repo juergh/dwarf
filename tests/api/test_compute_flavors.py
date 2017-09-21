@@ -22,7 +22,7 @@ from webtest import TestApp
 from tests import data
 from tests import utils
 
-from dwarf.compute.api import ComputeApiServer
+from dwarf.api_server import ApiServer
 
 FLAVOR_REQ = """{
     "flavor": {
@@ -78,54 +78,57 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(ComputeApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_list_flavors(self):
-        resp = self.app.get('/v2.0/flavors', status=200)
+        resp = self.app.get('/compute/v2.0/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp([flavor1, flavor2, flavor3],
                                            details=False))
 
     def test_list_flavors_detail(self):
-        resp = self.app.get('/v2.0/flavors/detail', status=200)
+        resp = self.app.get('/compute/v2.0/flavors/detail', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp([flavor1, flavor2, flavor3],
                                            details=True))
 
     def test_show_flavor(self):
-        resp = self.app.get('/v2.0/flavors/%s' % flavor1['id'], status=200)
+        resp = self.app.get('/compute/v2.0/flavors/%s' % flavor1['id'],
+                            status=200)
         self.assertEqual(json.loads(resp.body), show_flavor_resp(flavor1))
 
     def test_delete_flavor(self):
         # Delete flavor[0]
-        resp = self.app.delete('/v2.0/flavors/%s' % flavor1['id'], status=200)
+        resp = self.app.delete('/compute/v2.0/flavors/%s' % flavor1['id'],
+                               status=200)
         self.assertEqual(resp.body, '')
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v2.0/flavors', status=200)
+        resp = self.app.get('/compute/v2.0/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp([flavor2, flavor3], details=False))
 
     def test_create_flavor(self):
         # Delete flavor[0]
-        self.app.delete('/v2.0/flavors/%s' % flavor1['id'], status=200)
+        self.app.delete('/compute/v2.0/flavors/%s' % flavor1['id'], status=200)
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v2.0/flavors', status=200)
+        resp = self.app.get('/compute/v2.0/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp([flavor2, flavor3], details=False))
 
         # (Re-)create flavor[0]
-        resp = self.app.post('/v2.0/flavors',
+        resp = self.app.post('/compute/v2.0/flavors',
                              params=json.dumps(create_flavor_req(flavor1)),
                              status=200)
         self.assertEqual(json.loads(resp.body), create_flavor_resp(flavor1))
 
         # Check the resulting list of flavors
-        resp = self.app.get('/v2.0/flavors', status=200)
+        resp = self.app.get('/compute/v2.0/flavors', status=200)
         self.assertEqual(json.loads(resp.body),
                          list_flavors_resp([flavor2, flavor3, flavor1],
                                            details=False))

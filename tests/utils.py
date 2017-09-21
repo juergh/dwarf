@@ -31,6 +31,7 @@ from copy import deepcopy
 
 from tests import data
 
+from dwarf import api_server
 from dwarf import db
 from dwarf import task
 from dwarf import utils
@@ -38,10 +39,6 @@ from dwarf import utils
 from dwarf.compute import keypairs
 from dwarf.compute import servers
 from dwarf.image import images
-
-from dwarf.compute.api import ComputeApiServer
-from dwarf.identity.api import IdentityApiServer
-from dwarf.image.api import ImageApiServer
 
 LOG = logging.getLogger(__name__)
 
@@ -54,7 +51,7 @@ class TestCase(unittest.TestCase):
         super(TestCase, self).__init__(*args, **kwargs)
         self.maxDiff = None
         self.db = None
-        self.threads = []
+        self.dwarf = None
 
         # Mocking variables
         self.now = data.now
@@ -149,28 +146,19 @@ class TestCase(unittest.TestCase):
 
     def start_dwarf(self):
         """
-        Start all dwarf threads
+        Start the API server
         """
-        self.threads = [
-            IdentityApiServer(quiet=True),
-            ComputeApiServer(quiet=True),
-            ImageApiServer(quiet=True),
-        ]
-        for t in self.threads:
-            t.daemon = True
-            t.start()
+        self.dwarf = api_server.ApiServer(quiet=True)
+        self.dwarf.start()
 
         alive = True
-        active = 0
-        while alive and active != len(self.threads):
+        active = False
+        while alive and not active:
             time.sleep(1)
-            active = 0
-            for t in self.threads:
-                if not t.is_alive():
-                    alive = False
-                    break
-                if t.is_active():
-                    active += 1
+            alive = self.dwarf.is_alive()
+            active = self.dwarf.is_active()
+            if not alive:
+                break
         if not alive:
             self.stop_dwarf()
             raise Exception('Dwarf failed to start!')
@@ -179,14 +167,10 @@ class TestCase(unittest.TestCase):
 
     def stop_dwarf(self):
         """
-        Stop all dwarf threads
+        Stop the API server
         """
-        for t in self.threads:
-            t.stop()
-
-        # Wait until all threads are stopped
-        for t in self.threads:
-            t.join()
+        self.dwarf.stop()
+        self.dwarf.join()
 
         print('Dwarf is stopped')
 

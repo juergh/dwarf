@@ -89,5 +89,5 @@ def stop_all(wait=False):
         stop(tid)
 
     if wait:
-        while len(_TASKS) > 0:
+        while _TASKS:
             time.sleep(0.5)

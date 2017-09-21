@@ -1,4 +1,3 @@
-Cmnd_Alias DWARFCMDS = /bin/chown, \
-                       /sbin/iptables
+Cmnd_Alias DWARFCMDS = /bin/chown
 
 dwarf ALL = (root) NOPASSWD: SETENV: DWARFCMDS
