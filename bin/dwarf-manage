@@ -55,13 +55,13 @@ def add_arg(*args, **kwargs):
 
 
 @add_help('initialize the database')
-def do_db_init(dummy_args):
+def do_db_init(_args):
     _db = db.Controller()
     _db.init()
 
 
 @add_help('delete the database')
-def do_db_delete(dummy_args):
+def do_db_delete(_args):
     _db = db.Controller()
     _db.delete()
 

@@ -31,7 +31,7 @@ VERSION_v2d0 = """{
     "id": "v2.0",
     "links": [
         {
-            "href": "http://{{bind_host}}:{{compute_api_port}}/v2.0/",
+            "href": "http://{{bind_host}}:{{bind_port}}/compute/v2.0/",
             "rel": "self"
         }
     ],

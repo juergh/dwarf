@@ -42,13 +42,10 @@ _DEFAULT_CONFIG = {
     'libvirt_bridge_ip': '10.0.0.1',
 
     'bind_host': '127.0.0.1',
-    'identity_api_port': 5000,
-    'compute_api_port': 8774,
-    'image_api_port': 9292,
-    'ec2_metadata_port': 8080,
+    'bind_port': 5000,
 
     'server_soft_reboot_timeout': 30,
-    'force_config_drive': False,
+    'force_config_drive': True,
 }
 
 

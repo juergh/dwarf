@@ -21,13 +21,13 @@ from webtest import TestApp
 
 from tests import utils
 
-from dwarf.compute.api import ComputeApiServer
+from dwarf.api_server import ApiServer
 
 VERSION_RESP = {
     'id': 'v2.0',
     'links': [
         {
-            'href': 'http://127.0.0.1:20001/v2.0/',
+            'href': 'http://127.0.0.1:20000/compute/v2.0/',
             'rel': 'self',
         },
     ],
@@ -48,18 +48,16 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(ComputeApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
-
-    def test_http_error(self):
-        self.app.get('/no-such-url', status=404)
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_list_versions(self):
-        resp = self.app.get('/', status=300)
+        resp = self.app.get('/compute', status=300)
         self.assertEqual(json.loads(resp.body), list_versions_resp())
 
     def test_show_version(self):
-        resp = self.app.get('/v2.0', status=200)
+        resp = self.app.get('/compute/v2.0', status=200)
         self.assertEqual(json.loads(resp.body), show_version_resp())

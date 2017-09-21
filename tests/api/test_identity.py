@@ -22,7 +22,7 @@ from webtest import TestApp
 
 from tests import utils
 
-from dwarf.identity.api import IdentityApiServer
+from dwarf.api_server import ApiServer
 
 AUTH_REQ = {
     "auth": {
@@ -60,7 +60,7 @@ AUTH_RESP = {
                 "type": "compute",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:20001/v2.0",
+                        "publicURL": "http://127.0.0.1:20000/compute",
                         "region": "dwarf-region"
                     }
                 ]
@@ -70,7 +70,7 @@ AUTH_RESP = {
                 "type": "image",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:20002",
+                        "publicURL": "http://127.0.0.1:20000/image",
                         "region": "dwarf-region"
                     }
                 ]
@@ -80,7 +80,7 @@ AUTH_RESP = {
                 "type": "identity",
                 "endpoints": [
                     {
-                        "publicURL": "http://127.0.0.1:20000/v2.0",
+                        "publicURL": "http://127.0.0.1:20000/identity",
                         "region": "dwarf-region"
                     }
                 ]
@@ -98,7 +98,7 @@ VERSION_RESP = {
     "id": "v2.0",
     "links": [
         {
-            "href": "http://127.0.0.1:20000/v2.0/",
+            "href": "http://127.0.0.1:20000/identity/v2.0/",
             "rel": "self"
         }
     ],
@@ -125,25 +125,24 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(IdentityApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_http_error(self):
         self.app.get('/no-such-url', status=404)
 
     def test_list_versions(self):
-        resp = self.app.get('/')
-        self.assertEqual(resp.status, '300 Multiple Choices')
+        resp = self.app.get('/identity', status=300)
         self.assertEqual(json.loads(resp.body), list_versions_resp())
 
     def test_show_version(self):
-        resp = self.app.get('/v2.0')
-        self.assertEqual(resp.status, '200 OK')
+        resp = self.app.get('/identity/v2.0', status=200)
         self.assertEqual(json.loads(resp.body), show_version_resp())
 
     def test_authenticate(self):
-        resp = self.app.post('/v2.0/tokens', params=json.dumps(auth_req()))
-        self.assertEqual(resp.status, '200 OK')
+        resp = self.app.post('/identity/v2.0/tokens',
+                             params=json.dumps(auth_req()), status=200)
         self.assertEqual(json.loads(resp.body), auth_resp())

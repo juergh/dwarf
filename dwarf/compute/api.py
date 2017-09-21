@@ -20,7 +20,6 @@ import bottle
 import json
 import logging
 
-from dwarf import api_server
 from dwarf import config
 from dwarf import exception
 from dwarf import utils
@@ -44,7 +43,7 @@ SERVERS = servers.Controller()
 @exception.catchall
 def _route_versions():
     """
-    Routes: /
+    Routes: /compute
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -56,7 +55,7 @@ def _route_versions():
 @exception.catchall
 def _route_version():
     """
-    Routes: /v2.0
+    Routes: /compute/v2.0
     Method: GET
     """
     utils.show_request(bottle.request)
@@ -70,7 +69,7 @@ def _route_version():
 @exception.catchall
 def _route_flavors_id(flavor_id):
     """
-    Route:  /v2.0/flavors/<flavor_id>
+    Route:  /compute/v2.0/flavors/<flavor_id>
     Method: GET, DELETE
     """
     utils.show_request(bottle.request)
@@ -91,7 +90,7 @@ def _route_flavors_id(flavor_id):
 @exception.catchall
 def _route_flavors():
     """
-    Route:  /v2.0/flavors
+    Route:  /compute/v2.0/flavors
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -111,7 +110,7 @@ def _route_flavors():
 @exception.catchall
 def _route_os_keypairs():
     """
-    Route:  /v2.0/os-keypairs
+    Route:  /compute/v2.0/os-keypairs
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -128,7 +127,7 @@ def _route_os_keypairs():
 @exception.catchall
 def _route_os_keypairs_name(keypair_name):
     """
-    Route:  /v2.0/os-keypairs/<keypair_name>
+    Route:  /compute/v2.0/os-keypairs/<keypair_name>
     Method: DELETE, GET
     """
     utils.show_request(bottle.request)
@@ -148,7 +147,7 @@ def _route_os_keypairs_name(keypair_name):
 @exception.catchall
 def _route_servers_id(server_id):
     """
-    Route:  /v2.0/servers/<server_id>
+    Route:  /compute/v2.0/servers/<server_id>
     Method: GET, DELETE
     """
     utils.show_request(bottle.request)
@@ -169,7 +168,7 @@ def _route_servers_id(server_id):
 @exception.catchall
 def _route_servers():
     """
-    Route:  /v2.0/servers
+    Route:  /compute/v2.0/servers
     Method: GET, POST
     """
     utils.show_request(bottle.request)
@@ -186,7 +185,7 @@ def _route_servers():
 @exception.catchall
 def _route_servers_id_action(server_id):
     """
-    Route:  /v2.0/servers/<server_id>/action
+    Route:  /compute/v2.0/servers/<server_id>/action
     Method: POST
     """
     utils.show_request(bottle.request)
@@ -217,46 +216,41 @@ def _route_servers_id_action(server_id):
 
 
 # -----------------------------------------------------------------------------
-# API server class
+# Compute API exports
 
-class ComputeApiServer(api_server.ApiServer):
+def set_routes(app):
+    app.route('/compute',
+              method='GET',
+              callback=_route_versions)
+    app.route('/compute/v2.0',
+              method='GET',
+              callback=_route_version)
+    app.route('/compute/v2.0/os-keypairs',
+              method=('GET', 'POST'),
+              callback=_route_os_keypairs)
+    app.route('/compute/v2.0/os-keypairs/<keypair_name>',
+              method=('DELETE', 'GET'),
+              callback=_route_os_keypairs_name)
+    app.route('/compute/v2.0/servers/<server_id>',
+              method=('GET', 'DELETE'),
+              callback=_route_servers_id)
+    app.route('/compute/v2.0/servers',
+              method=('GET', 'POST'),
+              callback=_route_servers)
+    app.route('/compute/v2.0/servers/<server_id>/action',
+              method='POST',
+              callback=_route_servers_id_action)
+    app.route('/compute/v2.0/flavors/<flavor_id>',
+              method=('GET', 'DELETE'),
+              callback=_route_flavors_id)
+    app.route('/compute/v2.0/flavors',
+              method=('GET', 'POST'),
+              callback=_route_flavors)
 
-    def __init__(self, quiet=False):
-        super(ComputeApiServer, self).__init__('Compute',
-                                               CONF.bind_host,
-                                               CONF.compute_api_port,
-                                               quiet=quiet)
 
-        self.app.route('/',
-                       method='GET',
-                       callback=_route_versions)
-        self.app.route(('/v2.0', '/v2.0/'),
-                       method='GET',
-                       callback=_route_version)
-        self.app.route('/v2.0/os-keypairs',
-                       method=('GET', 'POST'),
-                       callback=_route_os_keypairs)
-        self.app.route('/v2.0/os-keypairs/<keypair_name>',
-                       method=('DELETE', 'GET'),
-                       callback=_route_os_keypairs_name)
-        self.app.route('/v2.0/servers/<server_id>',
-                       method=('GET', 'DELETE'),
-                       callback=_route_servers_id)
-        self.app.route('/v2.0/servers',
-                       method=('GET', 'POST'),
-                       callback=_route_servers)
-        self.app.route('/v2.0/servers/<server_id>/action',
-                       method='POST',
-                       callback=_route_servers_id_action)
-        self.app.route('/v2.0/flavors/<flavor_id>',
-                       method=('GET', 'DELETE'),
-                       callback=_route_flavors_id)
-        self.app.route('/v2.0/flavors',
-                       method=('GET', 'POST'),
-                       callback=_route_flavors)
+def setup():
+    SERVERS.setup()
 
-    def setup(self):
-        SERVERS.setup()
 
-    def teardown(self):
-        SERVERS.teardown()
+def teardown():
+    SERVERS.teardown()

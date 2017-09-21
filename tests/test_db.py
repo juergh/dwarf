@@ -127,11 +127,13 @@ image1 = data.image['11111111-2222-3333-4444-555555555555']
 
 class DbTestCase(utils.TestCase):
 
-    def setUp(self):
-        super(DbTestCase, self).setUp()
+    # Commented out to silence pylint
+    # def setUp(self):
+    #     super(DbTestCase, self).setUp()
 
-    def tearDown(self):
-        super(DbTestCase, self).tearDown()
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DbTestCase, self).tearDown()
 
     def test_init_db(self):
         self.assertEqual(self.db.servers.list(), [])

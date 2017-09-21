@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives import hashes as crypto_hashes
 from tests import data
 from tests import utils
 
-from dwarf.compute.api import ComputeApiServer
+from dwarf.api_server import ApiServer
 
 KEYPAIR_REQ = """{
 % if _public_key:
@@ -95,17 +95,18 @@ class DwarfTestCase(utils.TestCase):
 
     def setUp(self):
         super(DwarfTestCase, self).setUp()
-        self.app = TestApp(ComputeApiServer().app)
+        self.app = TestApp(ApiServer().app)
 
-    def tearDown(self):
-        super(DwarfTestCase, self).tearDown()
+    # Commented out to silence pylint
+    # def tearDown(self):
+    #     super(DwarfTestCase, self).tearDown()
 
     def test_list_keypairs(self):
         # Preload test keypairs
         self.create_keypair(keypair1)
         self.create_keypair(keypair2)
 
-        resp = self.app.get('/v2.0/os-keypairs', status=200)
+        resp = self.app.get('/compute/v2.0/os-keypairs', status=200)
         self.assertEqual(json.loads(resp.body), list_keypairs_resp([keypair1,
                                                                     keypair2]))
 
@@ -113,12 +114,12 @@ class DwarfTestCase(utils.TestCase):
         # Preload a test keypair
         self.create_keypair(keypair1)
 
-        resp = self.app.get('/v2.0/os-keypairs/%s' %
+        resp = self.app.get('/compute/v2.0/os-keypairs/%s' %
                             urllib.quote(keypair1['name']), status=200)
         self.assertEqual(json.loads(resp.body), show_keypair_resp(keypair1))
 
     def test_import_keypair(self):
-        resp = self.app.post('/v2.0/os-keypairs',
+        resp = self.app.post('/compute/v2.0/os-keypairs',
                              params=json.dumps(import_keypair_req(keypair1)),
                              status=200)
         self.assertEqual(json.loads(resp.body), import_keypair_resp(keypair1))
@@ -128,16 +129,16 @@ class DwarfTestCase(utils.TestCase):
         self.create_keypair(keypair1)
 
         # Delete the keypair
-        resp = self.app.delete('/v2.0/os-keypairs/%s' %
+        resp = self.app.delete('/compute/v2.0/os-keypairs/%s' %
                                urllib.quote(keypair1['name']), status=200)
         self.assertEqual(resp.body, '')
 
         # Check the resulting keypair list
-        resp = self.app.get('/v2.0/os-keypairs', status=200)
+        resp = self.app.get('/compute/v2.0/os-keypairs', status=200)
         self.assertEqual(json.loads(resp.body), list_keypairs_resp([]))
 
     def test_create_keypair(self):
-        resp = self.app.post('/v2.0/os-keypairs',
+        resp = self.app.post('/compute/v2.0/os-keypairs',
                              params=json.dumps(create_keypair_req(keypair1)),
                              status=200)
         jresp = json.loads(resp.body)

@@ -135,12 +135,15 @@ def _create_config_drive(server, keypair):
             'hostname': '%s.dwarflocal' % server['name'],
             'launch_index': 0,
             'name': server['name'],
-            'public_keys': {
-                server['key_name']: keypair['public_key'],
-            },
             'uuid': server['id'],
         },
     }
+
+    # Add the SSH keypair info
+    if keypair is not None:
+        config_data['meta_data']['public_keys'] = {
+            keypair['name']: keypair['public_key']
+        }
 
     # Create a temporary directory containing the config drive data
     config_dir = os.path.join('/tmp', 'dwarf-config-drive-%s' % server['id'])

@@ -24,8 +24,6 @@ import uuid
 from string import Template
 
 from dwarf import config
-from dwarf import exception
-from dwarf import utils
 
 CONF = config.Config()
 LOG = logging.getLogger(__name__)
@@ -320,23 +318,6 @@ class Controller(object):
         # Create (start) the network
         if net.isActive() == 0:
             net.create()
-
-        # Add the iptables rule for the Ec2 metadata service
-        rule = ['PREROUTING',
-                '-t', 'nat',
-                '-s', '%s/24' % CONF.libvirt_bridge_ip,
-                '-d', '169.254.169.254/32',
-                '-p', 'tcp',
-                '-m', 'tcp',
-                '--dport', 80,
-                '-j', 'REDIRECT',
-                '--to-port', CONF.ec2_metadata_port]
-        try:
-            utils.execute(['iptables', '-C'] + rule,
-                          run_as_root=True, check_exit_code=0)
-        except exception.CommandExecutionError:
-            utils.execute(['iptables', '-A'] + rule,
-                          run_as_root=True, check_exit_code=0)
 
     def get_dhcp_lease(self, server):
         """
