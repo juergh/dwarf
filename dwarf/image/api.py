@@ -63,7 +63,12 @@ def _route_images():
         return api_response.create_image(IMAGES.create(image_md))
 
     # glance image-list
-    return api_response.list_images(IMAGES.list())
+    if (bottle.request.query.get('marker', None) is not None):
+        # When the client wants more, tell it we're done
+        return api_response.list_images([])
+    else:
+        # We don't 'do' marker, so return it all on the first call
+        return api_response.list_images(IMAGES.list())
 
 
 @exception.catchall
