@@ -40,6 +40,7 @@ _DEFAULT_CONFIG = {
     'libvirt_domain_type': 'kvm',
     'libvirt_bridge_name': 'dwbr0',
     'libvirt_bridge_ip': '10.0.0.1',
+    'libvirt_network_name': 'dwarf',
 
     'bind_host': '127.0.0.1',
     'bind_port': 5000,
